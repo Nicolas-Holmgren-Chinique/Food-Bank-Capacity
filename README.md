@@ -4,7 +4,7 @@ CareSpace is a first-revision static website for a real-time coordination layer 
 
 The public brand and deployment target are:
 
-**https://carespace.heurchain.com**
+**https://carespace.pages.dev/**
 
 The source concept is documented in [`docs/CareForce-Product-Requirements-Document-Revision-0.1.md`](docs/CareForce-Product-Requirements-Document-Revision-0.1.md). The public experience intentionally uses the CareSpace name while preserving the original PRD as an archived product reference.
 
