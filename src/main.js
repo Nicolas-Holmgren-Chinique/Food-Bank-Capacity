@@ -197,7 +197,6 @@ app.innerHTML = `
     <main id="top">
       <section class="hero section-pad">
         <div class="hero-copy" data-reveal>
-          <p class="eyebrow"><span class="eyebrow-dot"></span> A coordination layer for community care</p>
           <h1>Food exists.<br /><em>Need exists.</em><br />CareSpace connects them.</h1>
           <p class="hero-intro">A living map of food, capacity, and people ready to help — so the next good thing can reach the right place in time.</p>
           <div class="hero-actions">
