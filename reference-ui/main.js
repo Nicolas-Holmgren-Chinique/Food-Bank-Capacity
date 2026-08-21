@@ -378,9 +378,70 @@ app.innerHTML = `
         </div>
       </section>
 
+      <section class="refinement-section section-pad" id="capacity-capture">
+        <div class="refinement-card" data-reveal>
+          <div class="refinement-header">
+            <p class="eyebrow"><span class="eyebrow-number">03</span> Field to insight</p>
+            <h2>See the work<br /><span>behind the handoff.</span></h2>
+            <p class="refinement-intro">Scan storage realities in the field, map capacity across the county, and make the next move visible to everyone who needs it.</p>
+          </div>
+
+          <div class="refinement-stage" aria-label="CareSpace field-to-insight workflow">
+            <article class="refinement-module">
+              <div class="refinement-device-pair" aria-hidden="true">
+                <div class="refinement-phone refinement-phone-camera">
+                  <div class="refinement-phone-screen">
+                    <div class="refinement-phone-top"><span>9:41</span><span>● ◔</span></div>
+                    <div class="refinement-camera-view">
+                      <span class="refinement-camera-grid"></span>
+                      <span class="refinement-scan-frame"></span>
+                      <span class="refinement-camera-target">STORAGE SPACE</span>
+                      <span class="refinement-camera-readout">READY TO CAPTURE</span>
+                    </div>
+                    <div class="refinement-camera-copy"><strong>Scan a space</strong><small>Open a room, fridge, or cabinet.</small></div>
+                    <div class="refinement-camera-controls"><span>Library</span><b></b><span>Capture</span></div>
+                  </div>
+                </div>
+
+                <div class="refinement-phone refinement-phone-map">
+                  <div class="refinement-phone-screen">
+                    <div class="refinement-phone-top"><span class="refinement-mini-mark">C</span><span>•••</span></div>
+                    <div class="refinement-map-heading"><strong>Map Capacity</strong><small>Find what you can safely hold.</small></div>
+                    <div class="refinement-map-canvas"><span class="refinement-map-route"></span><i class="refinement-map-dot map-dot-one"></i><i class="refinement-map-dot map-dot-two"></i><i class="refinement-map-dot map-dot-three"></i></div>
+                    <div class="refinement-map-select"><span>Select an agency</span><b>⌄</b></div>
+                    <div class="refinement-map-result"><strong>Aguilas del Poderoso Dios</strong><small>San Diego · 20 ft³ available</small></div>
+                  </div>
+                </div>
+              </div>
+              <div class="refinement-pill">Scan</div>
+              <p class="refinement-module-copy">Capture the storage reality and give capacity a place in the shared network.</p>
+            </article>
+
+            <article class="refinement-module">
+              <div class="refinement-laptop" aria-hidden="true">
+                <div class="refinement-laptop-screen">
+                  <div class="refinement-dashboard-top"><span><i></i><i></i><i></i></span><strong>Capacity overview</strong><small>D1 synced</small></div>
+                  <div class="refinement-chart-grid">
+                    <div class="refinement-chart-card"><div><span>Partner agencies</span><b>24</b></div><div class="refinement-chart-bars"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                    <div class="refinement-chart-card"><div><span>Open capacity</span><b>68%</b></div><div class="refinement-chart-donut"><i></i></div></div>
+                    <div class="refinement-chart-card"><div><span>Food category</span><b>12.4k</b></div><div class="refinement-chart-stack"><i></i><i></i><i></i></div></div>
+                    <div class="refinement-chart-card"><div><span>Service zone</span><b>06</b></div><div class="refinement-chart-line"><i></i><i></i><i></i><i></i><i></i></div></div>
+                  </div>
+                </div>
+                <div class="refinement-laptop-base"></div>
+              </div>
+              <div class="refinement-pill">Analyze</div>
+              <p class="refinement-module-copy">Turn field captures and live network data into the next useful decision.</p>
+            </article>
+          </div>
+
+          <div class="refinement-footer"><span class="refinement-footer-label">PRELIMINARY UI · SYNTHETIC DATA READY</span><span class="refinement-footer-note">Later: inference will surface the best landing place, storage constraint, and handoff path.</span></div>
+        </div>
+      </section>
+
       <section class="community-section section-pad" id="community">
         <div class="section-heading community-heading" data-reveal>
-          <div><p class="eyebrow"><span class="eyebrow-number">03</span> Make a signal</p><h2>There’s a place<br /><span>for your yes.</span></h2></div>
+          <div><p class="eyebrow"><span class="eyebrow-number">04</span> Make a signal</p><h2>There’s a place<br /><span>for your yes.</span></h2></div>
           <p class="heading-aside standalone">Whether you’re holding extra meals, finding a safe landing place, or opening a door — your signal helps the network respond.</p>
         </div>
         <div class="community-grid" data-reveal data-delay="100">
@@ -393,12 +454,12 @@ app.innerHTML = `
       <section class="trust-section section-pad" id="about">
         <div class="trust-card" data-reveal>
           <div class="trust-visual"><div class="trust-circle circle-a"></div><div class="trust-circle circle-b"></div><div class="trust-circle circle-c"></div><span class="trust-visual-word">care<br />moves</span></div>
-          <div class="trust-copy"><p class="eyebrow"><span class="eyebrow-number">04</span> A clearer map, a safer network</p><h2>Visibility without<br /><span>exposure.</span></h2><p>CareSpace maps organizations, resources, and community-level need — not the private details of the people being served.</p><div class="trust-points"><span>${icon('check')} Community-level signals</span><span>${icon('check')} Freshness & provenance</span><span>${icon('check')} Scoped access</span></div><a class="text-link light-link" href="#agents">Read the trust model ${icon('arrow')}</a></div>
+          <div class="trust-copy"><p class="eyebrow"><span class="eyebrow-number">05</span> A clearer map, a safer network</p><h2>Visibility without<br /><span>exposure.</span></h2><p>CareSpace maps organizations, resources, and community-level need — not the private details of the people being served.</p><div class="trust-points"><span>${icon('check')} Community-level signals</span><span>${icon('check')} Freshness & provenance</span><span>${icon('check')} Scoped access</span></div><a class="text-link light-link" href="#agents">Read the trust model ${icon('arrow')}</a></div>
         </div>
       </section>
 
       <section class="agents-section section-pad" id="agents">
-        <div class="agents-copy" data-reveal><p class="eyebrow"><span class="eyebrow-number">05</span> Built for people. Accessible to agents.</p><h2>Let the network<br /><em>stay in sync.</em></h2><p>CareSpace is designed as a coordination layer, not a closed directory. People can use the interface. Authorized agents can discover capabilities, report signals, and search for matches through a clear API.</p><a class="button button-dark" href="/capabilities.json" target="_blank" rel="noreferrer">View capabilities ${icon('arrow')}</a></div>
+        <div class="agents-copy" data-reveal><p class="eyebrow"><span class="eyebrow-number">06</span> Built for people. Accessible to agents.</p><h2>Let the network<br /><em>stay in sync.</em></h2><p>CareSpace is designed as a coordination layer, not a closed directory. People can use the interface. Authorized agents can discover capabilities, report signals, and search for matches through a clear API.</p><a class="button button-dark" href="/capabilities.json" target="_blank" rel="noreferrer">View capabilities ${icon('arrow')}</a></div>
         <div class="api-card" data-reveal data-delay="120"><div class="api-topbar"><span><i></i><i></i><i></i></span><span class="api-label">care-space / public capability</span><button class="copy-button" type="button" data-copy aria-label="Copy API example">${icon('copy')} <span>Copy</span></button></div><pre><code><span class="code-comment">// discover what the network can do</span>
 <span class="code-method">GET</span> <span class="code-path">/api/v1/capabilities</span>
 
@@ -414,7 +475,7 @@ app.innerHTML = `
       </section>
 
       <section class="impact-section section-pad">
-        <div class="impact-inner" data-reveal><div><p class="eyebrow eyebrow-light"><span class="eyebrow-number">06</span> The measure of a match</p><h2>Good coordination<br /><span>leaves a trace.</span></h2></div><div class="impact-metrics"><div><strong>120</strong><span>meals redirected<br />in one example match</span></div><div><strong>14m</strong><span>from report to<br />a proposed next step</span></div><div><strong>1</strong><span>shared picture<br />for the whole network</span></div></div></div>
+        <div class="impact-inner" data-reveal><div><p class="eyebrow eyebrow-light"><span class="eyebrow-number">07</span> The measure of a match</p><h2>Good coordination<br /><span>leaves a trace.</span></h2></div><div class="impact-metrics"><div><strong>120</strong><span>meals redirected<br />in one example match</span></div><div><strong>14m</strong><span>from report to<br />a proposed next step</span></div><div><strong>1</strong><span>shared picture<br />for the whole network</span></div></div></div>
       </section>
 
       <section class="final-cta section-pad" data-reveal>
