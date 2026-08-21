@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/**
+ * Palette sampled from the CareSpace site.
+ *   #377e7f  brand teal
+ *   #ffffff  background
+ *   #1a1a1a  headline
+ *   #555555  body copy
+ *   #b9d2d2  light teal used in the illustrations
+ */
+
+:root {
+  --page: #f4f6f6; /* desktop backdrop behind the phone frame only */
+  --background: #ffffff;
+  --surface: #ffffff;
+  --foreground: #1a1a1a;
+  --muted: #555555;
+  --line: #e3e8e8;
+
+  --accent: #377e7f;
+  --accent-tint: #b9d2d2;
+  --accent-wash: #f0f5f5;
+
+  /* Two zones, split warm and cool. Produce borrows the brand teal. */
+  --zone-shelf: #b07d3f;
+  --zone-produce: #377e7f;
+
+  /* Stranded capacity, missing zones, anything that costs families food. */
+  --warn: #b3453c;
+  --warn-bg: #fbf1ef;
+  --warn-line: #f0dcd8;
+
+  /* Low confidence, worth a second look but not a failure. */
+  --caution: #8a6224;
+  --caution-bg: #faf4ea;
+  --caution-line: #ecdfc9;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-warn: var(--warn);
+  --color-caution: var(--caution);
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Numbers that get compared to each other should line up. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
