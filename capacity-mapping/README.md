@@ -17,11 +17,14 @@ npm run dev
 Then open http://localhost:3000. Phone shaped, so it looks best in a narrow
 window or with device emulation on.
 
+**Start with "Demo Agency."** It is pinned to the top of the picker with a Demo
+badge and exists purely to walk someone through a scan end to end.
+
 ## The one idea
 
 A Family Box has to be assembled **at a single site** out of both zones,
-shelf-stable and produce. So a site's real capacity is the **minimum across
-zones, not the sum**.
+shelf-stable and refrigerated. So a site's real capacity is the **minimum
+across zones, not the sum**.
 
 ```
 people = min over zones of floor(usable_cuft / cuft_per_box) x 4
@@ -30,18 +33,50 @@ people = min over zones of floor(usable_cuft / cuft_per_box) x 4
 Everything above that minimum in the other zone is stranded: the space is
 physically there and can never be used.
 
-| Agency | Shelf-stable | Produce | Can feed | Limited by |
-|---|---:|---:|---:|---|
-| Oceanside Community Resource Center | 600 | 68 | **68** | produce |
-| All Saint Episcopal, Vista | 212 | 460 | **212** | shelf-stable |
-| Apostolic Assembly, Escondido | 408 | 68 | **68** | produce |
-| Iglesia Cristiana Vida Nueva | 160 | 104 | **104** | produce |
-| Aguilas del Poderoso Dios | 160 | 0 | **0** | produce |
+The box is **80% refrigerated by volume**, because this network is
+produce-forward. Two of these agencies are literally "Neighborhood Produce
+(25-30lb)" in the source data. One box is 1.45 cu ft refrigerated against
+0.37 cu ft shelf-stable.
 
-Oceanside has warehouse-grade racking and one break room fridge, so it can feed
-600 people worth of shelf-stable and 68 people in total. Aguilas has no cold
-storage at all, so it cannot assemble one complete box no matter how much shelf
-space it has.
+| Agency | Shelf-stable | Refrigerated | Can feed | Limited by |
+|---|---:|---:|---:|---|
+| Oceanside Community Resource Center | 1,636 | 32 | **32** | refrigerated |
+| Apostolic Assembly, Escondido | 1,112 | 32 | **32** | refrigerated |
+| Demo Agency | 780 | 80 | **80** | refrigerated |
+| All Saint Episcopal, Vista | 596 | 856 | **596** | shelf-stable |
+| Iglesia Cristiana Vida Nueva | 448 | 48 | **48** | refrigerated |
+| Aguilas del Poderoso Dios | 448 | 0 | **0** | refrigerated |
+
+Oceanside has warehouse-grade racking and one break room fridge. All Saint runs
+the other way: it inherited a restaurant walk-in cooler and ran out of shelving,
+so it is the one site in the network where shelf-stable binds. Aguilas has no
+cold storage at all, so it cannot assemble one complete box no matter how much
+shelf space it has.
+
+## Capacity against what actually went out
+
+`distribution_event` records what each site handed out. The gap against
+capacity has three causes with three different owners, and only one of them is
+a storage problem:
+
+- **Full and still turning people away.** Ran out of space. The only case
+  CareSpace can fix, and the only one the app comments on.
+- **Room to spare.** The food did not arrive, or the families did not come.
+  Not a storage problem, so the app stays quiet.
+
+`turned_away` is the column that tells them apart.
+
+| Agency | Can feed | Last fed | Turned away |
+|---|---:|---:|---:|
+| Oceanside | 32 | 32 | **40** |
+| Apostolic | 32 | 28 | 12 |
+| Demo Agency | 80 | 64 | 0 |
+| All Saint | 596 | 412 | 0 |
+| Aguilas | 0 | 120 | 0 |
+
+Aguilas is the honest edge case: it fed 120 people while holding zero complete
+boxes, because produce arrives the morning of and goes straight out. A naive
+utilization metric divides by zero there.
 
 ## Units, and why
 
@@ -49,24 +84,29 @@ space it has.
 case of size 4 diapers is 40 lb and 3.5 cu ft, a case of canned corn is 11 lb
 and 0.45 cu ft. And a camera can estimate the size of a cooler but can never
 weigh one, so if the scan is the intake path, capacity has to be in a unit the
-scan can produce. `item.unit_volume_cuft` bridges volume to the pounds that
-food banks report in.
+scan can produce.
+
+Weight is also the wrong lens on the box itself. Oil is 4,010 cal/lb and mixed
+produce is 140, a 29x spread, so any ratio computed in pounds is really a ratio
+of water content. Item counts fail the other way: one produce box is a single
+item at 1.2 cu ft, while six shelf-stable items together are 0.37. Volume is
+the only unit the capacity model needs and the only one that behaves.
 
 **Only usable cubic feet are ever displayed.** Each storage unit has a
-`gross_cuft` and a `usable_pct` fit factor, which covers aisles, air gaps, and
-the shelf nobody can reach. The UI shows `gross x usable_pct` and never gross
-on its own, so every number on a screen adds up to the total above it.
+`gross_cuft` and a `usable_pct` fit factor, covering aisles, air gaps, and the
+shelf nobody can reach. The UI shows `gross x usable_pct`, rounded per unit and
+then summed, so every column adds up to the total above it.
 
 ## Screens
 
 | Route | What it is |
 |---|---|
-| `/` | Map Capacity. Pick an agency, start. |
+| `/` | Map Capacity. Pick an agency, start. Demo Agency is pinned. |
 | `/agency/[id]/scan` | Camera handoff. **Not built.** This is where the vision model goes. |
 | `/agency/[id]/scan/complete` | Assumes the scan ran. Usable space, a check against inventory, then people. |
 | `/agency/[id]/scan/fix` | The rep overrides the scan: size, fit factor, or "that is not there". Recounts live. |
 | `/agency/[id]/inventory` | The rep corrects the item counts. |
-| `/agency/[id]` | The reveal: per-zone bars, the binding zone, stranded space, what one more unit unlocks. |
+| `/agency/[id]` | The reveal: people, last distribution, per-zone bars, what one more unit unlocks. |
 
 Auth is out of scope. The agency picker stands in for it.
 
@@ -84,8 +124,9 @@ python3 data/export_xlsx.py  # -> data/CareSpace_Synthetic_DB.xlsx
 
 Both are dependency-free apart from `openpyxl` for the spreadsheet.
 `data/CareSpace_Synthetic_DB.xlsx` is committed, so you can read the whole
-dataset without running anything. Start with its **Capacity by zone** and
-**Inventory check** sheets, which are the math the app runs.
+dataset without running anything. Start with its **Capacity by zone**,
+**Inventory check** and **What went out** sheets, which are the math the app
+runs.
 
 The app reads `app/src/lib/fixture.json` rather than the database, so there is
 no runtime dependency to wire up. `app/src/lib/data.ts` is the only file that
@@ -111,11 +152,14 @@ decisions.
   error budget, well ahead of anything to do with packing geometry. That is why
   the fix screen exposes it as a slider: the rep in the room is the only person
   who knows.
-- One box template. A senior box or an infant kit has a different zone mix and
-  would move the binding zone at several sites.
-- Vida Nueva sits at 160 shelf-stable against 104 produce, only a 1.6x gap. It
-  is the one site where a sloppy fit estimate could flip which zone binds.
-  Every other site has a wide enough margin to survive being badly wrong.
+- Oceanside is 1,636 against 32, a 51x gap. That is the honest output of a
+  produce-forward box meeting three pallet racks and one break room fridge, but
+  it is a big number to defend. All Saint and Demo Agency are the moderate ones
+  to lead with.
+- One box template, and its recipe was authored rather than derived from a
+  nutrition standard. "80 people" currently has no stated standard behind it.
+  A senior box or an infant kit would have a different zone mix and move
+  binding zones.
 - Estimates should stay biased low. Overestimating capacity ships boxes a site
   cannot store, and that food gets thrown out. Underestimating just moves
   slightly fewer boxes. The costs are not symmetric.

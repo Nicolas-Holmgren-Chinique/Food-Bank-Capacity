@@ -14,7 +14,7 @@ PRAGMA foreign_keys = ON;
 
 -- The storage zones a food box must be assembled across.
 CREATE TABLE storage_zone (
-  id          TEXT PRIMARY KEY,          -- shelf_stable | produce
+  id          TEXT PRIMARY KEY,          -- shelf_stable | refrigerated
   label       TEXT NOT NULL,
   temp_min_f  INTEGER,
   temp_max_f  INTEGER,
@@ -54,6 +54,7 @@ CREATE TABLE agency (
   diapers_period_supplies  INTEGER DEFAULT 0,
   weekend_availability     INTEGER DEFAULT 0,
   is_hub                   INTEGER NOT NULL DEFAULT 0,
+  is_demo                  INTEGER NOT NULL DEFAULT 0, -- pinned to the top of the picker
   provenance               TEXT NOT NULL  -- real | synthetic
 );
 
@@ -152,6 +153,27 @@ CREATE TABLE box_line (
   consumer_qty TEXT                     -- "4 cans", for display
 );
 CREATE INDEX idx_box_line_template ON box_line(template_id);
+
+-- ---------------------------------------------------------------------------
+-- What actually went out the door.
+--
+-- Capacity says what a site COULD hold. This says what it DID hand out. The
+-- gap between them is the whole underutilization question, and turned_away is
+-- the column that tells you whose problem the gap is: people turned away at
+-- full capacity means the site ran out of space, which is CareSpace's problem.
+-- Room to spare means the food never arrived or nobody came, which is not.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE distribution_event (
+  id              TEXT PRIMARY KEY,
+  agency_id       TEXT NOT NULL REFERENCES agency(id),
+  distributed_on  TEXT NOT NULL,
+  boxes_out       INTEGER NOT NULL,
+  people_served   INTEGER NOT NULL,
+  turned_away     INTEGER NOT NULL DEFAULT 0,
+  notes           TEXT
+);
+CREATE INDEX idx_dist_agency ON distribution_event(agency_id, distributed_on DESC);
 
 -- ---------------------------------------------------------------------------
 -- Scan sessions. Empty at seed time. The AI piece fills these.

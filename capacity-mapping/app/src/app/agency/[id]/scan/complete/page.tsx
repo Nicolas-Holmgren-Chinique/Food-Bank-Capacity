@@ -5,6 +5,7 @@ import {
   usableCuft,
   ZONE_STYLE,
   ZONE_EMPTY_COPY,
+  ZONE_ADJ,
   zones,
 } from "@/lib/data";
 import { TopBar, SectionLabel } from "@/components/Chrome";
@@ -25,7 +26,6 @@ export default async function ScanComplete({
   if (!agency) notFound();
 
   const found = agency.storage_units;
-  const totalCuft = found.reduce((s, u) => s + usableCuft(u), 0);
 
   // Does the food already on the books fit in the space we just measured?
   const check = zones.map((z) => {
@@ -56,19 +56,33 @@ export default async function ScanComplete({
     <main className="flex-1 flex flex-col">
       <TopBar back={`/agency/${agency.id}/scan`} title="Scan complete" />
 
-      <div className="px-5 py-4 border-b border-line flex items-center gap-3">
+      <div className="px-5 py-4 border-b border-line flex items-start gap-3">
         <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
           <span className="text-accent text-base leading-none">&#10003;</span>
         </div>
-        <p className="text-[13.5px] leading-snug">
-          <span className="font-medium">
+        <div>
+          <p className="text-[13.5px] leading-snug font-medium">
             Found {found.length} storage {found.length === 1 ? "unit" : "units"}
-          </span>
-          <span className="text-muted">
-            {" "}
-            &middot; {totalCuft.toLocaleString()} cu ft
-          </span>
-        </p>
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
+            {check.map((c) => (
+              <span
+                key={c.zone.id}
+                className="flex items-baseline gap-1.5 text-[12px]"
+              >
+                <span
+                  className={`w-2 h-2 rounded-full self-center ${
+                    ZONE_STYLE[c.zone.id].dot
+                  }`}
+                />
+                <span className="text-muted">{c.zone.label}</span>
+                <span className="font-semibold tnum">
+                  {c.capacity.toLocaleString()} cu ft
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* What it found, already derated to what you can stack into. */}
@@ -77,29 +91,32 @@ export default async function ScanComplete({
         {zones.map((z) => {
           const units = found.filter((u) => u.zone_id === z.id);
           return (
-            <div key={z.id} className="mb-4 last:mb-0">
-              <div className="flex items-center gap-1.5 mb-1.5">
+            <div key={z.id} className="mb-5 last:mb-0">
+              <div className="flex items-center gap-1.5 mb-2">
                 <span
                   className={`w-2 h-2 rounded-full ${ZONE_STYLE[z.id].dot}`}
                 />
                 <span className="text-[12.5px] font-medium">{z.label}</span>
               </div>
               {units.length === 0 ? (
-                <p className="ml-3.5 text-[12.5px] text-muted">
+                <p className="ml-3.5 text-[12px] text-muted">
                   {ZONE_EMPTY_COPY[z.id]}
                 </p>
               ) : (
-                <ul className="ml-3.5 space-y-1.5">
+                <ul className="ml-3.5 space-y-1">
                   {units.map((u) => (
                     <li
                       key={u.id}
-                      className="flex items-baseline justify-between gap-3 text-[12.5px]"
+                      className="flex items-baseline justify-between gap-3 text-[12.5px] text-muted"
                     >
                       <span className="truncate">
                         {u.label}
-                        <span className="text-muted"> &middot; {u.kind_label}</span>
+                        <span className="opacity-70">
+                          {" "}
+                          &middot; {u.kind_label}
+                        </span>
                       </span>
-                      <span className="tnum whitespace-nowrap text-muted">
+                      <span className="tnum whitespace-nowrap">
                         {usableCuft(u)} cu ft
                       </span>
                     </li>
@@ -130,7 +147,7 @@ export default async function ScanComplete({
                   </span>
                 </div>
                 <span className="text-[11.5px] text-muted tnum">
-                  {c.items.toLocaleString()} items &middot;{" "}
+                  {c.items.toLocaleString()} items using{" "}
                   {c.onHand.toFixed(0)} of {c.capacity.toLocaleString()} cu ft
                 </span>
               </div>
@@ -156,7 +173,7 @@ export default async function ScanComplete({
               {mismatch
                 .map(
                   (c) =>
-                    `${c.onHand.toFixed(0)} cu ft of ${c.zone.label.toLowerCase()} against ${c.capacity.toLocaleString()} cu ft of space`
+                    `${c.onHand.toFixed(0)} cu ft of ${ZONE_ADJ[c.zone.id]} goods against ${c.capacity.toLocaleString()} cu ft of space`
                 )
                 .join(", and ")}
               . Either there is storage we missed, or the inventory is out of
@@ -185,8 +202,9 @@ export default async function ScanComplete({
               people you can feed
             </p>
             <p className="text-[13px] mt-3 leading-relaxed">
-              This site has no {agency.zones.find((z) => z.is_binding)!.label.toLowerCase()}{" "}
-              storage, so it cannot put together a single complete box.
+              This site has no{" "}
+              {ZONE_ADJ[agency.zones.find((z) => z.is_binding)!.zone_id]} storage,
+              so it cannot put together a single complete box.
             </p>
           </>
         ) : (
@@ -210,7 +228,7 @@ export default async function ScanComplete({
           href={`/agency/${agency.id}`}
           className="block w-full text-center bg-accent text-white rounded-xl py-4 text-[16px] font-medium hover:opacity-90 transition-opacity"
         >
-          {people === 0 ? "See what would change that" : "See what is holding you back"}
+          {people === 0 ? "See what would change that" : "See what limits this site"}
         </Link>
         <Link
           href={`/agency/${agency.id}/scan/fix`}

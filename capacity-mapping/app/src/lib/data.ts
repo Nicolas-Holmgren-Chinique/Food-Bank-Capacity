@@ -8,7 +8,7 @@ import fixture from "./fixture.json";
  * database, only this file changes.
  */
 
-export type ZoneId = "shelf_stable" | "produce";
+export type ZoneId = "shelf_stable" | "refrigerated";
 
 export type ZoneCapacity = {
   zone_id: ZoneId;
@@ -54,6 +54,15 @@ export type InventoryRow = {
   total_cuft: number;
 };
 
+export type Distribution = {
+  distributed_on: string;
+  boxes_out: number;
+  people_served: number;
+  /** The column that says whose problem an under-used site is. */
+  turned_away: number;
+  notes: string | null;
+};
+
 export type Agency = {
   id: string;
   name: string;
@@ -65,6 +74,8 @@ export type Agency = {
   distribution_day: string | null;
   frequency: string;
   is_hub: number;
+  /** Pinned to the top of the picker so it is easy to find in a demo. */
+  is_demo: number;
   story: string;
   zones: ZoneCapacity[];
   binding_zone: ZoneId;
@@ -73,6 +84,8 @@ export type Agency = {
   people_fed_today: number;
   storage_units: StorageUnit[];
   inventory: InventoryRow[];
+  /** Newest first. */
+  distributions: Distribution[];
 };
 
 export type Operator = {
@@ -214,11 +227,27 @@ export function peopleFromUnits(units: EditableUnit[]): {
  */
 export const ZONE_EMPTY_COPY: Record<ZoneId, string> = {
   shelf_stable: "No shelving, racking, or pantry space found.",
-  produce: "No cooler, fridge, or cold room found.",
+  refrigerated: "No cooler, fridge, or cold room found.",
+};
+
+/** "2026-08-14" -> "Aug 14". Parsed off the string so no timezone can shift it. */
+export function shortDate(iso: string): string {
+  const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const [, m, d] = iso.split("-");
+  return `${M[Number(m) - 1]} ${Number(d)}`;
+}
+
+/**
+ * Short adjective form, for sentences. The label is a noun phrase
+ * ("Refrigerated Goods") and reads badly in "no ... storage at all".
+ */
+export const ZONE_ADJ: Record<ZoneId, string> = {
+  shelf_stable: "shelf-stable",
+  refrigerated: "refrigerated",
 };
 
 /**
- * Two zones, split warm and cool. Produce borrows the brand teal; shelf-stable
+ * Two zones, split warm and cool. Refrigerated borrows the brand teal; shelf-stable
  * takes an ochre so the pair reads as two categories rather than two shades.
  * Values live in globals.css so the palette stays in one place.
  */
@@ -231,9 +260,9 @@ export const ZONE_STYLE: Record<
     dot: "bg-[var(--zone-shelf)]",
     text: "text-[var(--zone-shelf)]",
   },
-  produce: {
-    bar: "bg-[var(--zone-produce)]",
-    dot: "bg-[var(--zone-produce)]",
-    text: "text-[var(--zone-produce)]",
+  refrigerated: {
+    bar: "bg-[var(--zone-refrigerated)]",
+    dot: "bg-[var(--zone-refrigerated)]",
+    text: "text-[var(--zone-refrigerated)]",
   },
 };

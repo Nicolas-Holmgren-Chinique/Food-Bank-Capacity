@@ -7,13 +7,13 @@
     "feeds_days": 7,
     "description": "One week of balanced meals for a household of four. Must be assembled at a single site.",
     "zone_demand": {
-      "produce": {
-        "cuft_per_box": 0.676,
-        "lb_per_box": 15.5
+      "refrigerated": {
+        "cuft_per_box": 1.453,
+        "lb_per_box": 34.0
       },
       "shelf_stable": {
-        "cuft_per_box": 1.0093,
-        "lb_per_box": 29.64
+        "cuft_per_box": 0.3739,
+        "lb_per_box": 11.69
       }
     },
     "lines": [
@@ -21,28 +21,44 @@
         "qty_units": 0.08,
         "consumer_qty": "2 lb carrots",
         "name": "Fresh Carrots",
-        "zone_id": "produce",
+        "zone_id": "refrigerated",
         "unit_description": "25 lb bag",
         "unit_volume_cuft": 0.95
       },
       {
-        "qty_units": 0.5,
-        "consumer_qty": "Half a mixed produce box",
+        "qty_units": 0.08,
+        "consumer_qty": "2 lb onions",
+        "name": "Fresh Onions",
+        "zone_id": "refrigerated",
+        "unit_description": "25 lb bag",
+        "unit_volume_cuft": 0.9
+      },
+      {
+        "qty_units": 0.1,
+        "consumer_qty": "3 lb potatoes",
+        "name": "Fresh Potatoes",
+        "zone_id": "refrigerated",
+        "unit_description": "30 lb bag",
+        "unit_volume_cuft": 1.05
+      },
+      {
+        "qty_units": 1.0,
+        "consumer_qty": "1 produce box, 25-30 lb",
         "name": "Mixed Produce Box",
-        "zone_id": "produce",
+        "zone_id": "refrigerated",
         "unit_description": "25-30 lb box",
         "unit_volume_cuft": 1.2
       },
       {
-        "qty_units": 0.333,
-        "consumer_qty": "4 cans black beans",
+        "qty_units": 0.17,
+        "consumer_qty": "2 cans black beans",
         "name": "Canned Black Beans",
         "zone_id": "shelf_stable",
         "unit_description": "case of 12 (15oz)",
         "unit_volume_cuft": 0.45
       },
       {
-        "qty_units": 0.167,
+        "qty_units": 0.17,
         "consumer_qty": "2 cans chicken",
         "name": "Canned Chicken",
         "zone_id": "shelf_stable",
@@ -50,47 +66,15 @@
         "unit_volume_cuft": 0.42
       },
       {
-        "qty_units": 0.167,
-        "consumer_qty": "2 cans corn",
+        "qty_units": 0.08,
+        "consumer_qty": "1 can corn",
         "name": "Canned Corn",
         "zone_id": "shelf_stable",
         "unit_description": "case of 12 (15oz)",
         "unit_volume_cuft": 0.45
       },
       {
-        "qty_units": 0.167,
-        "consumer_qty": "2 cans diced tomatoes",
-        "name": "Canned Diced Tomatoes",
-        "zone_id": "shelf_stable",
-        "unit_description": "case of 12 (14.5oz)",
-        "unit_volume_cuft": 0.45
-      },
-      {
-        "qty_units": 0.083,
-        "consumer_qty": "1 can tuna",
-        "name": "Canned Tuna",
-        "zone_id": "shelf_stable",
-        "unit_description": "case of 24 (5oz)",
-        "unit_volume_cuft": 0.35
-      },
-      {
-        "qty_units": 0.083,
-        "consumer_qty": "1 box cereal",
-        "name": "Cereal (Assorted)",
-        "zone_id": "shelf_stable",
-        "unit_description": "case of 12",
-        "unit_volume_cuft": 1.6
-      },
-      {
-        "qty_units": 0.1,
-        "consumer_qty": "2 lb dried beans",
-        "name": "Dried Pinto Beans",
-        "zone_id": "shelf_stable",
-        "unit_description": "20 lb bag",
-        "unit_volume_cuft": 0.45
-      },
-      {
-        "qty_units": 0.083,
+        "qty_units": 0.08,
         "consumer_qty": "1 jar peanut butter",
         "name": "Peanut Butter",
         "zone_id": "shelf_stable",
@@ -98,7 +82,7 @@
         "unit_volume_cuft": 0.55
       },
       {
-        "qty_units": 0.083,
+        "qty_units": 0.04,
         "consumer_qty": "1 lb pasta",
         "name": "Spaghetti Pasta",
         "zone_id": "shelf_stable",
@@ -106,16 +90,8 @@
         "unit_volume_cuft": 0.9
       },
       {
-        "qty_units": 0.167,
-        "consumer_qty": "1 bottle cooking oil",
-        "name": "Vegetable Oil",
-        "zone_id": "shelf_stable",
-        "unit_description": "case of 6 (48oz)",
-        "unit_volume_cuft": 0.55
-      },
-      {
-        "qty_units": 0.4,
-        "consumer_qty": "10 lb rice",
+        "qty_units": 0.2,
+        "consumer_qty": "5 lb rice",
         "name": "White Rice",
         "zone_id": "shelf_stable",
         "unit_description": "25 lb bag",
@@ -132,8 +108,8 @@
       "sort_order": 1
     },
     {
-      "id": "produce",
-      "label": "Produce",
+      "id": "refrigerated",
+      "label": "Refrigerated Goods",
       "temp_min_f": 33,
       "temp_max_f": 40,
       "sort_order": 2
@@ -175,7 +151,7 @@
     {
       "id": "reach_in_cooler",
       "label": "Reach-in cooler",
-      "zone_id": "produce",
+      "zone_id": "refrigerated",
       "typical_cuft": 24.0,
       "usable_default": 0.75,
       "is_fixed": 0
@@ -183,7 +159,7 @@
     {
       "id": "walk_in_cooler",
       "label": "Walk-in cooler",
-      "zone_id": "produce",
+      "zone_id": "refrigerated",
       "typical_cuft": 120.0,
       "usable_default": 0.65,
       "is_fixed": 1
@@ -191,7 +167,7 @@
     {
       "id": "residential_fridge",
       "label": "Residential fridge",
-      "zone_id": "produce",
+      "zone_id": "refrigerated",
       "typical_cuft": 20.0,
       "usable_default": 0.6,
       "is_fixed": 0
@@ -246,26 +222,27 @@
       "diapers_period_supplies": 0,
       "weekend_availability": 0,
       "is_hub": 0,
+      "is_demo": 0,
       "provenance": "synthetic",
       "story": "No cold storage at all. Produce arrives the morning of and is handed out the same day, so nothing can be held.",
       "zones": [
         {
           "zone_id": "shelf_stable",
           "label": "Shelf-stable",
-          "usable_cuft": 40.5,
-          "cuft_per_box": 1.0093,
-          "boxes_if_alone": 40,
+          "usable_cuft": 42.0,
+          "cuft_per_box": 0.3739,
+          "boxes_if_alone": 112,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": false,
-          "dead_boxes": 40,
-          "dead_cuft": 40.4
+          "dead_boxes": 112,
+          "dead_cuft": 41.9
         },
         {
-          "zone_id": "produce",
-          "label": "Produce",
+          "zone_id": "refrigerated",
+          "label": "Refrigerated Goods",
           "usable_cuft": 0.0,
-          "cuft_per_box": 0.676,
+          "cuft_per_box": 1.453,
           "boxes_if_alone": 0,
           "source": "manual",
           "measured_at": "2026-08-21",
@@ -274,12 +251,12 @@
           "dead_cuft": 0.0
         }
       ],
-      "binding_zone": "produce",
+      "binding_zone": "refrigerated",
       "boxes_today": 0,
       "people_fed_today": 0,
       "storage_units": [
         {
-          "id": "su_e43b4f63",
+          "id": "su_fa1d9595",
           "agency_id": "aguilas_sd",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -296,7 +273,7 @@
           "kind_label": "Wire shelving unit"
         },
         {
-          "id": "su_255fe04e",
+          "id": "su_7190be53",
           "agency_id": "aguilas_sd",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -313,7 +290,7 @@
           "kind_label": "Wire shelving unit"
         },
         {
-          "id": "su_94a86e56",
+          "id": "su_064bd6ef",
           "agency_id": "aguilas_sd",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -328,6 +305,15 @@
           "measured_at": "2026-08-21",
           "created_at": "2026-08-21",
           "kind_label": "Wire shelving unit"
+        }
+      ],
+      "distributions": [
+        {
+          "distributed_on": "2026-07-23",
+          "boxes_out": 0,
+          "people_served": 120,
+          "turned_away": 0,
+          "notes": "Produce only, no complete boxes. Received and handed out the same morning."
         }
       ],
       "inventory": [
@@ -417,15 +403,16 @@
       "diapers_period_supplies": 0,
       "weekend_availability": 1,
       "is_hub": 0,
+      "is_demo": 0,
       "provenance": "synthetic",
       "story": "Inherited a walk-in cooler from a closed restaurant. Most of it sits empty, because the box also needs shelf space.",
       "zones": [
         {
           "zone_id": "shelf_stable",
           "label": "Shelf-stable",
-          "usable_cuft": 54.0,
-          "cuft_per_box": 1.0093,
-          "boxes_if_alone": 53,
+          "usable_cuft": 56.0,
+          "cuft_per_box": 0.3739,
+          "boxes_if_alone": 149,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": true,
@@ -433,29 +420,29 @@
           "dead_cuft": 0.0
         },
         {
-          "zone_id": "produce",
-          "label": "Produce",
-          "usable_cuft": 78.0,
-          "cuft_per_box": 0.676,
-          "boxes_if_alone": 115,
+          "zone_id": "refrigerated",
+          "label": "Refrigerated Goods",
+          "usable_cuft": 312.0,
+          "cuft_per_box": 1.453,
+          "boxes_if_alone": 214,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": false,
-          "dead_boxes": 62,
-          "dead_cuft": 41.9
+          "dead_boxes": 65,
+          "dead_cuft": 94.4
         }
       ],
       "binding_zone": "shelf_stable",
-      "boxes_today": 53,
-      "people_fed_today": 212,
+      "boxes_today": 149,
+      "people_fed_today": 596,
       "storage_units": [
         {
-          "id": "su_d3ca5d1f",
+          "id": "su_1c757752",
           "agency_id": "all_saint_vista",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "kind_id": "walk_in_cooler",
           "label": "Walk-in cooler, kitchen",
-          "gross_cuft": 120.0,
+          "gross_cuft": 480.0,
           "usable_pct": 0.65,
           "source": "scan",
           "confidence": 0.92,
@@ -467,7 +454,7 @@
           "kind_label": "Walk-in cooler"
         },
         {
-          "id": "su_30e7145a",
+          "id": "su_21ef50a7",
           "agency_id": "all_saint_vista",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -484,7 +471,7 @@
           "kind_label": "Wire shelving unit"
         },
         {
-          "id": "su_c1b2f6d5",
+          "id": "su_5965cfa5",
           "agency_id": "all_saint_vista",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -501,7 +488,7 @@
           "kind_label": "Wire shelving unit"
         },
         {
-          "id": "su_00ed9232",
+          "id": "su_5b78f8cb",
           "agency_id": "all_saint_vista",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -518,7 +505,7 @@
           "kind_label": "Wire shelving unit"
         },
         {
-          "id": "su_f8368b07",
+          "id": "su_8e21cdd8",
           "agency_id": "all_saint_vista",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -535,12 +522,35 @@
           "kind_label": "Wire shelving unit"
         }
       ],
+      "distributions": [
+        {
+          "distributed_on": "2026-07-25",
+          "boxes_out": 103,
+          "people_served": 412,
+          "turned_away": 0,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-06-27",
+          "boxes_out": 96,
+          "people_served": 384,
+          "turned_away": 0,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-05-23",
+          "boxes_out": 88,
+          "people_served": 352,
+          "turned_away": 0,
+          "notes": null
+        }
+      ],
       "inventory": [
         {
           "qty_units": 5.0,
           "name": "Fresh Apples",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "30 lb case",
           "unit_weight_lb": 30.0,
           "unit_volume_cuft": 1.15,
@@ -551,7 +561,7 @@
           "qty_units": 6.0,
           "name": "Fresh Carrots",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "25 lb bag",
           "unit_weight_lb": 25.0,
           "unit_volume_cuft": 0.95,
@@ -562,7 +572,7 @@
           "qty_units": 22.0,
           "name": "Mixed Produce Box",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "25-30 lb box",
           "unit_weight_lb": 27.0,
           "unit_volume_cuft": 1.2,
@@ -677,27 +687,28 @@
       "diapers_period_supplies": 1,
       "weekend_availability": 1,
       "is_hub": 0,
+      "is_demo": 0,
       "provenance": "synthetic",
       "story": "A full pallet rack held back by the kitchen fridge.",
       "zones": [
         {
           "zone_id": "shelf_stable",
           "label": "Shelf-stable",
-          "usable_cuft": 103.1,
-          "cuft_per_box": 1.0093,
-          "boxes_if_alone": 102,
+          "usable_cuft": 104.0,
+          "cuft_per_box": 0.3739,
+          "boxes_if_alone": 278,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": false,
-          "dead_boxes": 85,
-          "dead_cuft": 85.8
+          "dead_boxes": 270,
+          "dead_cuft": 101.0
         },
         {
-          "zone_id": "produce",
-          "label": "Produce",
+          "zone_id": "refrigerated",
+          "label": "Refrigerated Goods",
           "usable_cuft": 12.0,
-          "cuft_per_box": 0.676,
-          "boxes_if_alone": 17,
+          "cuft_per_box": 1.453,
+          "boxes_if_alone": 8,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": true,
@@ -705,14 +716,14 @@
           "dead_cuft": 0.0
         }
       ],
-      "binding_zone": "produce",
-      "boxes_today": 17,
-      "people_fed_today": 68,
+      "binding_zone": "refrigerated",
+      "boxes_today": 8,
+      "people_fed_today": 32,
       "storage_units": [
         {
-          "id": "su_77e035f7",
+          "id": "su_b8a94f85",
           "agency_id": "apostolic_escondido",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "kind_id": "residential_fridge",
           "label": "Kitchen fridge",
           "gross_cuft": 20.0,
@@ -727,7 +738,7 @@
           "kind_label": "Residential fridge"
         },
         {
-          "id": "su_aba784e5",
+          "id": "su_fde45845",
           "agency_id": "apostolic_escondido",
           "zone_id": "shelf_stable",
           "kind_id": "pallet_rack",
@@ -744,7 +755,7 @@
           "kind_label": "Pallet rack bay"
         },
         {
-          "id": "su_4c7323e1",
+          "id": "su_e0a16213",
           "agency_id": "apostolic_escondido",
           "zone_id": "shelf_stable",
           "kind_id": "pallet_rack",
@@ -761,7 +772,7 @@
           "kind_label": "Pallet rack bay"
         },
         {
-          "id": "su_63d7ac69",
+          "id": "su_f1a50aa8",
           "agency_id": "apostolic_escondido",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -778,12 +789,28 @@
           "kind_label": "Wire shelving unit"
         }
       ],
+      "distributions": [
+        {
+          "distributed_on": "2026-07-25",
+          "boxes_out": 7,
+          "people_served": 28,
+          "turned_away": 12,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-06-27",
+          "boxes_out": 8,
+          "people_served": 32,
+          "turned_away": 9,
+          "notes": null
+        }
+      ],
       "inventory": [
         {
           "qty_units": 8.0,
           "name": "Mixed Produce Box",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "25-30 lb box",
           "unit_weight_lb": 27.0,
           "unit_volume_cuft": 1.2,
@@ -881,6 +908,286 @@
       ]
     },
     {
+      "id": "demo_agency",
+      "name": "Demo Agency",
+      "address": "100 Example Street",
+      "city": "San Diego",
+      "zip": "92101",
+      "service_type": "Neighborhood Distribution",
+      "food_category": "Nonperishable Dry Goods + Produce",
+      "eligibility": "Open to All",
+      "distribution_day": "Friday",
+      "frequency": "Weekly",
+      "start_time": "10:00 am",
+      "end_time": "2:00 pm",
+      "walkup": 1,
+      "drivethru": 1,
+      "diapers_period_supplies": 0,
+      "weekend_availability": 0,
+      "is_hub": 0,
+      "is_demo": 1,
+      "provenance": "synthetic",
+      "story": "Stand-in site for walking through a scan end to end.",
+      "zones": [
+        {
+          "zone_id": "shelf_stable",
+          "label": "Shelf-stable",
+          "usable_cuft": 73.0,
+          "cuft_per_box": 0.3739,
+          "boxes_if_alone": 195,
+          "source": "scan",
+          "measured_at": "2026-08-21",
+          "is_binding": false,
+          "dead_boxes": 175,
+          "dead_cuft": 65.4
+        },
+        {
+          "zone_id": "refrigerated",
+          "label": "Refrigerated Goods",
+          "usable_cuft": 30.0,
+          "cuft_per_box": 1.453,
+          "boxes_if_alone": 20,
+          "source": "scan",
+          "measured_at": "2026-08-21",
+          "is_binding": true,
+          "dead_boxes": 0,
+          "dead_cuft": 0.0
+        }
+      ],
+      "binding_zone": "refrigerated",
+      "boxes_today": 20,
+      "people_fed_today": 80,
+      "storage_units": [
+        {
+          "id": "su_16962420",
+          "agency_id": "demo_agency",
+          "zone_id": "refrigerated",
+          "kind_id": "residential_fridge",
+          "label": "Kitchen fridge",
+          "gross_cuft": 20.0,
+          "usable_pct": 0.6,
+          "source": "scan",
+          "confidence": 0.84,
+          "photo_path": null,
+          "notes": null,
+          "is_active": 1,
+          "measured_at": "2026-08-21",
+          "created_at": "2026-08-21",
+          "kind_label": "Residential fridge"
+        },
+        {
+          "id": "su_5d089fdc",
+          "agency_id": "demo_agency",
+          "zone_id": "refrigerated",
+          "kind_id": "reach_in_cooler",
+          "label": "Reach-in cooler",
+          "gross_cuft": 24.0,
+          "usable_pct": 0.75,
+          "source": "scan",
+          "confidence": 0.91,
+          "photo_path": null,
+          "notes": null,
+          "is_active": 1,
+          "measured_at": "2026-08-21",
+          "created_at": "2026-08-21",
+          "kind_label": "Reach-in cooler"
+        },
+        {
+          "id": "su_2714d8e4",
+          "agency_id": "demo_agency",
+          "zone_id": "shelf_stable",
+          "kind_id": "pallet_rack",
+          "label": "Pallet rack, bay 1",
+          "gross_cuft": 64.0,
+          "usable_pct": 0.7,
+          "source": "scan",
+          "confidence": 0.93,
+          "photo_path": null,
+          "notes": null,
+          "is_active": 1,
+          "measured_at": "2026-08-21",
+          "created_at": "2026-08-21",
+          "kind_label": "Pallet rack bay"
+        },
+        {
+          "id": "su_245ca5ec",
+          "agency_id": "demo_agency",
+          "zone_id": "shelf_stable",
+          "kind_id": "wire_shelving",
+          "label": "Shelving, back room",
+          "gross_cuft": 18.0,
+          "usable_pct": 0.75,
+          "source": "scan",
+          "confidence": 0.9,
+          "photo_path": null,
+          "notes": null,
+          "is_active": 1,
+          "measured_at": "2026-08-21",
+          "created_at": "2026-08-21",
+          "kind_label": "Wire shelving unit"
+        },
+        {
+          "id": "su_d6a02145",
+          "agency_id": "demo_agency",
+          "zone_id": "shelf_stable",
+          "kind_id": "wire_shelving",
+          "label": "Shelving, front room",
+          "gross_cuft": 18.0,
+          "usable_pct": 0.75,
+          "source": "scan",
+          "confidence": 0.86,
+          "photo_path": null,
+          "notes": null,
+          "is_active": 1,
+          "measured_at": "2026-08-21",
+          "created_at": "2026-08-21",
+          "kind_label": "Wire shelving unit"
+        }
+      ],
+      "distributions": [
+        {
+          "distributed_on": "2026-08-14",
+          "boxes_out": 16,
+          "people_served": 64,
+          "turned_away": 0,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-08-07",
+          "boxes_out": 18,
+          "people_served": 72,
+          "turned_away": 0,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-07-31",
+          "boxes_out": 15,
+          "people_served": 60,
+          "turned_away": 0,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-07-24",
+          "boxes_out": 17,
+          "people_served": 68,
+          "turned_away": 0,
+          "notes": null
+        }
+      ],
+      "inventory": [
+        {
+          "qty_units": 4.0,
+          "name": "Fresh Carrots",
+          "category": "Produce",
+          "zone_id": "refrigerated",
+          "unit_description": "25 lb bag",
+          "unit_weight_lb": 25.0,
+          "unit_volume_cuft": 0.95,
+          "total_lb": 100.0,
+          "total_cuft": 3.8
+        },
+        {
+          "qty_units": 2.0,
+          "name": "Fresh Potatoes",
+          "category": "Produce",
+          "zone_id": "refrigerated",
+          "unit_description": "30 lb bag",
+          "unit_weight_lb": 30.0,
+          "unit_volume_cuft": 1.05,
+          "total_lb": 60.0,
+          "total_cuft": 2.1
+        },
+        {
+          "qty_units": 12.0,
+          "name": "Mixed Produce Box",
+          "category": "Produce",
+          "zone_id": "refrigerated",
+          "unit_description": "25-30 lb box",
+          "unit_weight_lb": 27.0,
+          "unit_volume_cuft": 1.2,
+          "total_lb": 324.0,
+          "total_cuft": 14.4
+        },
+        {
+          "qty_units": 16.0,
+          "name": "Canned Black Beans",
+          "category": "Canned Goods",
+          "zone_id": "shelf_stable",
+          "unit_description": "case of 12 (15oz)",
+          "unit_weight_lb": 11.3,
+          "unit_volume_cuft": 0.45,
+          "total_lb": 180.8,
+          "total_cuft": 7.2
+        },
+        {
+          "qty_units": 12.0,
+          "name": "Canned Chicken",
+          "category": "Canned Goods",
+          "zone_id": "shelf_stable",
+          "unit_description": "case of 12 (12.5oz)",
+          "unit_weight_lb": 10.5,
+          "unit_volume_cuft": 0.42,
+          "total_lb": 126.0,
+          "total_cuft": 5.04
+        },
+        {
+          "qty_units": 20.0,
+          "name": "Canned Corn",
+          "category": "Canned Goods",
+          "zone_id": "shelf_stable",
+          "unit_description": "case of 12 (15oz)",
+          "unit_weight_lb": 11.3,
+          "unit_volume_cuft": 0.45,
+          "total_lb": 226.0,
+          "total_cuft": 9.0
+        },
+        {
+          "qty_units": 12.0,
+          "name": "Dried Pinto Beans",
+          "category": "Grains/Staples",
+          "zone_id": "shelf_stable",
+          "unit_description": "20 lb bag",
+          "unit_weight_lb": 20.0,
+          "unit_volume_cuft": 0.45,
+          "total_lb": 240.0,
+          "total_cuft": 5.4
+        },
+        {
+          "qty_units": 6.0,
+          "name": "Peanut Butter",
+          "category": "Canned Goods",
+          "zone_id": "shelf_stable",
+          "unit_description": "case of 12 (18oz)",
+          "unit_weight_lb": 14.0,
+          "unit_volume_cuft": 0.55,
+          "total_lb": 84.0,
+          "total_cuft": 3.3
+        },
+        {
+          "qty_units": 8.0,
+          "name": "Spaghetti Pasta",
+          "category": "Grains/Staples",
+          "zone_id": "shelf_stable",
+          "unit_description": "case of 24 (16oz)",
+          "unit_weight_lb": 24.0,
+          "unit_volume_cuft": 0.9,
+          "total_lb": 192.0,
+          "total_cuft": 7.2
+        },
+        {
+          "qty_units": 20.0,
+          "name": "White Rice",
+          "category": "Grains/Staples",
+          "zone_id": "shelf_stable",
+          "unit_description": "25 lb bag",
+          "unit_weight_lb": 25.0,
+          "unit_volume_cuft": 0.55,
+          "total_lb": 500.0,
+          "total_cuft": 11.0
+        }
+      ]
+    },
+    {
       "id": "vida_nueva_cv",
       "name": "Iglesia Cristiana Vida Nueva",
       "address": "1240 Third Avenue",
@@ -898,27 +1205,28 @@
       "diapers_period_supplies": 0,
       "weekend_availability": 0,
       "is_hub": 0,
+      "is_demo": 0,
       "provenance": "synthetic",
       "story": "The most balanced site in the network. Little stranded space either way.",
       "zones": [
         {
           "zone_id": "shelf_stable",
           "label": "Shelf-stable",
-          "usable_cuft": 40.5,
-          "cuft_per_box": 1.0093,
-          "boxes_if_alone": 40,
+          "usable_cuft": 42.0,
+          "cuft_per_box": 0.3739,
+          "boxes_if_alone": 112,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": false,
-          "dead_boxes": 14,
-          "dead_cuft": 14.1
+          "dead_boxes": 100,
+          "dead_cuft": 37.4
         },
         {
-          "zone_id": "produce",
-          "label": "Produce",
+          "zone_id": "refrigerated",
+          "label": "Refrigerated Goods",
           "usable_cuft": 18.0,
-          "cuft_per_box": 0.676,
-          "boxes_if_alone": 26,
+          "cuft_per_box": 1.453,
+          "boxes_if_alone": 12,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": true,
@@ -926,14 +1234,14 @@
           "dead_cuft": 0.0
         }
       ],
-      "binding_zone": "produce",
-      "boxes_today": 26,
-      "people_fed_today": 104,
+      "binding_zone": "refrigerated",
+      "boxes_today": 12,
+      "people_fed_today": 48,
       "storage_units": [
         {
-          "id": "su_3283c644",
+          "id": "su_fcacfb5b",
           "agency_id": "vida_nueva_cv",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "kind_id": "reach_in_cooler",
           "label": "Reach-in cooler",
           "gross_cuft": 24.0,
@@ -948,7 +1256,7 @@
           "kind_label": "Reach-in cooler"
         },
         {
-          "id": "su_c99912ce",
+          "id": "su_1d13e479",
           "agency_id": "vida_nueva_cv",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -965,7 +1273,7 @@
           "kind_label": "Wire shelving unit"
         },
         {
-          "id": "su_bbcc930f",
+          "id": "su_99b96630",
           "agency_id": "vida_nueva_cv",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -982,7 +1290,7 @@
           "kind_label": "Wire shelving unit"
         },
         {
-          "id": "su_c42891fe",
+          "id": "su_b8a4d6cd",
           "agency_id": "vida_nueva_cv",
           "zone_id": "shelf_stable",
           "kind_id": "wire_shelving",
@@ -999,12 +1307,28 @@
           "kind_label": "Wire shelving unit"
         }
       ],
+      "distributions": [
+        {
+          "distributed_on": "2026-08-19",
+          "boxes_out": 11,
+          "people_served": 44,
+          "turned_away": 0,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-08-12",
+          "boxes_out": 12,
+          "people_served": 48,
+          "turned_away": 3,
+          "notes": null
+        }
+      ],
       "inventory": [
         {
           "qty_units": 2.0,
           "name": "Fresh Apples",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "30 lb case",
           "unit_weight_lb": 30.0,
           "unit_volume_cuft": 1.15,
@@ -1015,7 +1339,7 @@
           "qty_units": 8.0,
           "name": "Mixed Produce Box",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "25-30 lb box",
           "unit_weight_lb": 27.0,
           "unit_volume_cuft": 1.2,
@@ -1130,27 +1454,28 @@
       "diapers_period_supplies": 1,
       "weekend_availability": 0,
       "is_hub": 0,
+      "is_demo": 0,
       "provenance": "synthetic",
       "story": "Warehouse-grade shelving, one break room fridge. The cheapest fix in the network is here.",
       "zones": [
         {
           "zone_id": "shelf_stable",
           "label": "Shelf-stable",
-          "usable_cuft": 152.4,
-          "cuft_per_box": 1.0093,
-          "boxes_if_alone": 150,
+          "usable_cuft": 153.0,
+          "cuft_per_box": 0.3739,
+          "boxes_if_alone": 409,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": false,
-          "dead_boxes": 133,
-          "dead_cuft": 134.2
+          "dead_boxes": 401,
+          "dead_cuft": 149.9
         },
         {
-          "zone_id": "produce",
-          "label": "Produce",
+          "zone_id": "refrigerated",
+          "label": "Refrigerated Goods",
           "usable_cuft": 12.0,
-          "cuft_per_box": 0.676,
-          "boxes_if_alone": 17,
+          "cuft_per_box": 1.453,
+          "boxes_if_alone": 8,
           "source": "scan",
           "measured_at": "2026-08-21",
           "is_binding": true,
@@ -1158,14 +1483,14 @@
           "dead_cuft": 0.0
         }
       ],
-      "binding_zone": "produce",
-      "boxes_today": 17,
-      "people_fed_today": 68,
+      "binding_zone": "refrigerated",
+      "boxes_today": 8,
+      "people_fed_today": 32,
       "storage_units": [
         {
-          "id": "su_a93695b1",
+          "id": "su_09909ebb",
           "agency_id": "oceanside_crc",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "kind_id": "residential_fridge",
           "label": "Break room fridge",
           "gross_cuft": 20.0,
@@ -1180,7 +1505,7 @@
           "kind_label": "Residential fridge"
         },
         {
-          "id": "su_86540ace",
+          "id": "su_06ed4dcb",
           "agency_id": "oceanside_crc",
           "zone_id": "shelf_stable",
           "kind_id": "floor_stack",
@@ -1197,7 +1522,7 @@
           "kind_label": "Floor staging area"
         },
         {
-          "id": "su_3c54f1b9",
+          "id": "su_8a5e406b",
           "agency_id": "oceanside_crc",
           "zone_id": "shelf_stable",
           "kind_id": "pallet_rack",
@@ -1214,7 +1539,7 @@
           "kind_label": "Pallet rack bay"
         },
         {
-          "id": "su_558d9e33",
+          "id": "su_9e28ab1e",
           "agency_id": "oceanside_crc",
           "zone_id": "shelf_stable",
           "kind_id": "pallet_rack",
@@ -1231,7 +1556,7 @@
           "kind_label": "Pallet rack bay"
         },
         {
-          "id": "su_e7beb4bd",
+          "id": "su_b42485ca",
           "agency_id": "oceanside_crc",
           "zone_id": "shelf_stable",
           "kind_id": "pallet_rack",
@@ -1248,12 +1573,35 @@
           "kind_label": "Pallet rack bay"
         }
       ],
+      "distributions": [
+        {
+          "distributed_on": "2026-08-18",
+          "boxes_out": 8,
+          "people_served": 32,
+          "turned_away": 40,
+          "notes": "Ran out of boxes 50 minutes in."
+        },
+        {
+          "distributed_on": "2026-08-11",
+          "boxes_out": 8,
+          "people_served": 32,
+          "turned_away": 26,
+          "notes": null
+        },
+        {
+          "distributed_on": "2026-08-04",
+          "boxes_out": 8,
+          "people_served": 32,
+          "turned_away": 31,
+          "notes": null
+        }
+      ],
       "inventory": [
         {
           "qty_units": 1.0,
           "name": "Fresh Potatoes",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "30 lb bag",
           "unit_weight_lb": 30.0,
           "unit_volume_cuft": 1.05,
@@ -1264,7 +1612,7 @@
           "qty_units": 5.0,
           "name": "Mixed Produce Box",
           "category": "Produce",
-          "zone_id": "produce",
+          "zone_id": "refrigerated",
           "unit_description": "25-30 lb box",
           "unit_weight_lb": 27.0,
           "unit_volume_cuft": 1.2,

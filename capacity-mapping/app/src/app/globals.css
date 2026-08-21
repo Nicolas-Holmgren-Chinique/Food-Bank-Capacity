@@ -21,9 +21,9 @@
   --accent-tint: #b9d2d2;
   --accent-wash: #f0f5f5;
 
-  /* Two zones, split warm and cool. Produce borrows the brand teal. */
+  /* Two zones, split warm and cool. Refrigerated borrows the brand teal. */
   --zone-shelf: #b07d3f;
-  --zone-produce: #377e7f;
+  --zone-refrigerated: #377e7f;
 
   /* Stranded capacity, missing zones, anything that costs families food. */
   --warn: #b3453c;

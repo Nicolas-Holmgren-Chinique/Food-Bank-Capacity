@@ -8,7 +8,7 @@ Writes:
   data/carespace.db          SQLite, schema from data/schema.sql
   app/src/lib/fixture.json   same data as JSON so the UI runs before the DB is wired
 
-Two zones: shelf-stable and produce. No frozen. Most partner agencies in this
+Two zones: shelf-stable and refrigerated. No frozen. Most partner agencies in this
 network run out of a fellowship hall or a storage closet, and a cold chain is
 the thing they do not have.
 
@@ -43,7 +43,7 @@ def rid(prefix):
 
 ZONES = [
     ("shelf_stable", "Shelf-stable", 50, 80, 1),
-    ("produce", "Produce", 33, 40, 2),
+    ("refrigerated", "Refrigerated Goods", 33, 40, 2),
 ]
 
 # typical_cuft is the prior the scan falls back on when it recognizes the form
@@ -55,9 +55,9 @@ KINDS = [
     ("wire_shelving",      "Wire shelving unit", "shelf_stable",  18.0, 0.75, 0),
     ("pantry_closet",      "Pantry closet",      "shelf_stable",  45.0, 0.70, 1),
     ("floor_stack",        "Floor staging area", "shelf_stable",  30.0, 0.60, 0),
-    ("reach_in_cooler",    "Reach-in cooler",    "produce",       24.0, 0.75, 0),
-    ("walk_in_cooler",     "Walk-in cooler",     "produce",      120.0, 0.65, 1),
-    ("residential_fridge", "Residential fridge", "produce",       20.0, 0.60, 0),
+    ("reach_in_cooler",    "Reach-in cooler",    "refrigerated",       24.0, 0.75, 0),
+    ("walk_in_cooler",     "Walk-in cooler",     "refrigerated",      120.0, 0.65, 1),
+    ("residential_fridge", "Residential fridge", "refrigerated",       20.0, 0.60, 0),
 ]
 
 # ---------------------------------------------------------------------------
@@ -84,13 +84,13 @@ ITEMS = [
     ("diapers_4",     "Diapers (Size 4)",       "Household/Other", "shelf_stable", "case of 132",         40.0, 3.50),
     ("pads",          "Period Supplies (Pads)", "Household/Other", "shelf_stable", "case of 250",         18.0, 1.50),
 
-    ("produce_box",   "Mixed Produce Box",      "Produce", "produce", "25-30 lb box", 27.0, 1.20),
-    ("apples",        "Fresh Apples",           "Produce", "produce", "30 lb case",   30.0, 1.15),
-    ("oranges",       "Fresh Oranges",          "Produce", "produce", "30 lb case",   30.0, 1.15),
-    ("carrots",       "Fresh Carrots",          "Produce", "produce", "25 lb bag",    25.0, 0.95),
-    ("potatoes",      "Fresh Potatoes",         "Produce", "produce", "30 lb bag",    30.0, 1.05),
-    ("onions",        "Fresh Onions",           "Produce", "produce", "25 lb bag",    25.0, 0.90),
-    ("salad",         "Bagged Salad Mix",       "Produce", "produce", "case of 4 lb",  4.0, 0.60),
+    ("produce_box",   "Mixed Produce Box",      "Produce", "refrigerated", "25-30 lb box", 27.0, 1.20),
+    ("apples",        "Fresh Apples",           "Produce", "refrigerated", "30 lb case",   30.0, 1.15),
+    ("oranges",       "Fresh Oranges",          "Produce", "refrigerated", "30 lb case",   30.0, 1.15),
+    ("carrots",       "Fresh Carrots",          "Produce", "refrigerated", "25 lb bag",    25.0, 0.95),
+    ("potatoes",      "Fresh Potatoes",         "Produce", "refrigerated", "30 lb bag",    30.0, 1.05),
+    ("onions",        "Fresh Onions",           "Produce", "refrigerated", "25 lb bag",    25.0, 0.90),
+    ("salad",         "Bagged Salad Mix",       "Produce", "refrigerated", "case of 4 lb",  4.0, 0.60),
 ]
 
 # ---------------------------------------------------------------------------
@@ -108,21 +108,22 @@ BOX = {
 }
 
 BOX_LINES = [
-    # item, qty_units (fraction of a case), consumer_qty
-    ("rice_white",    0.400, "10 lb rice"),
-    ("beans_pinto",   0.100, "2 lb dried beans"),
-    ("cn_blackbean",  0.333, "4 cans black beans"),
-    ("cn_corn",       0.167, "2 cans corn"),
-    ("cn_tomato",     0.167, "2 cans diced tomatoes"),
-    ("cn_chicken",    0.167, "2 cans chicken"),
-    ("cn_tuna",       0.083, "1 can tuna"),
-    ("peanut_butter", 0.083, "1 jar peanut butter"),
-    ("pasta_spag",    0.083, "1 lb pasta"),
-    ("cereal",        0.083, "1 box cereal"),
-    ("veg_oil",       0.167, "1 bottle cooking oil"),
-
-    ("produce_box",   0.500, "Half a mixed produce box"),
+    # item, qty_units (fraction of a bulk unit), consumer_qty
+    # Refrigerated first, because this network is produce-forward: two of these
+    # agencies are literally "Neighborhood Produce (25-30lb)" in the source
+    # data. Comes to 80% produce by volume, which is the only ratio the
+    # capacity model cares about.
+    ("produce_box",   1.000, "1 produce box, 25-30 lb"),
+    ("potatoes",      0.100, "3 lb potatoes"),
     ("carrots",       0.080, "2 lb carrots"),
+    ("onions",        0.080, "2 lb onions"),
+
+    ("rice_white",    0.200, "5 lb rice"),
+    ("cn_blackbean",  0.170, "2 cans black beans"),
+    ("cn_chicken",    0.170, "2 cans chicken"),
+    ("cn_corn",       0.080, "1 can corn"),
+    ("peanut_butter", 0.080, "1 jar peanut butter"),
+    ("pasta_spag",    0.040, "1 lb pasta"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -133,6 +134,32 @@ BOX_LINES = [
 
 AGENCIES = [
     {
+        # Obvious placeholder name so it is unmistakable in the picker.
+        "id": "demo_agency",
+        "name": "Demo Agency",
+        "address": "100 Example Street", "city": "San Diego", "zip": "92101",
+        "service_type": "Neighborhood Distribution",
+        "food_category": "Nonperishable Dry Goods + Produce",
+        "eligibility": "Open to All", "distribution_day": "Friday", "frequency": "Weekly",
+        "start_time": "10:00 am", "end_time": "2:00 pm",
+        "walkup": 1, "drivethru": 1, "diapers_period_supplies": 0,
+        "weekend_availability": 0, "is_hub": 0, "is_demo": 1,
+        "story": "Stand-in site for walking through a scan end to end.",
+        "units": [
+            ("pallet_rack",        "Pallet rack, bay 1",      64.0, "scan", 0.93, TODAY),
+            ("wire_shelving",      "Shelving, back room",     18.0, "scan", 0.90, TODAY),
+            ("wire_shelving",      "Shelving, front room",    18.0, "scan", 0.86, TODAY),
+            ("reach_in_cooler",    "Reach-in cooler",         24.0, "scan", 0.91, TODAY),
+            ("residential_fridge", "Kitchen fridge",          20.0, "scan", 0.84, TODAY),
+        ],
+        "inventory": [
+            ("rice_white", 20), ("beans_pinto", 12), ("pasta_spag", 8),
+            ("cn_corn", 20), ("cn_blackbean", 16), ("cn_chicken", 12),
+            ("peanut_butter", 6),
+            ("produce_box", 12), ("carrots", 4), ("potatoes", 2),
+        ],
+    },
+    {
         "id": "oceanside_crc",
         "name": "Oceanside Community Resource Center",
         "address": "605 South Coast Highway", "city": "Oceanside", "zip": "92054",
@@ -141,7 +168,7 @@ AGENCIES = [
         "eligibility": "Open to All", "distribution_day": "Tuesday", "frequency": "Weekly",
         "start_time": "9:00 am", "end_time": "1:00 pm",
         "walkup": 1, "drivethru": 1, "diapers_period_supplies": 1,
-        "weekend_availability": 0, "is_hub": 0,
+        "weekend_availability": 0, "is_hub": 0, "is_demo": 0,
         "story": "Warehouse-grade shelving, one break room fridge. The cheapest fix in the network is here.",
         "units": [
             ("pallet_rack",        "Pallet rack, bay 1",  64.0, "scan", 0.92, TODAY),
@@ -166,7 +193,7 @@ AGENCIES = [
         "eligibility": None, "distribution_day": "Saturday", "frequency": "Monthly",
         "start_time": "9:30 am", "end_time": "10:30 am",
         "walkup": 0, "drivethru": 1, "diapers_period_supplies": 1,
-        "weekend_availability": 1, "is_hub": 0,
+        "weekend_availability": 1, "is_hub": 0, "is_demo": 0,
         "story": "A full pallet rack held back by the kitchen fridge.",
         "units": [
             ("pallet_rack",        "Pallet rack, bay 1",      64.0, "scan", 0.91, TODAY),
@@ -190,14 +217,14 @@ AGENCIES = [
         "eligibility": "Open to All", "distribution_day": "Saturday", "frequency": "Monthly",
         "start_time": "11:00 am", "end_time": "12:00 pm",
         "walkup": 0, "drivethru": 0, "diapers_period_supplies": 0,
-        "weekend_availability": 1, "is_hub": 0,
+        "weekend_availability": 1, "is_hub": 0, "is_demo": 0,
         "story": "Inherited a walk-in cooler from a closed restaurant. Most of it sits empty, because the box also needs shelf space.",
         "units": [
             ("wire_shelving",  "Shelving, fellowship hall north wall",  18.0, "scan", 0.88, TODAY),
             ("wire_shelving",  "Shelving, fellowship hall south wall",  18.0, "scan", 0.88, TODAY),
             ("wire_shelving",  "Shelving, hallway",                     18.0, "scan", 0.81, TODAY),
             ("wire_shelving",  "Shelving, kitchen pantry",              18.0, "scan", 0.79, TODAY),
-            ("walk_in_cooler", "Walk-in cooler, kitchen",              120.0, "scan", 0.92, TODAY),
+            ("walk_in_cooler", "Walk-in cooler, kitchen",              480.0, "scan", 0.92, TODAY),
         ],
         "inventory": [
             ("rice_white", 14), ("beans_pinto", 10), ("pasta_spag", 8),
@@ -215,7 +242,7 @@ AGENCIES = [
         "eligibility": "Open to All", "distribution_day": "Wednesday", "frequency": "Weekly",
         "start_time": "4:00 pm", "end_time": "6:00 pm",
         "walkup": 1, "drivethru": 0, "diapers_period_supplies": 0,
-        "weekend_availability": 0, "is_hub": 0,
+        "weekend_availability": 0, "is_hub": 0, "is_demo": 0,
         "story": "The most balanced site in the network. Little stranded space either way.",
         "units": [
             ("wire_shelving",   "Shelving, pantry room", 18.0, "scan", 0.93, TODAY),
@@ -239,7 +266,7 @@ AGENCIES = [
         "eligibility": "Open to All", "distribution_day": "Thursday", "frequency": "Monthly",
         "start_time": "10:00 am", "end_time": "until food runs out",
         "walkup": 1, "drivethru": 1, "diapers_period_supplies": 0,
-        "weekend_availability": 0, "is_hub": 0,
+        "weekend_availability": 0, "is_hub": 0, "is_demo": 0,
         "story": "No cold storage at all. Produce arrives the morning of and is handed out the same day, so nothing can be held.",
         "units": [
             ("wire_shelving", "Shelving, storage room", 18.0, "scan", 0.90, TODAY),
@@ -252,6 +279,46 @@ AGENCIES = [
         ],
     },
 ]
+
+# What actually went out. Authored so the network shows all three reasons a
+# site can come in under capacity, because they have different owners.
+#   (date, boxes_out, people_served, turned_away, notes)
+DISTRIBUTIONS = {
+    "demo_agency": [
+        ("2026-08-14", 16, 64, 0, None),
+        ("2026-08-07", 18, 72, 0, None),
+        ("2026-07-31", 15, 60, 0, None),
+        ("2026-07-24", 17, 68, 0, None),
+    ],
+    # Capped. Full every week and still turning families away: the site ran out
+    # of cold space, which is the one case CareSpace can actually fix.
+    "oceanside_crc": [
+        ("2026-08-18", 8, 32, 40, "Ran out of boxes 50 minutes in."),
+        ("2026-08-11", 8, 32, 26, None),
+        ("2026-08-04", 8, 32, 31, None),
+    ],
+    "apostolic_escondido": [
+        ("2026-07-25", 7, 28, 12, None),
+        ("2026-06-27", 8, 32, 9, None),
+    ],
+    # Room to spare every month. The cooler is idle 29 days out of 30, so the
+    # limit here is cadence and volunteers, not storage.
+    "all_saint_vista": [
+        ("2026-07-25", 103, 412, 0, None),
+        ("2026-06-27", 96, 384, 0, None),
+        ("2026-05-23", 88, 352, 0, None),
+    ],
+    "vida_nueva_cv": [
+        ("2026-08-19", 11, 44, 0, None),
+        ("2026-08-12", 12, 48, 3, None),
+    ],
+    # Fed people without holding a single complete box: produce arrives the
+    # morning of and goes straight out.
+    "aguilas_sd": [
+        ("2026-07-23", 0, 120, 0,
+         "Produce only, no complete boxes. Received and handed out the same morning."),
+    ],
+}
 
 OPERATORS = [
     ("op_maria",  "Maria Delgado",  "agency_rep",         "all_saint_vista"),
@@ -284,11 +351,12 @@ def build():
 
     for a in AGENCIES:
         con.execute(
-            "INSERT INTO agency VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'synthetic')",
+            "INSERT INTO agency VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'synthetic')",
             (a["id"], a["name"], a["address"], a["city"], a["zip"], a["service_type"],
              a["food_category"], a["eligibility"], a["distribution_day"], a["frequency"],
              a["start_time"], a["end_time"], a["walkup"], a["drivethru"],
-             a["diapers_period_supplies"], a["weekend_availability"], a["is_hub"]),
+             a["diapers_period_supplies"], a["weekend_availability"], a["is_hub"],
+             a.get("is_demo", 0)),
         )
 
         zone_totals, zone_source = {}, {}
@@ -300,7 +368,10 @@ def build():
                 (rid("su"), a["id"], zone, kind, label, gross, usable, source, conf,
                  None, None, measured, TODAY),
             )
-            zone_totals[zone] = zone_totals.get(zone, 0.0) + gross * usable
+            # Round per unit, then sum. The UI lists each unit's usable cu ft,
+            # so the zone total has to be the sum of those displayed numbers,
+            # not the sum of the unrounded floats behind them.
+            zone_totals[zone] = zone_totals.get(zone, 0.0) + round(gross * usable)
             zone_source[zone] = source if zone not in zone_source else (
                 zone_source[zone] if zone_source[zone] == source else "manual"
             )
@@ -317,6 +388,11 @@ def build():
         for item_id, qty in a["inventory"]:
             con.execute("INSERT INTO inventory VALUES (?,?,?,?,?,?)",
                         (rid("inv"), a["id"], item_id, qty, None, None))
+
+    for aid, events in DISTRIBUTIONS.items():
+        for on, boxes, people, away, note in events:
+            con.execute("INSERT INTO distribution_event VALUES (?,?,?,?,?,?,?)",
+                        (rid("de"), aid, on, boxes, people, away, note))
 
     con.executemany("INSERT INTO operator VALUES (?,?,?,?)", OPERATORS)
     con.commit()
@@ -375,6 +451,10 @@ def export_fixture(con):
                    JOIN storage_unit_kind k ON k.id = su.kind_id
                    WHERE su.agency_id = ? AND su.is_active = 1
                    ORDER BY su.zone_id, su.label""", a["id"]),
+            "distributions": q(
+                """SELECT distributed_on, boxes_out, people_served, turned_away, notes
+                   FROM distribution_event WHERE agency_id = ?
+                   ORDER BY distributed_on DESC""", a["id"]),
             "inventory": q(
                 """SELECT inv.qty_units, i.name, i.category, i.zone_id,
                           i.unit_description, i.unit_weight_lb, i.unit_volume_cuft,
@@ -412,10 +492,10 @@ if __name__ == "__main__":
     print(f"One {fx['box']['name']} needs: " + ", ".join(
         f"{v['cuft_per_box']:.2f} cuft {k}" for k, v in d.items()))
     print()
-    hdr = f"{'site':<42}{'shelf':>7}{'prod':>7}{'holds':>8}{'strand':>8}  binding"
+    hdr = f"{'site':<42}{'shelf':>7}{'refr':>7}{'holds':>8}{'strand':>8}  binding"
     print(hdr); print("-" * len(hdr))
     for a in fx["agencies"]:
         b = {z["zone_id"]: z["boxes_if_alone"] for z in a["zones"]}
         strand = sum(z["dead_boxes"] for z in a["zones"])
-        print(f"{a['name'][:41]:<42}{b['shelf_stable']:>7}{b['produce']:>7}"
+        print(f"{a['name'][:41]:<42}{b['shelf_stable']:>7}{b['refrigerated']:>7}"
               f"{a['boxes_today']:>8}{strand:>8}  {a['binding_zone']}")

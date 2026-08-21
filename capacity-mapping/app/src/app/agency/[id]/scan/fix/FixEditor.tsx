@@ -9,6 +9,7 @@ import {
   storageUnitKinds,
   zones,
   ZONE_STYLE,
+  ZONE_ADJ,
   type EditableUnit,
   type ZoneId,
 } from "@/lib/data";
@@ -245,7 +246,7 @@ export function FixEditor({ agencyId }: { agencyId: string }) {
                 onClick={() => setAddingZone(z.id)}
                 className="mt-3 text-[12.5px] text-accent font-medium"
               >
-                + Add {z.label.toLowerCase()} storage the scan missed
+                + Add {ZONE_ADJ[z.id]} storage the scan missed
               </button>
             )}
           </div>

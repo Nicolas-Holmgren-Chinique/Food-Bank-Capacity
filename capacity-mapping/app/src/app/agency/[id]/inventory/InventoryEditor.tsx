@@ -93,7 +93,7 @@ export function InventoryEditor({ agencyId }: { agencyId: string }) {
                 p.over ? "text-[var(--warn)] font-medium" : "text-muted"
               }`}
             >
-              {p.items.toLocaleString()} items &middot; {p.onHand.toFixed(0)} of{" "}
+              {p.items.toLocaleString()} items using {p.onHand.toFixed(0)} of{" "}
               {p.capacity.toLocaleString()} cu ft
             </span>
           </div>

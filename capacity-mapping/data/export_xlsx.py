@@ -58,6 +58,14 @@ README = [
     ("", False),
     ("See the 'Capacity by zone' sheet for that calculation per site.", False),
     ("", False),
+    ("CAPACITY VS REALITY", True),
+    ("distribution_event records what actually went out the door. The gap", False),
+    ("against capacity has three different causes with three different owners:", False),
+    ("full and still turning people away means the site ran out of space, which", False),
+    ("is the only one a storage product can fix. Room to spare means the food", False),
+    ("never arrived or the families did not come. turned_away is the column", False),
+    ("that tells them apart. See the 'What went out' sheet.", False),
+    ("", False),
     ("EMPTY TABLES", True),
     ("scan_session and scan_detection are empty. Nothing has been scanned yet;", False),
     ("the vision model fills them. capacity_snapshot has one row per site per", False),
@@ -81,6 +89,19 @@ LEFT JOIN storage_unit su
 JOIN v_box_zone_demand d ON d.zone_id = z.id
 GROUP BY a.id, z.id
 ORDER BY a.name, z.sort_order
+"""
+
+DERIVED_SERVED = """
+SELECT a.name                                   AS "Agency",
+       a.frequency                              AS "Cadence",
+       de.distributed_on                        AS "Date",
+       de.boxes_out                             AS "Boxes out",
+       de.people_served                         AS "People served",
+       de.turned_away                           AS "Turned away",
+       de.notes                                 AS "Notes"
+FROM distribution_event de
+JOIN agency a ON a.id = de.agency_id
+ORDER BY a.name, de.distributed_on DESC
 """
 
 DERIVED_CHECK = """
@@ -145,6 +166,7 @@ def main():
     for title, sql in [
         ("Capacity by zone", DERIVED_CAPACITY),
         ("Inventory check", DERIVED_CHECK),
+        ("What went out", DERIVED_SERVED),
     ]:
         cur = con.execute(sql)
         write_sheet(wb, title, [d[0] for d in cur.description], cur.fetchall())
@@ -153,7 +175,8 @@ def main():
     order = [
         "storage_zone", "storage_unit_kind", "agency", "operator",
         "storage_unit", "capacity_snapshot", "item", "inventory",
-        "box_template", "box_line", "scan_session", "scan_detection",
+        "box_template", "box_line", "distribution_event",
+        "scan_session", "scan_detection",
     ]
     for t in order:
         cur = con.execute(f"SELECT * FROM {t}")

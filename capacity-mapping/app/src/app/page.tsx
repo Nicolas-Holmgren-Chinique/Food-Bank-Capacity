@@ -19,13 +19,19 @@ export default function MapCapacity() {
 
   const selected = agencies.find((a) => a.id === selectedId) ?? null;
 
+  // Demo sites sort to the top so they are easy to find when presenting.
+  const ordered = useMemo(
+    () => [...agencies].sort((a, b) => b.is_demo - a.is_demo),
+    []
+  );
+
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return agencies;
-    return agencies.filter((a) =>
+    if (!q) return ordered;
+    return ordered.filter((a) =>
       `${a.name} ${a.city} ${a.zip}`.toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [query, ordered]);
 
   function choose(id: string) {
     const a = agencies.find((x) => x.id === id)!;
@@ -112,7 +118,14 @@ export default function MapCapacity() {
                     }}
                     className="w-full text-left px-4 py-2.5 hover:bg-accent/[0.06] transition-colors"
                   >
-                    <div className="text-[14px]">{a.name}</div>
+                    <div className="text-[14px] flex items-center gap-2">
+                      {a.name}
+                      {a.is_demo === 1 && (
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded bg-[var(--accent-wash)] text-accent">
+                          Demo
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[12px] text-muted mt-0.5">
                       {a.city} {a.zip}
                     </div>
