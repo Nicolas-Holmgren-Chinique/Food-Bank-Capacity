@@ -1,7 +1,7 @@
 {
   "service": "CareSpace",
   "version": "1.0",
-  "domain": "carespace.heurchain.com",
+  "domain": "carespace.pages.dev",
   "capabilities": ["discover", "report", "query", "search_matches"],
-  "declaration": "https://carespace.heurchain.com/capabilities.json"
+  "declaration": "https://carespace.pages.dev/capabilities.json"
 }

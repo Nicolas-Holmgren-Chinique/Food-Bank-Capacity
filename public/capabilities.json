@@ -1,36 +1,27 @@
 {
-  "$schema": "https://carespace.heurchain.com/.well-known/capabilities.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "service": "CareSpace",
   "brand": "CareSpace",
-  "domain": "carespace.heurchain.com",
+  "domain": "carespace.pages.dev",
   "version": "1.0",
   "description": "A coordination layer for food, community need, capacity, and logistics.",
   "capabilities": [
     "discover",
-    "report",
     "query",
     "search_matches"
   ],
   "resources": [
-    "organizations",
-    "facilities",
-    "capacity",
-    "food_supply",
-    "food_demand",
-    "logistics",
+    "food_bank_locations",
     "matches"
   ],
   "endpoints": {
     "capabilities": "GET /api/v1/capabilities",
-    "facilities": "GET /api/v1/facilities",
-    "capacity": "GET /api/v1/capacity",
-    "supply": "GET /api/v1/supply",
-    "demand": "GET /api/v1/demand",
+    "foodBanks": "GET /api/v1/food-banks",
     "matches": "POST /api/v1/matches/search"
   },
   "trust": {
     "freshness": ["source", "reported_at", "verified_at", "expires_at"],
     "privacy": "Community-level resource signals; no individual case records.",
-    "high_impact_actions": "Require scoped credentials and human confirmation."
+    "high_impact_actions": "Require scoped credentials and human confirmation before production use."
   }
 }

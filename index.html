@@ -557,6 +557,30 @@
     .allocation-model-footer p { color: #315a5d; font-size: 0.82rem; line-height: 1.5; margin: 0; }
     .allocation-model-footer a { color: var(--teal); font-weight: 800; white-space: nowrap; }
 
+    /* ── Agent integration framework ── */
+    .agent-section { background: var(--dark); color: var(--white); }
+    .agent-heading { align-items: flex-end; display: flex; justify-content: space-between; gap: 2rem; margin: 0 auto 2.5rem; max-width: 1000px; }
+    .agent-heading .section-label { color: #b4e4bc; }
+    .agent-heading h2 { font-size: 2.5rem; line-height: 1.02; margin: .4rem 0 0; }
+    .agent-heading h2 em { color: #f3c84b; font-style: normal; }
+    .agent-heading > p { color: rgba(255,255,255,.68); line-height: 1.6; margin: 0; max-width: 390px; }
+    .agent-grid { display: grid; gap: 1rem; grid-template-columns: .85fr 1.15fr; margin: 0 auto; max-width: 1000px; }
+    .agent-copy-card { background: #24585c; border-radius: 15px; padding: 2rem; }
+    .agent-copy-card h3 { font-size: 1.65rem; letter-spacing: -.05em; line-height: 1.08; margin: .75rem 0 1rem; }
+    .agent-copy-card > p { color: rgba(255,255,255,.7); line-height: 1.6; margin: 0; }
+    .agent-capability-list { display: grid; gap: .6rem; list-style: none; margin: 1.5rem 0; padding: 0; }
+    .agent-capability-list li { align-items: center; color: rgba(255,255,255,.8); display: flex; font-size: .82rem; gap: .55rem; }
+    .agent-capability-list li::before { color: #b4e4bc; content: '✓'; font-weight: 900; }
+    .agent-actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .agent-actions a { color: #b4e4bc; font-size: .78rem; font-weight: 800; text-decoration: none; }.agent-actions a:hover { color: var(--white); }
+    .agent-api-card { background: #101b1d; border: 1px solid rgba(255,255,255,.15); border-radius: 15px; overflow: hidden; }
+    .agent-api-bar { align-items: center; display: flex; justify-content: space-between; padding: 1rem 1.2rem; }
+    .agent-api-label { color: rgba(255,255,255,.55); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; }
+    .agent-copy-button { background: transparent; border: 1px solid rgba(255,255,255,.24); border-radius: 999px; color: var(--white); cursor: pointer; font-size: .7rem; padding: .45rem .7rem; }.agent-copy-button:hover { border-color: #b4e4bc; color: #b4e4bc; }
+    .agent-api-card pre { border-bottom: 1px solid rgba(255,255,255,.1); border-top: 1px solid rgba(255,255,255,.1); color: #f4f1ea; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; line-height: 1.7; margin: 0; overflow-x: auto; padding: 1.5rem 1.2rem; white-space: pre-wrap; }
+    .agent-api-card .method { color: #b4e4bc; }.agent-api-card .path { color: #f3c84b; }.agent-api-card .string { color: #ff9e8f; }
+    .agent-api-footer { color: rgba(255,255,255,.55); display: flex; font-size: .7rem; justify-content: space-between; padding: 1rem 1.2rem; }
+
     /* ── Responsive ── */
     @media (max-width: 1024px) {
       .section { padding: 3.5rem 2rem; }
@@ -579,6 +603,8 @@
       .dashboard-gate-face { grid-template-columns: 1fr; }
       .dashboard-demo-aside { display: none; }
       .allocation-model-grid { grid-template-columns: repeat(2, 1fr); }
+      .agent-heading { align-items: flex-start; flex-direction: column; }
+      .agent-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
@@ -595,6 +621,7 @@
       .dashboard-appbar { flex-direction: column; }
       .dashboard-back { align-self: flex-start; }
       .allocation-model-footer { align-items: flex-start; flex-direction: column; }
+      .agent-api-footer { align-items: flex-start; flex-direction: column; gap: .5rem; }
     }
   </style>
 </head>
@@ -608,7 +635,8 @@
     <a href="#dashboard">Dashboard</a>
     <a href="#features">Features</a>
     <a href="#how-it-works">How it Works</a>
-    <a href="#allocation-model">About the model</a>
+    <a href="/allocation-model.html">About the model</a>
+    <a href="#agents">For agents</a>
   </div>
   <div class="menu-icon" aria-label="Menu">
     <span></span><span></span><span></span>
@@ -946,7 +974,44 @@
     <article class="allocation-model-step"><span>03 · NET</span><h3>Subtract current state</h3><p>Free space and residual need both start from what is already on hand today.</p></article>
     <article class="allocation-model-step"><span>04 · FILL & DIAGNOSE</span><h3>Raise the waterline</h3><p>Max-min coverage reveals whether a site needs food, storage, or no further action.</p></article>
   </div>
-  <div class="allocation-model-footer"><p><strong>Operational rule:</strong> a capacity-bound site needs shelving or cold space, not another delivery. The network is re-solved as inventory moves.</p><a href="https://claude.ai/code/artifact/0380ce46-57db-4d47-82db-1a6902de62ed?via=auto_preview" target="_blank" rel="noreferrer">Read the full Allocation Framework →</a></div>
+  <div class="allocation-model-footer"><p><strong>Operational rule:</strong> a capacity-bound site needs shelving or cold space, not another delivery. The network is re-solved as inventory moves.</p><a href="/allocation-model.html">Read the full Allocation Framework →</a></div>
+</section>
+
+<!-- ═══════════════ AGENT INTEGRATION ═══════════════ -->
+<section id="agents" class="section agent-section">
+  <div class="agent-heading">
+    <div>
+      <p class="section-label"><span class="num">05</span> Agent integration</p>
+      <h2>Built for people.<br /><em>Accessible to agents.</em></h2>
+    </div>
+    <p>CareSpace is a coordination layer, not a closed directory. Agents can discover the declared surface, read community-level resources, and ask the same allocation engine where a wave can land.</p>
+  </div>
+  <div class="agent-grid">
+    <div class="agent-copy-card">
+      <p>Public declaration · scoped operations</p>
+      <h3>One shared picture, with a human in the loop.</h3>
+      <ul class="agent-capability-list">
+        <li>Discover capabilities and resource types</li>
+        <li>Read county-scoped food-bank locations</li>
+        <li>Search matches with the allocation engine</li>
+        <li>Keep privacy and confirmation boundaries explicit</li>
+      </ul>
+      <div class="agent-actions"><a href="/capabilities.json" target="_blank" rel="noreferrer">View capabilities →</a><a href="/.well-known/capabilities.json" target="_blank" rel="noreferrer">Well-known declaration →</a></div>
+    </div>
+    <div class="agent-api-card">
+      <div class="agent-api-bar"><span class="agent-api-label">carespace / agent surface</span><button class="agent-copy-button" type="button" data-copy-agent>Copy example</button></div>
+      <pre id="agent-api-example"><span class="method">GET</span> <span class="path">/api/v1/capabilities</span>
+
+<span class="method">GET</span> <span class="path">/api/v1/food-banks?limit=500</span>
+
+<span class="method">POST</span> <span class="path">/api/v1/matches/search</span>
+{
+  <span class="string">"supply"</span>: 30000,
+  <span class="string">"sites"</span>: [{ <span class="string">"id"</span>: <span class="string">"north-county"</span>, <span class="string">"people"</span>: 3880 }]
+}</pre>
+      <div class="agent-api-footer"><span>Freshness · provenance · county scope</span><span>Scoped credentials · human confirmation</span></div>
+    </div>
+  </div>
 </section>
 
 <!-- ═══════════════ MAP SCRIPT ═══════════════ -->
@@ -1188,6 +1253,23 @@
 
   sizeDashboardCard(gate);
   window.addEventListener('resize', () => sizeDashboardCard(card.classList.contains('is-open') ? app : gate));
+})();
+</script>
+
+<script>
+(function() {
+  const button = document.querySelector('[data-copy-agent]');
+  const example = document.querySelector('#agent-api-example');
+  if (!button || !example) return;
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(example.textContent);
+      button.textContent = 'Copied';
+      window.setTimeout(() => { button.textContent = 'Copy example'; }, 1400);
+    } catch {
+      button.textContent = 'Select manually';
+    }
+  });
 })();
 </script>
 

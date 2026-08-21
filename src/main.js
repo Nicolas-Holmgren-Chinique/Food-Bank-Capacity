@@ -1493,7 +1493,7 @@ $$('.desktop-nav a').forEach((link) => link.addEventListener('click', () => {
   menuButton.setAttribute('aria-expanded', 'false');
 }));
 
-const apiExample = `GET /api/v1/capabilities\n\n{\n  "service": "CareSpace",\n  "version": "1.0",\n  "can": ["discover", "report", "match"]\n}`;
+const apiExample = `GET /api/v1/capabilities\n\nGET /api/v1/food-banks?limit=500\n\nPOST /api/v1/matches/search\n{\n  "supply": 30000,\n  "sites": [{ "id": "north-county", "people": 3880 }]\n}`;
 $('[data-copy]').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(apiExample);

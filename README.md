@@ -54,6 +54,7 @@ The existing `heurchain` Pages project is intentionally not referenced by the wo
 - San Diego County food-bank layer sourced from the county-scoped D1 API, with a named fallback if the API is unavailable
 - No-auth role picker that flips into distinct person-in-need, food-bank, and food-supplier dashboard views
 - D1-backed dashboard registration and session login for people in need, food-bank operators, and food suppliers
+- Agent integration surface with a capabilities declaration, county-scoped food-bank query, and allocation-backed match search
 - Report-food, report-need, and report-capacity entry points
 - Match flow: report → match → move → confirm
 - Privacy/trust framing for community-level signals
@@ -62,7 +63,7 @@ The existing `heurchain` Pages project is intentionally not referenced by the wo
 
 ## Allocation model
 
-The About section links to the [The Indivisible Box — Allocation Framework](https://claude.ai/code/artifact/0380ce46-57db-4d47-82db-1a6902de62ed?via=auto_preview). The POC treats each ration as a whole box, finds the minimum usable capacity across storage dimensions, nets current inventory from need and free space, and uses a water-fill allocation to diagnose whether a site needs food, storage, or no further action.
+The About section links to the internal [The Indivisible Box — Allocation Framework](allocation-model.html). The POC treats each ration as a whole box, finds the minimum usable capacity across storage dimensions, nets current inventory from need and free space, and uses a water-fill allocation to diagnose whether a site needs food, storage, or no further action.
 
 ## Live map data
 
@@ -81,3 +82,7 @@ Dashboard auth endpoints are `/api/v1/dashboard/register`, `/api/v1/dashboard/lo
 The dashboard loads [`public/dashboard-data.json`](public/dashboard-data.json) and can be pointed at a live feed with `VITE_DASHBOARD_DATA_URL`. The dashboard auth in this revision is a D1-backed POC; connect it to the selected production identity provider before accepting real credentials or user-specific data.
 
 Google Maps can be used as a provider-specific follow-up by supplying a Google Maps JavaScript API key and map ID; the default map does not require a key or billing account.
+
+## Agent integration
+
+The landing page’s **For agents** section documents the POC agent surface. Machine-readable discovery is available at [`/capabilities.json`](public/capabilities.json), [`/.well-known/capabilities.json`](public/.well-known/capabilities.json), and `GET /api/v1/capabilities`. Agents can read `GET /api/v1/food-banks?limit=500` and submit allocation inputs to `POST /api/v1/matches/search`. The match endpoint runs the same indivisible-box allocation engine used by the dashboard. Production deployments should add scoped credentials and human confirmation for high-impact actions.
