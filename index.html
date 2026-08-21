@@ -601,6 +601,20 @@
     .dashboard-allocation-table .allocation-status { color: #4f9c77; font-weight: 800; white-space: nowrap; }
     .dashboard-allocation-table tr.warning .allocation-status { color: var(--red); }
     .dashboard-detail-callout { background: #dff1e7; border-radius: 9px; color: #315a5d; font-size: 0.72rem; line-height: 1.5; margin-top: 0.8rem; padding: 0.8rem; }
+    .allocation-ask { margin-top: 0.9rem; }
+    .allocation-ask-kicker { color: #7a8c8f; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; margin-bottom: 0.45rem; text-transform: uppercase; }
+    .allocation-ask-form { align-items: center; background: #f2f6f4; border: 1px solid #d8e3df; border-radius: 9px; display: flex; gap: 0.5rem; padding: 0.3rem 0.3rem 0.3rem 0.7rem; }
+    .allocation-ask-form:focus-within { border-color: #2f9e79; }
+    .allocation-ask-form input { background: none; border: 0; color: #123; flex: 1; font-family: inherit; font-size: 0.72rem; min-width: 0; outline: 0; padding: 0.4rem 0; }
+    .allocation-ask-form input::placeholder { color: #9aa9a6; }
+    .allocation-ask-form button { background: #123f3a; border: 0; border-radius: 7px; color: #fff; cursor: pointer; font-family: inherit; font-size: 0.66rem; font-weight: 700; padding: 0.45rem 0.8rem; }
+    .allocation-ask-form button:disabled { cursor: progress; opacity: 0.55; }
+    .allocation-ask-status { color: #5d7370; font-size: 0.68rem; margin-top: 0.6rem; }
+    .allocation-ask-status.is-error { color: #b4541a; }
+    .allocation-ask-answer { background: #fff; border: 1px solid #d8e3df; border-radius: 9px; color: #234; font-size: 0.72rem; line-height: 1.55; margin-top: 0.6rem; padding: 0.75rem; }
+    .allocation-ask-figures { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.55rem; }
+    .allocation-ask-figures span { background: #f2f6f4; border: 1px solid #d8e3df; border-radius: 5px; color: #4a6360; font-size: 0.6rem; padding: 0.16rem 0.4rem; }
+    .allocation-ask-foot { color: #7a8c8f; font-size: 0.6rem; margin-top: 0.5rem; }
     .dashboard-detail-callout strong { color: var(--dark); display: block; margin-bottom: 0.18rem; }
     .dashboard-privacy-note { color: var(--gray-light); display: block; font-size: 0.68rem; line-height: 1.45; margin-top: 0.8rem; }
 
@@ -1510,6 +1524,24 @@
 
 <script>
 (function() {
+  // The figures rendered below are this solver input run through
+  // src/lib/allocation.js. Sending it to /api/v1/analyze lets the endpoint
+  // recompute them server-side, so the model only ever sees solver output.
+  const ALLOCATION_INPUT = {
+    supply: 2600,
+    dimensions: [
+      { key: 'dry_storage', label: 'Dry storage', volumePerBox: 0.03, unit: 'm3' },
+      { key: 'frozen_storage', label: 'Cold storage', volumePerBox: 0.005, unit: 'm3' }
+    ],
+    sites: [
+      { id: 'north', name: 'North County Food Hub', people: 4200, boxesOnHand: 320, space: { dry_storage: 240, frozen_storage: 9 } },
+      { id: 'central', name: 'Central Care Food Bank', people: 5600, boxesOnHand: 0, space: { dry_storage: 180, frozen_storage: 4.5 } },
+      { id: 'south', name: 'South Bay Community Pantry', people: 3100, boxesOnHand: 210, space: { dry_storage: 36, frozen_storage: 11 } },
+      { id: 'east', name: 'East County Community Table', people: 2400, boxesOnHand: 90, space: { dry_storage: 90, frozen_storage: 1.6 } }
+    ],
+    provenance: { demoData: true }
+  };
+
   const profiles = {
     need: {
       kicker: 'PERSON IN NEED',
@@ -1637,7 +1669,73 @@
     const rowsMarkup = detail.allocationRows.map(([facility, canHold, send, coverage, status, tone]) => '<tr class="' + (tone || '') + '"><td><strong>' + facility + '</strong></td><td>' + canHold + '</td><td><strong>' + send + '</strong></td><td>' + coverage + '</td><td class="allocation-status">' + status + '</td></tr>').join('');
     const tableMarkup = '<div class="dashboard-allocation-table-wrap"><table class="dashboard-allocation-table"><thead><tr><th>Facility</th><th>Can hold</th><th>Send</th><th>Coverage</th><th>Limited by</th></tr></thead><tbody>' + rowsMarkup + '</tbody></table></div>';
     const calloutMarkup = '<div class="dashboard-detail-callout"><strong>' + detail.callout[0] + '</strong>' + detail.callout[1] + '</div>';
-    return metricsMarkup + tableMarkup + calloutMarkup;
+    const askMarkup = '<div class="allocation-ask">'
+      + '<p class="allocation-ask-kicker">Ask about this wave</p>'
+      + '<form class="allocation-ask-form" data-allocation-ask>'
+      + '<input type="text" name="question" maxlength="1000" autocomplete="off" aria-label="Ask a question about this wave" placeholder="Ask anything — e.g. which site should we visit first?" />'
+      + '<button type="submit">Ask</button>'
+      + '</form>'
+      + '<div data-allocation-answer></div>'
+      + '</div>';
+    return metricsMarkup + tableMarkup + calloutMarkup + askMarkup;
+  }
+
+  function escapeText(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  function renderAllocationAnswer(target, findings, model) {
+    let html = '<div class="allocation-ask-answer">' + escapeText(findings.answer || '');
+    if (Array.isArray(findings.figuresUsed) && findings.figuresUsed.length) {
+      html += '<div class="allocation-ask-figures">'
+        + findings.figuresUsed.map((f) => '<span>' + escapeText(f) + '</span>').join('')
+        + '</div>';
+    }
+    if (findings.answerable && String(findings.answerable).toLowerCase() !== 'yes' && findings.missing) {
+      html += '<p class="allocation-ask-foot">Needs: ' + escapeText(findings.missing) + '</p>';
+    }
+    html += '</div><p class="allocation-ask-foot">Interpretation only — every figure comes from the solver. '
+      + escapeText(model || '') + '</p>';
+    target.innerHTML = html;
+  }
+
+  function askAboutWave(form, question) {
+    const answer = form.parentElement.querySelector('[data-allocation-answer]');
+    const button = form.querySelector('button');
+    const input = form.querySelector('input');
+    button.disabled = true;
+    input.disabled = true;
+    answer.innerHTML = '<p class="allocation-ask-status">Reading the allocation…</p>';
+
+    fetch('/api/v1/analyze', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        supply: ALLOCATION_INPUT.supply,
+        dimensions: ALLOCATION_INPUT.dimensions,
+        sites: ALLOCATION_INPUT.sites,
+        provenance: ALLOCATION_INPUT.provenance,
+        analysis: 'ask',
+        params: { question: question }
+      })
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('The analysis service returned ' + response.status + '.');
+        return response.json();
+      })
+      .then((payload) => {
+        if (payload.analysisError) throw new Error(payload.analysisError.message);
+        renderAllocationAnswer(answer, payload.analysis.findings || {}, payload.analysis.model);
+      })
+      .catch((error) => {
+        answer.innerHTML = '<p class="allocation-ask-status is-error">' + escapeText(error.message) + '</p>';
+      })
+      .then(() => {
+        button.disabled = false;
+        input.disabled = false;
+      });
   }
 
   function renderDashboardDetails(profile) {
@@ -1654,6 +1752,14 @@
 
     detailPrimary.innerHTML = primaryMarkup;
     detailSecondary.innerHTML = secondaryMarkup;
+    const askForm = detailSecondary.querySelector('[data-allocation-ask]');
+    if (askForm) {
+      askForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const question = askForm.question.value.trim();
+        if (question) askAboutWave(askForm, question);
+      });
+    }
     privacy.textContent = detail.note;
   }
 
