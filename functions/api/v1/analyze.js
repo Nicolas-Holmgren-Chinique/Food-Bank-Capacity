@@ -155,6 +155,18 @@ export const onRequestPost = async ({ request, env }) => {
 };
 
 async function callOllama({ apiKey, model, prompt }) {
+  // Structured output is high-nineties reliable, not perfect: the model
+  // occasionally breaks quoting inside an array. One retry costs a few seconds
+  // and removes the class of failure an operator would otherwise just see.
+  try {
+    return await callOllamaOnce({ apiKey, model, prompt });
+  } catch (error) {
+    if (error?.code !== 'inference_unparseable') throw error;
+    return callOllamaOnce({ apiKey, model, prompt, retry: true });
+  }
+}
+
+async function callOllamaOnce({ apiKey, model, prompt, retry = false }) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), INFERENCE_TIMEOUT_MS);
 
@@ -168,7 +180,12 @@ async function callOllama({ apiKey, model, prompt }) {
         model,
         messages: [
           { role: 'system', content: prompt.system },
-          { role: 'user', content: prompt.user },
+          {
+            role: 'user',
+            content: retry
+              ? `${prompt.user}\n\nYour previous reply was not valid JSON. Return only a single well-formed JSON object. Every array element must be a quoted string with no embedded quotes or colons.`
+              : prompt.user,
+          },
         ],
         response_format: { type: 'json_object' },
         stream: false,
