@@ -149,7 +149,8 @@ const fallbackDashboardData = {
 };
 
 const dashboardDataUrl = import.meta.env.VITE_DASHBOARD_DATA_URL || '/dashboard-data.json';
-const foodBankDataUrl = import.meta.env.VITE_FOOD_BANK_DATA_URL || '/food-bank-locations.json';
+const foodBankDataUrl = import.meta.env.VITE_FOOD_BANK_DATA_URL || '/api/v1/food-banks';
+const foodBankStaticDataUrl = '/food-bank-locations.json';
 const fallbackFoodBankData = {
   version: '1.0',
   schema: 'carespace.food-bank-locations',
@@ -684,12 +685,27 @@ async function loadNetworkData() {
   return { ...fallbackNetworkData, ...payload, signals: payload.signals };
 }
 
-async function loadFoodBankData() {
-  const response = await fetch(foodBankDataUrl, { headers: { Accept: 'application/json' } });
+async function readFoodBankFeed(url) {
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
   if (!response.ok) throw new Error(`Food-bank feed returned ${response.status}`);
   const payload = await response.json();
   if (!Array.isArray(payload.locations)) throw new Error('Food-bank feed has no locations array');
   return { ...fallbackFoodBankData, ...payload, locations: payload.locations };
+}
+
+async function loadFoodBankData() {
+  try {
+    return { data: await readFoodBankFeed(foodBankDataUrl), isFallback: false };
+  } catch (apiError) {
+    if (foodBankDataUrl !== foodBankStaticDataUrl) {
+      try {
+        return { data: await readFoodBankFeed(foodBankStaticDataUrl), isFallback: true };
+      } catch (staticError) {
+        console.warn('CareSpace food-bank API and static feed unavailable; showing demo locations.', { apiError, staticError });
+      }
+    }
+    return { data: fallbackFoodBankData, isFallback: true };
+  }
 }
 
 async function initializeLiveMap() {
@@ -698,7 +714,7 @@ async function initializeLiveMap() {
 
   const [networkResult, foodBankResult] = await Promise.allSettled([loadNetworkData(), loadFoodBankData()]);
   const isFallback = networkResult.status !== 'fulfilled';
-  const isFoodBankFallback = foodBankResult.status !== 'fulfilled';
+  const isFoodBankFallback = foodBankResult.status !== 'fulfilled' || foodBankResult.value.isFallback;
 
   if (isFallback) {
     networkData = fallbackNetworkData;
@@ -707,10 +723,12 @@ async function initializeLiveMap() {
     networkData = networkResult.value;
   }
   if (isFoodBankFallback) {
-    foodBankData = fallbackFoodBankData;
-    console.warn('CareSpace food-bank feed unavailable; showing demo food-bank locations.', foodBankResult.reason);
+    foodBankData = foodBankResult.status === 'fulfilled' ? foodBankResult.value.data : fallbackFoodBankData;
+    if (foodBankResult.status !== 'fulfilled') {
+      console.warn('CareSpace food-bank feed unavailable; showing demo food-bank locations.', foodBankResult.reason);
+    }
   } else {
-    foodBankData = foodBankResult.value;
+    foodBankData = foodBankResult.value.data;
   }
 
   const focus = networkData.focus ?? fallbackNetworkData.focus;
@@ -754,7 +772,7 @@ async function initializeLiveMap() {
     const foodBankCount = visibleFoodBankLocations().length;
     $('#networkFocusName').textContent = name;
     $('#networkFocusMeta').textContent = `${signalCount} signals · ${foodBankCount} food banks · ${type} ready`;
-    $('#mapProviderBadge').textContent = `${name} · ${type}-ready · food banks live`;
+    $('#mapProviderBadge').textContent = `${name} · ${type}-ready · ${isFoodBankFallback ? 'food-bank fallback' : 'food banks live'}`;
     setMapFilter('all');
     void loadServiceAreaBoundaryLayer(map).then((boundaryLayer) => {
       if (mapRuntime?.map === map) mapRuntime.boundaryLayer = boundaryLayer;

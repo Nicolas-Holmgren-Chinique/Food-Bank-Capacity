@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "prepare:data": "node scripts/normalize-food-bank-data.mjs",
+    "prepare:migration": "npm run prepare:data && node scripts/generate-food-bank-migration.mjs",
     "predev": "npm run prepare:data",
     "dev": "vite",
     "prebuild": "npm run prepare:data",
