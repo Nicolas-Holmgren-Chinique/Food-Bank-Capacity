@@ -1234,8 +1234,20 @@
   }
 
   function clearHeat() {
-    if (heatLayer && map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
-    densityCircles.forEach(circle => map.removeLayer(circle));
+    if (heatLayer) {
+      try {
+        if (map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
+      } catch (error) {
+        console.warn('Could not clear the heatmap layer.', error);
+      }
+    }
+    densityCircles.forEach(circle => {
+      try {
+        map.removeLayer(circle);
+      } catch (error) {
+        console.warn('Could not clear a density fallback layer.', error);
+      }
+    });
     densityCircles = [];
   }
 
@@ -1285,13 +1297,18 @@
       }
     }
     if (!heatmapRendered) {
-      densityCircles = points.map(point => L.circle([point.lat, point.lng], {
-        radius: 850,
-        color: '#8b5cf6',
-        fillColor: '#8b5cf6',
-        fillOpacity: 0.12,
-        weight: 1,
-      }).addTo(map));
+      try {
+        densityCircles = points.map(point => L.circle([point.lat, point.lng], {
+          radius: 850,
+          color: '#8b5cf6',
+          fillColor: '#8b5cf6',
+          fillOpacity: 0.12,
+          weight: 1,
+        }).addTo(map));
+      } catch (error) {
+        console.warn('Density fallback unavailable.', error);
+        densityCircles = [];
+      }
     }
     updateMapSummary(points);
   }
