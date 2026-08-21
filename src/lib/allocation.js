@@ -142,9 +142,13 @@ const floorCoverage = (x, need) => {
  * @param {number} input.supply       Boxes deliverable in this wave.
  * @param {Array}  input.dimensions   [{key, label, volumePerBox, unit}]
  * @param {Array}  input.sites        [{id, name, people, boxesOnHand, space:{[key]:number}}]
- * @param {boolean} [input.recommend] Compute space recommendations (extra solves).
+ * @param {boolean} [input.recommend] Compute space recommendations. Each one costs a
+ *                                    full extra solve, so the count is bounded below.
+ * @param {number} [input.maxRecommendations] Hard cap on extra solves (default 5).
+ *                                    Candidates are the worst-covered capacity-bound
+ *                                    facilities — the ones storage would help most.
  */
-export function allocate({ supply, dimensions, sites, recommend = true }) {
+export function allocate({ supply, dimensions, sites, recommend = true, maxRecommendations = 5 }) {
   if (!Array.isArray(dimensions) || !Array.isArray(sites)) {
     throw new TypeError('allocate() requires `dimensions` and `sites` arrays');
   }
@@ -254,15 +258,29 @@ export function allocate({ supply, dimensions, sites, recommend = true }) {
 
   // For each space-bound facility: how much extra storage lifts it to the
   // waterline, and what that does to the network's worst-served facility.
-  for (const row of rows) {
-    if (row.status !== 'capacity_bound') continue;
+  //
+  // Every recommendation costs a full extra solve, so this is bounded twice:
+  // only capacity-bound facilities are candidates, and only the worst-covered
+  // `maxRecommendations` of those are solved. Without the cap a network of N
+  // capacity-bound facilities costs N full solves — quadratic, and reachable
+  // from a single unauthenticated API request.
+  const budget = Math.max(0, Math.floor(Number(maxRecommendations) || 0));
+  const siteById = new Map(sites.map((s) => [s.id, s]));
+  const candidates = rows
+    .filter((row) => row.status === 'capacity_bound')
+    .sort((a, b) => a.coverage - b.coverage)
+    .slice(0, budget);
 
+  result.recommendationsTruncated =
+    rows.filter((row) => row.status === 'capacity_bound').length - candidates.length;
+
+  for (const row of candidates) {
     const target = Math.min(row.residualNeed, Math.ceil(lambda * row.residualNeed));
     if (target <= row.boxCapacity) continue;
 
+    const site = siteById.get(row.id);
     const additions = [];
     for (const dim of dimensions.filter(binds)) {
-      const site = sites.find((s) => s.id === row.id);
       const have = Number(site.space?.[dim.key]) || 0;
       const required = target * dim.volumePerBox;
       if (required > have) {
@@ -328,19 +346,38 @@ export function spaceFromCapacityRecords(records, { now = Date.now(), maxAgeHour
       warnings.push('capacity record without capacity_type ignored');
       continue;
     }
-    const validUntil = record.valid_until ? Date.parse(record.valid_until) : null;
-    const verified = record.last_verified ? Date.parse(record.last_verified) : null;
+    const where = `${key} at ${record.facility_id ?? 'unknown facility'}`;
 
-    if (validUntil !== null && Number.isFinite(validUntil) && validUntil < now) {
+    // An unparseable timestamp is worse than a missing one: it looks like
+    // provenance without being provenance. Drop the record rather than let
+    // Date.parse -> NaN slip past both the expiry and staleness comparisons.
+    const parseStamp = (raw, field) => {
+      if (raw === undefined || raw === null || raw === '') return null;
+      const parsed = Date.parse(raw);
+      if (!Number.isFinite(parsed)) return { invalid: field };
+      return parsed;
+    };
+
+    const validUntil = parseStamp(record.valid_until, 'valid_until');
+    const verified = parseStamp(record.last_verified, 'last_verified');
+
+    const invalid = validUntil?.invalid ?? verified?.invalid;
+    if (invalid) {
+      warnings.push(`${where} has an unreadable ${invalid} — record dropped`);
+      stale.push({ ...record, reason: 'invalid_timestamp' });
+      continue;
+    }
+
+    if (validUntil !== null && validUntil < now) {
       stale.push({ ...record, reason: 'expired' });
       continue;
     }
-    if (verified !== null && Number.isFinite(verified) && verified < cutoff) {
+    if (verified !== null && verified < cutoff) {
       stale.push({ ...record, reason: 'unverified' });
       continue;
     }
     if (verified === null) {
-      warnings.push(`${key} at ${record.facility_id ?? 'unknown facility'} has no last_verified`);
+      warnings.push(`${where} has no last_verified`);
     }
 
     const value = Number(record.available_capacity);

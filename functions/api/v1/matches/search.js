@@ -57,7 +57,10 @@ export const onRequestPost = async ({ request }) => {
     return fail(400, 'invalid_body', 'Body must be a JSON object.');
   }
 
-  const { supply, sites, dimensions = DEFAULT_BOX, recommend = true } = payload;
+  // `recommend` is opt-in, not opt-out: each recommendation costs a full extra
+  // solve, so defaulting it on lets one anonymous request buy a lot of CPU.
+  const { supply, sites, dimensions = DEFAULT_BOX, recommend = false } = payload;
+  const maxRecommendations = Math.min(10, Math.max(0, Math.floor(Number(payload.maxRecommendations) || 5)));
 
   if (!Array.isArray(sites) || sites.length === 0) {
     return fail(400, 'missing_sites', 'Provide a non-empty `sites` array: {id, people, boxesOnHand, space}.');
@@ -79,7 +82,13 @@ export const onRequestPost = async ({ request }) => {
 
   let result;
   try {
-    result = allocate({ supply: Number(supply), dimensions, sites, recommend: recommend !== false });
+    result = allocate({
+      supply: Number(supply),
+      dimensions,
+      sites,
+      recommend: recommend === true,
+      maxRecommendations,
+    });
   } catch (error) {
     return fail(400, 'invalid_sites', error instanceof Error ? error.message : 'Could not allocate.');
   }
