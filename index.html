@@ -1209,8 +1209,9 @@
   let dataSource = 'D1 synced';
   let mapRenderFrame = null;
   let heatmapRedrawFrame = null;
-  const heatLayer = typeof L.heatLayer === 'function'
-    ? L.heatLayer([], { radius: 22, blur: 18, maxZoom: 12, minOpacity: 0.35, gradient: { 0.25: '#9be7ad', 0.55: '#f3c84b', 0.8: '#f08b76', 1: '#8b5cf6' } })
+  const heatLayerOptions = { radius: 22, blur: 18, maxZoom: 12, minOpacity: 0.35, gradient: { 0.25: '#9be7ad', 0.55: '#f3c84b', 0.8: '#f08b76', 1: '#8b5cf6' } };
+  let heatLayer = typeof L.heatLayer === 'function'
+    ? L.heatLayer([], heatLayerOptions)
     : null;
 
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
@@ -1293,6 +1294,16 @@
           if (map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
         } catch (cleanupError) {
           console.warn('Could not remove the failed heatmap layer.', cleanupError);
+        }
+        try {
+          if (typeof L.heatLayer === 'function') {
+            heatLayer = L.heatLayer([], heatLayerOptions);
+            heatLayer.setLatLngs(locations);
+            heatLayer.addTo(map);
+            heatmapRendered = true;
+          }
+        } catch (replacementError) {
+          console.warn('Could not create a replacement heatmap layer.', replacementError);
         }
       }
     }
