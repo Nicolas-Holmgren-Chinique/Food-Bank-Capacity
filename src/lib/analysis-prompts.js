@@ -125,7 +125,8 @@ export const ANALYSES = {
         'solver output below.',
         '',
         'Do not calculate anything — no sums, differences, percentages, or',
-        'per-person figures. Quote figures from the input verbatim. If the question',
+        'per-person figures. Quote figures from the input verbatim, but write them',
+        'as plain readable text — never paste raw JSON fragments. If the question',
         'cannot be answered from this data, say so plainly and say what would be',
         'needed; do not guess, and do not answer a different question than the one',
         'asked. If the question is unrelated to food distribution capacity, say it',
@@ -143,7 +144,9 @@ export const ANALYSES = {
       ].join('\n'),
       schema: {
         answer: 'two or three sentences answering the question',
-        figuresUsed: ['each figure you quoted, exactly as it appears in the input'],
+        figuresUsed: [
+          'each figure you cited as a short plain label, e.g. "2600 boxes placed" or "0.1385 coverage at East County" — plain text only, never JSON fragments, key/value pairs, quotes or colons',
+        ],
         answerable: 'yes | partially | no',
         missing: 'if not fully answerable, what data would be needed — otherwise null',
       },
