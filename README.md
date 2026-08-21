@@ -51,6 +51,7 @@ The existing `heurchain` Pages project is intentionally not referenced by the wo
 ## Product surface
 
 - Live-signal network map with supply, demand, capacity, and logistics filters
+- Alternate landing-page map views for marker map, unweighted location-density heatmap, and notebook-derived charts
 - San Diego County food-bank layer sourced from the county-scoped D1 API, with a named fallback if the API is unavailable
 - No-auth role picker that flips into distinct person-in-need, food-bank, and food-supplier dashboard views
 - D1-backed dashboard registration and session login for people in need, food-bank operators, and food suppliers
@@ -73,7 +74,9 @@ To point the static site at a live JSON feed, set `VITE_NETWORK_DATA_URL` during
 
 The main map reads food-bank locations from the D1-backed `/api/v1/food-banks` Pages Function. The endpoint returns the same normalized shape as [`public/food-bank-locations.json`](public/food-bank-locations.json), which is generated from [`san-diego-food-bank-locations.md`](san-diego-food-bank-locations.md) during `npm run dev` and `npm run build` by [`scripts/normalize-food-bank-data.mjs`](scripts/normalize-food-bank-data.mjs). The static feed remains a browser fallback while the API is unavailable. Food-bank locations have their own `food-bank` type, filter, marker shape, popup provenance, and source fields so they remain distinct from live food, need, capacity, and logistics signals. Set `VITE_FOOD_BANK_DATA_URL` to replace the API with another compatible JSON source.
 
-The POC D1 food-bank schema and seed migration are in [`migrations/0001_food_bank_locations.sql`](migrations/0001_food_bank_locations.sql), generated with `npm run prepare:migration`; dashboard accounts and sessions are in [`migrations/0002_dashboard_users.sql`](migrations/0002_dashboard_users.sql). The Pages Functions use the `CARES_DB` binding configured in [`wrangler.toml`](wrangler.toml) and return only active records inside the San Diego County envelope.
+The notebook-derived profile layer is generated from [`Google Maps Data Ingestation.ipynb`](Google%20Maps%20Data%20Ingestation.ipynb) and [`google_maps_cleaned_data.csv`](google_maps_cleaned_data.csv) by [`scripts/generate-notebook-analytics-migration.mjs`](scripts/generate-notebook-analytics-migration.mjs). It is published as [`public/food-bank-analytics.json`](public/food-bank-analytics.json) for static fallback and stored in D1 as `food_bank_analytics`. The landing-page Charts view aggregates city, food category, service model, and access-feature counts from these records; the Heatmap view shows unweighted location density only.
+
+The POC D1 food-bank schema and seed migration are in [`migrations/0001_food_bank_locations.sql`](migrations/0001_food_bank_locations.sql), notebook analytics are in [`migrations/0003_notebook_food_bank_analytics.sql`](migrations/0003_notebook_food_bank_analytics.sql), and dashboard accounts and sessions are in [`migrations/0002_dashboard_users.sql`](migrations/0002_dashboard_users.sql). The Pages Functions use the `CARES_DB` binding configured in [`wrangler.toml`](wrangler.toml) and return only active records inside the San Diego County envelope.
 
 Cloudflare D1 is a managed serverless SQLite database: this POC uses relational SQL tables for food-bank locations, dashboard users, and dashboard sessions. The dashboard map also includes fixed POC envelopes for common San Diego County cities; replace them with authoritative city boundaries when city-level GIS data is connected.
 

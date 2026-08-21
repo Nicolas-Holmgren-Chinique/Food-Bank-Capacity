@@ -36,13 +36,22 @@ const json = (body, status = 200, extraHeaders = {}) => new Response(JSON.string
 });
 
 function rowToLocation(row) {
+  let analytics = null;
+  if (row.analytics_json) {
+    try {
+      analytics = JSON.parse(row.analytics_json);
+    } catch {
+      analytics = null;
+    }
+  }
+  const area = analytics?.city || row.area;
   return {
     id: row.id,
     sourceId: row.source_id,
     type: row.type,
     label: row.label,
-    meta: row.meta,
-    area: row.area,
+    meta: analytics?.zip ? `${area} · ${analytics.zip}` : row.meta,
+    area,
     kind: row.kind,
     address: row.address,
     phone: row.phone,
@@ -57,6 +66,7 @@ function rowToLocation(row) {
     source: row.source,
     sourceUrl: row.source_url,
     retrievedAt: row.retrieved_at,
+    analytics,
   };
 }
 
@@ -75,24 +85,31 @@ export const onRequestGet = async ({ request, env }) => {
     : DEFAULT_LIMIT;
 
   const where = [
-    'active = 1',
-    'latitude BETWEEN ? AND ?',
-    'longitude BETWEEN ? AND ?',
+    'food_bank_locations.active = 1',
+    'food_bank_locations.latitude BETWEEN ? AND ?',
+    'food_bank_locations.longitude BETWEEN ? AND ?',
   ];
   const binds = [SCOPE.bounds[0][0], SCOPE.bounds[1][0], SCOPE.bounds[0][1], SCOPE.bounds[1][1]];
 
   if (search) {
-    where.push('(label LIKE ? OR area LIKE ? OR address LIKE ? OR tags LIKE ?)');
+    where.push('(food_bank_locations.label LIKE ? OR food_bank_locations.area LIKE ? OR food_bank_locations.address LIKE ? OR food_bank_locations.tags LIKE ?)');
     const searchTerm = `%${search}%`;
     binds.push(searchTerm, searchTerm, searchTerm, searchTerm);
   }
 
   const query = `
     SELECT
-      id, source_id, type, label, meta, area, kind, address, phone, website,
-      schedule, closures, services, eligibility, access, tags, latitude,
-      longitude, source, source_url, retrieved_at
+      food_bank_locations.id, food_bank_locations.source_id, food_bank_locations.type,
+      food_bank_locations.label, food_bank_locations.meta, food_bank_locations.area,
+      food_bank_locations.kind, food_bank_locations.address, food_bank_locations.phone,
+      food_bank_locations.website, food_bank_locations.schedule, food_bank_locations.closures,
+      food_bank_locations.services, food_bank_locations.eligibility, food_bank_locations.access,
+      food_bank_locations.tags, food_bank_locations.latitude, food_bank_locations.longitude,
+      food_bank_locations.source, food_bank_locations.source_url, food_bank_locations.retrieved_at,
+      analytics.payload_json AS analytics_json
     FROM food_bank_locations
+    LEFT JOIN food_bank_analytics analytics
+      ON analytics.source_id = food_bank_locations.source_id
     WHERE ${where.join(' AND ')}
     ORDER BY label COLLATE NOCASE
     LIMIT ?

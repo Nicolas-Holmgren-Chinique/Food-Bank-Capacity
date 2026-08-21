@@ -12,6 +12,7 @@
   ],
   "resources": [
     "food_bank_locations",
+    "food_bank_analytics",
     "matches"
   ],
   "endpoints": {

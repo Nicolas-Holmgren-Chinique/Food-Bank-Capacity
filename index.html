@@ -270,6 +270,11 @@
     .dot-capacity { background: var(--green); }
     .dot-banks { background: var(--purple); }
 
+    .map-view-switcher { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .map-view-tab { border: 1px solid #d9d9d9; border-radius: 999px; background: var(--white); color: var(--dark); cursor: pointer; font-size: 0.75rem; font-weight: 700; padding: 0.42rem 0.75rem; }
+    .map-view-tab:hover, .map-view-tab:focus-visible { border-color: var(--teal); color: var(--teal); outline: none; }
+    .map-view-tab.active { background: var(--teal); border-color: var(--teal); color: var(--white); }
+
     .map-explore {
       color: var(--teal);
       text-decoration: none;
@@ -287,6 +292,28 @@
     }
 
     #liveMap { width: 100%; height: 100%; min-height: 480px; }
+    #liveMap[hidden] { display: none; }
+
+    .map-alternate-view { background: #fbfaf8; height: 100%; min-height: 480px; overflow: auto; padding: 1.25rem; }
+    .map-alternate-view[hidden] { display: none; }
+    .map-insights-heading { align-items: flex-start; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .map-insights-heading h3 { font-size: 1.25rem; margin: 0; }
+    .map-insights-heading p { color: var(--gray); font-size: 0.75rem; line-height: 1.5; margin: 0.35rem 0 0; max-width: 470px; }
+    .map-chart-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.55rem; margin-bottom: 0.8rem; }
+    .map-chart-kpi { background: var(--white); border: 1px solid #e5e2dc; border-radius: 9px; padding: 0.7rem; }
+    .map-chart-kpi strong { color: var(--teal); display: block; font-size: 1.2rem; }
+    .map-chart-kpi span { color: var(--gray); display: block; font-size: 0.65rem; line-height: 1.3; margin-top: 0.15rem; }
+    .map-chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .map-chart-card { background: var(--white); border: 1px solid #e5e2dc; border-radius: 10px; padding: 0.9rem; }
+    .map-chart-card h4 { font-size: 0.85rem; margin: 0 0 0.75rem; }
+    .map-chart-bars { display: grid; gap: 0.55rem; }
+    .map-chart-bar { display: grid; grid-template-columns: minmax(95px, 0.9fr) 1.5fr auto; align-items: center; gap: 0.5rem; }
+    .map-chart-bar label { color: var(--gray); font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .map-chart-track { background: #eceae5; border-radius: 999px; height: 0.45rem; overflow: hidden; }
+    .map-chart-fill { background: var(--teal); border-radius: inherit; height: 100%; min-width: 0.35rem; }
+    .map-chart-bar b { color: var(--dark); font-size: 0.68rem; min-width: 1.2rem; text-align: right; }
+    .map-chart-empty { color: var(--gray); font-size: 0.75rem; line-height: 1.5; }
+    .map-insights-footnote { color: var(--gray-light); font-size: 0.68rem; line-height: 1.45; margin: 0.85rem 0 0; }
 
     .map-status-bar {
       position: absolute;
@@ -631,6 +658,8 @@
       .network-heading { flex-direction: column; align-items: flex-start; }
       .map-body { flex-direction: column; }
       .signal-panel { width: 100%; border-left: none; border-top: 1px solid #f0f0f0; }
+      .map-chart-kpis { grid-template-columns: repeat(2, 1fr); }
+      .map-chart-grid { grid-template-columns: 1fr; }
       .steps-grid { grid-template-columns: 1fr; gap: 2.5rem; }
       .dashboard-heading, .allocation-model-heading { align-items: flex-start; flex-direction: column; }
       .dashboard-gate-face { grid-template-columns: 1fr; }
@@ -655,6 +684,8 @@
       .dashboard-inventory-grid { grid-template-columns: 1fr; }
       .dashboard-appbar { flex-direction: column; }
       .dashboard-back { align-self: flex-start; }
+      .map-chart-kpis { grid-template-columns: 1fr 1fr; }
+      .map-chart-bar { grid-template-columns: minmax(80px, 0.8fr) 1.2fr auto; }
       .allocation-model-footer { align-items: flex-start; flex-direction: column; }
       .agent-api-footer { align-items: flex-start; flex-direction: column; gap: .5rem; }
     }
@@ -805,12 +836,30 @@
         <button class="map-filter" data-filter="capacity"><span class="filter-dot dot-capacity"></span>Capacity</button>
         <button class="map-filter" data-filter="banks"><span class="filter-dot dot-banks"></span>Food banks</button>
       </div>
+      <div class="map-view-switcher" role="group" aria-label="Map alternate views">
+        <button class="map-view-tab active" type="button" data-map-view="markers" aria-pressed="true">Map</button>
+        <button class="map-view-tab" type="button" data-map-view="heatmap" aria-pressed="false">Heatmap</button>
+        <button class="map-view-tab" type="button" data-map-view="charts" aria-pressed="false">Charts</button>
+      </div>
       <a class="map-explore" href="#">Explore →</a>
     </div>
 
     <div class="map-body">
       <div class="map-container">
         <div id="liveMap"></div>
+        <div id="mapCharts" class="map-alternate-view" data-map-panel="charts" hidden>
+          <div class="map-insights-heading">
+            <div><h3>San Diego County food-bank insights</h3><p>Derived from the Google Maps ingestion notebook and synchronized with the county-scoped food-bank records.</p></div>
+          </div>
+          <div class="map-chart-kpis" data-map-chart-kpis></div>
+          <div class="map-chart-grid">
+            <section class="map-chart-card"><h4>Locations by city</h4><div class="map-chart-bars" data-map-chart="city"></div></section>
+            <section class="map-chart-card"><h4>Food category</h4><div class="map-chart-bars" data-map-chart="foodCategory"></div></section>
+            <section class="map-chart-card"><h4>Service model</h4><div class="map-chart-bars" data-map-chart="serviceType"></div></section>
+            <section class="map-chart-card"><h4>Access features</h4><div class="map-chart-bars" data-map-chart="access"></div></section>
+          </div>
+          <p class="map-insights-footnote">Counts are location records, not food volume or people served. Heatmap intensity is unweighted location density; it does not imply need, quality, or availability.</p>
+        </div>
         <div class="map-status-bar"><span class="dot"></span>Showing 159 live locations · 153 food banks</div>
       </div>
 
@@ -1056,6 +1105,7 @@
 
 <!-- ═══════════════ MAP SCRIPT ═══════════════ -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
 (function() {
   // San Diego County food bank data (sample subset for demo)
@@ -1144,69 +1194,243 @@
     }),
   };
 
+  const liveMap = document.querySelector('#liveMap');
+  const mapCharts = document.querySelector('#mapCharts');
+  const chartKpis = document.querySelector('[data-map-chart-kpis]');
+  const statusLabel = document.querySelector('.map-status-bar');
+  const countLabel = document.querySelector('.map-location small');
+  const signalCountLabel = document.querySelector('.signal-panel-header .count');
+  const footerLabel = document.querySelector('.signal-panel-footer > span:last-child');
   let markers = [];
+  let densityCircles = [];
   let activeFilter = 'all';
+  let activeView = 'markers';
+  let analyticsRecords = [];
+  let dataSource = 'D1 synced';
+  const heatLayer = typeof L.heatLayer === 'function'
+    ? L.heatLayer([], { radius: 22, blur: 18, maxZoom: 12, minOpacity: 0.35, gradient: { 0.25: '#9be7ad', 0.55: '#f3c84b', 0.8: '#f08b76', 1: '#8b5cf6' } })
+    : null;
 
-  function renderMarkers(filter) {
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+  const pointIsValid = (point) => Number.isFinite(point.lat) && Number.isFinite(point.lng) && countyBounds.contains([point.lat, point.lng]);
+  const isBank = (point) => point.type === 'bank';
 
-    foodBanks.forEach(bank => {
-      const isBank = bank.type === 'bank';
-      const matches = filter === 'all' ||
-        (filter === 'banks' && isBank) ||
-        (!isBank && bank.type === filter);
-
-      if (!matches) return;
-
-      const icon = isBank ? bankIcon : (signalIcons[bank.type] || bankIcon);
-      const marker = L.marker([bank.lat, bank.lng], { icon })
-        .addTo(map)
-        .bindPopup('<strong>' + bank.name + '</strong><br>' + bank.meta);
-      markers.push(marker);
-    });
+  function matchesFilter(point, filter) {
+    if (filter === 'all') return true;
+    if (filter === 'banks') return isBank(point);
+    if (filter === 'capacity') return point.type === 'capacity' || point.type === 'logistics';
+    return point.type === filter;
   }
 
-  renderMarkers('all');
+  function visiblePoints(filter = activeFilter) {
+    return foodBanks.filter(point => pointIsValid(point) && matchesFilter(point, filter));
+  }
 
-  // Filter button behavior
-  document.querySelectorAll('.map-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.map-filter').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeFilter = btn.dataset.filter;
-      renderMarkers(activeFilter);
+  function clearMarkers() {
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+  }
+
+  function clearHeat() {
+    if (heatLayer && map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
+    densityCircles.forEach(circle => map.removeLayer(circle));
+    densityCircles = [];
+  }
+
+  function updateMapSummary(points) {
+    const bankCount = points.filter(isBank).length;
+    const label = activeView === 'heatmap'
+      ? 'Showing location density across ' + points.length + ' county-scoped records'
+      : activeView === 'charts'
+        ? 'Charting ' + bankCount + ' food-bank records in the current selection'
+        : 'Showing ' + points.length + ' county-scoped locations · ' + bankCount + ' food banks';
+    if (statusLabel) statusLabel.innerHTML = '<span class="dot"></span>' + label;
+    if (signalCountLabel) signalCountLabel.textContent = String(points.length);
+  }
+
+  function renderMarkers(points) {
+    clearHeat();
+    clearMarkers();
+    points.forEach(point => {
+      const icon = isBank(point) ? bankIcon : (signalIcons[point.type] || bankIcon);
+      const analytics = point.analytics;
+      const detail = analytics?.foodCategory ? '<br><small>' + escapeHtml(analytics.foodCategory) + '</small>' : '';
+      const marker = L.marker([point.lat, point.lng], { icon })
+        .addTo(map)
+        .bindPopup('<strong>' + escapeHtml(point.name) + '</strong><br>' + escapeHtml(point.meta) + detail);
+      markers.push(marker);
+    });
+    updateMapSummary(points);
+  }
+
+  function renderHeatmap(points) {
+    clearMarkers();
+    const locations = points.map(point => [point.lat, point.lng, 1]);
+    if (heatLayer) {
+      heatLayer.setLatLngs(locations);
+      heatLayer.addTo(map);
+    } else {
+      densityCircles = points.map(point => L.circle([point.lat, point.lng], {
+        radius: 850,
+        color: '#8b5cf6',
+        fillColor: '#8b5cf6',
+        fillOpacity: 0.12,
+        weight: 1,
+      }).addTo(map));
+    }
+    updateMapSummary(points);
+  }
+
+  function aggregate(records, key) {
+    const counts = new Map();
+    const add = (value) => {
+      const label = String(value || 'Not reported').trim();
+      counts.set(label, (counts.get(label) || 0) + 1);
+    };
+    records.forEach(record => {
+      if (key === 'access') {
+        if (record.walkup) add('Walk-up');
+        if (record.drivethru) add('Drive-through');
+        if (record.appointmentRequired) add('Appointment');
+        if (record.weekendAvailability) add('Weekend');
+        return;
+      }
+      add(record[key]);
+    });
+    return [...counts.entries()].sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0])).slice(0, 7);
+  }
+
+  function renderBars(selector, entries) {
+    const container = document.querySelector(selector);
+    if (!container) return;
+    if (!entries.length) {
+      container.innerHTML = '<p class="map-chart-empty">No food-bank records match this filter.</p>';
+      return;
+    }
+    const maximum = Math.max(...entries.map(([, count]) => count));
+    container.innerHTML = entries.map(([label, count]) => '<div class="map-chart-bar"><label title="' + escapeHtml(label) + '">' + escapeHtml(label) + '</label><div class="map-chart-track"><div class="map-chart-fill" style="width:' + ((count / maximum) * 100) + '%"></div></div><b>' + count + '</b></div>').join('');
+  }
+
+  function renderCharts(points) {
+    const records = points.filter(isBank).map(point => point.analytics).filter(Boolean);
+    const walkupCount = records.filter(record => record.walkup).length;
+    const weekendCount = records.filter(record => record.weekendAvailability).length;
+    const cities = new Set(records.map(record => record.city).filter(Boolean)).size;
+    chartKpis.innerHTML = [
+      [records.length, 'food-bank records'],
+      [cities, 'cities represented'],
+      [walkupCount, 'walk-up sites'],
+      [weekendCount, 'weekend sites'],
+    ].map(([value, label]) => '<div class="map-chart-kpi"><strong>' + value + '</strong><span>' + label + '</span></div>').join('');
+    renderBars('[data-map-chart="city"]', aggregate(records, 'city'));
+    renderBars('[data-map-chart="foodCategory"]', aggregate(records, 'foodCategory'));
+    renderBars('[data-map-chart="serviceType"]', aggregate(records, 'serviceType'));
+    renderBars('[data-map-chart="access"]', aggregate(records, 'access'));
+    updateMapSummary(points);
+  }
+
+  function renderActiveView() {
+    const points = visiblePoints();
+    if (activeView === 'charts') {
+      clearMarkers();
+      clearHeat();
+      liveMap.hidden = true;
+      mapCharts.hidden = false;
+      renderCharts(points);
+      return;
+    }
+    liveMap.hidden = false;
+    mapCharts.hidden = true;
+    if (activeView === 'heatmap') renderHeatmap(points);
+    else renderMarkers(points);
+    window.requestAnimationFrame(() => map.invalidateSize());
+  }
+
+  async function loadAnalytics() {
+    try {
+      const response = await fetch('/food-bank-analytics.json', { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error('Analytics feed returned ' + response.status);
+      const payload = await response.json();
+      return new Map((payload.records || []).map(record => [Number(record.sourceId), record]));
+    } catch (error) {
+      console.warn('Notebook analytics fallback unavailable.', error);
+      return new Map();
+    }
+  }
+
+  function normalizeLocation(item, analyticsBySource) {
+    const latitude = Number(item?.location?.latitude);
+    const longitude = Number(item?.location?.longitude);
+    const sourceId = Number(item?.sourceId);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    return {
+      id: item.id,
+      sourceId: Number.isFinite(sourceId) ? sourceId : null,
+      name: item.label || 'Food bank location',
+      lat: latitude,
+      lng: longitude,
+      type: 'bank',
+      meta: item.meta || item.area || 'Food bank',
+      analytics: item.analytics || analyticsBySource.get(sourceId) || null,
+    };
+  }
+
+  function updateDataLabels(points) {
+    const banks = points.filter(point => isBank(point) && pointIsValid(point)).length;
+    const signals = points.filter(point => !isBank(point) && Number.isFinite(point.lat) && Number.isFinite(point.lng)).length;
+    if (countLabel) countLabel.textContent = signals + ' signals · ' + banks + ' food banks · ' + dataSource;
+    if (footerLabel) footerLabel.textContent = '+ ' + banks + ' food-bank locations are active';
+  }
+
+  document.querySelectorAll('[data-map-view]').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('[data-map-view]').forEach(item => {
+        const selected = item === button;
+        item.classList.toggle('active', selected);
+        item.setAttribute('aria-pressed', String(selected));
+      });
+      activeView = button.dataset.mapView;
+      renderActiveView();
     });
   });
 
+  document.querySelectorAll('.map-filter').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.map-filter').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      activeFilter = button.dataset.filter;
+      renderActiveView();
+    });
+  });
+
+  renderActiveView();
+
   async function loadFoodBankLocations() {
+    const analyticsBySource = await loadAnalytics();
+    let points = [];
     try {
       const response = await fetch('/api/v1/food-banks?limit=500', { headers: { Accept: 'application/json' } });
       if (!response.ok) throw new Error('Food-bank API returned ' + response.status);
       const payload = await response.json();
-      const locations = Array.isArray(payload.locations) ? payload.locations : [];
-      const points = locations
-        .filter(item => Number.isFinite(Number(item?.location?.latitude)) && Number.isFinite(Number(item?.location?.longitude)))
-        .map(item => ({
-          name: item.label || 'Food bank location',
-          lat: Number(item.location.latitude),
-          lng: Number(item.location.longitude),
-          type: 'bank',
-          meta: item.meta || item.area || 'Food bank',
-        }));
-
-      if (!points.length) return;
-      foodBanks = foodBanks.filter(item => item.type !== 'bank').concat(points);
-      renderMarkers(activeFilter);
-      const countLabel = document.querySelector('.map-location small');
-      if (countLabel) countLabel.textContent = '6 signals · ' + points.length + ' food banks · D1 synced';
-      const statusLabel = document.querySelector('.map-status-bar');
-      if (statusLabel) statusLabel.innerHTML = '<span class="dot"></span>Showing ' + (points.length + 6) + ' county-scoped locations · ' + points.length + ' food banks';
-      const footerLabel = document.querySelector('.signal-panel-footer > span:last-child');
-      if (footerLabel) footerLabel.textContent = '+ ' + points.length + ' food-bank locations are active';
+      points = (payload.locations || []).map(item => normalizeLocation(item, analyticsBySource)).filter(Boolean);
+      if (!points.length) throw new Error('D1 returned no locations');
     } catch (error) {
-      console.warn('Using named fallback food-bank points.', error);
+      dataSource = 'static feed';
+      try {
+        const response = await fetch('/food-bank-locations.json', { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Static feed returned ' + response.status);
+        const payload = await response.json();
+        points = (payload.locations || []).map(item => normalizeLocation(item, analyticsBySource)).filter(Boolean);
+      } catch (fallbackError) {
+        console.warn('Using named fallback food-bank points.', fallbackError);
+      }
     }
+
+    if (!points.length) return;
+    foodBanks = foodBanks.filter(item => item.type !== 'bank').concat(points);
+    analyticsRecords = points.map(point => point.analytics).filter(Boolean);
+    updateDataLabels(foodBanks);
+    renderActiveView();
   }
 
   loadFoodBankLocations();

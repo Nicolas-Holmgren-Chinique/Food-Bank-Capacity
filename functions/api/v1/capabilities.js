@@ -18,7 +18,7 @@ const declaration = {
   version: '1.0',
   description: 'A coordination layer for food, community need, capacity, and logistics.',
   capabilities: ['discover', 'query', 'search_matches'],
-  resources: ['food_bank_locations', 'matches'],
+  resources: ['food_bank_locations', 'food_bank_analytics', 'matches'],
   endpoints: {
     capabilities: 'GET /api/v1/capabilities',
     foodBanks: 'GET /api/v1/food-banks',
