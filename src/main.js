@@ -177,6 +177,7 @@ let dashboardUser = null;
 let selectedFoodBankId = fallbackDashboardData.foodBanks[0].id;
 let dashboardRuntime = null;
 let allocationSupply = null;
+let allocationAnalysis = { status: 'idle', id: null, data: null, error: null };
 
 const icon = (name) => {
   const paths = {
@@ -1085,6 +1086,158 @@ function renderAllocationBody() {
 }
 
 /** Build the panel shell once per dashboard render, then fill the body. */
+/* ---------------------------------------------------------------------------
+ * Inference layer.
+ *
+ * The solver runs server-side inside /api/v1/analyze and its figures are passed
+ * to the model as ground truth — the model interprets, it never calculates.
+ * Everything here is additive: if inference is unavailable the allocation table
+ * above is unaffected.
+ * ------------------------------------------------------------------------ */
+
+const ANALYSIS_OPTIONS = [
+  { id: 'unmet_requirements', label: 'Unmet requirements' },
+  { id: 'capital_recommendation', label: 'Where funding should go' },
+  { id: 'data_gaps', label: 'Data gaps' },
+];
+
+async function runAllocationAnalysis(analysisId) {
+  const input = allocationInputs();
+  if (!input) return;
+
+  allocationAnalysis = { status: 'running', id: analysisId, data: null, error: null };
+  renderAllocationAnalysis();
+
+  try {
+    const response = await fetch('/api/v1/analyze', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        supply: allocationSupply ?? 0,
+        dimensions: input.dimensions,
+        sites: input.sites,
+        analysis: analysisId,
+        provenance: {
+          demoData: Boolean(dashboardData.allocation?.note),
+          droppedRecords: input.dropped,
+          unverifiedRecords: input.unverified,
+          facilitiesWithoutCapacity: input.missing,
+        },
+      }),
+    });
+    if (!response.ok) throw new Error(`The analysis service returned ${response.status}.`);
+    const payload = await response.json();
+    if (payload.analysisError) throw new Error(payload.analysisError.message);
+    allocationAnalysis = { status: 'done', id: analysisId, data: payload.analysis, error: null };
+  } catch (error) {
+    allocationAnalysis = {
+      status: 'error',
+      id: analysisId,
+      data: null,
+      error: error instanceof Error ? error.message : 'The analysis could not be completed.',
+    };
+  }
+  renderAllocationAnalysis();
+}
+
+/** Findings shapes differ per analysis, so render whatever is present. */
+function analysisFindingsMarkup(findings) {
+  if (!findings || typeof findings !== 'object') return '';
+  const parts = [];
+  const lead = findings.headline ?? findings.recommendation ?? null;
+  if (lead) parts.push(`<p class="analysis-lead">${escapeHtml(lead)}</p>`);
+  if (findings.rationale) parts.push(`<p class="analysis-body">${escapeHtml(findings.rationale)}</p>`);
+  if (findings.effect) parts.push(`<p class="analysis-body">${escapeHtml(findings.effect)}</p>`);
+  // The model often returns "equity — because ...". Uppercase only the verdict,
+  // never the sentence that follows it.
+  const splitVerdict = (value) => {
+    const text = String(value).trim();
+    const match = text.match(/^([^—.,:]{1,24})\s*[—:,.]\s*(.+)$/s);
+    return match ? { verdict: match[1].trim(), rest: match[2].trim() } : { verdict: text, rest: '' };
+  };
+  if (findings.buysCoverageOrEquity) {
+    const { verdict, rest } = splitVerdict(findings.buysCoverageOrEquity);
+    parts.push(
+      `<p class="analysis-tag"><b>Buys ${escapeHtml(verdict)}</b>${rest ? ` <span>${escapeHtml(rest)}</span>` : ''}</p>`,
+    );
+  }
+  if (findings.safeToActOn) {
+    const { verdict, rest } = splitVerdict(findings.safeToActOn);
+    parts.push(
+      `<p class="analysis-tag ${verdict.toLowerCase() === 'no' ? 'is-blocked' : ''}"><b>Safe to act on: ${escapeHtml(verdict)}</b>${rest ? ` <span>${escapeHtml(rest)}</span>` : ''}</p>`,
+    );
+  }
+
+  const list = Array.isArray(findings.findings)
+    ? findings.findings
+    : Array.isArray(findings.gaps)
+      ? findings.gaps
+      : [];
+  if (list.length) {
+    parts.push(
+      `<ul class="analysis-list">${list
+        .map((item) => {
+          const title = item.requirement ?? item.missing ?? '';
+          const detail = item.invalidates ?? item.action ?? '';
+          const extra = item.fix ?? item.scale ?? '';
+          const sev = item.severity ? `<span class="analysis-sev sev-${escapeHtml(String(item.severity))}">${escapeHtml(String(item.severity))}</span>` : '';
+          const where = Array.isArray(item.facilities) && item.facilities.length
+            ? `<small>${escapeHtml(item.facilities.join(' · '))}</small>`
+            : '';
+          return `<li><strong>${escapeHtml(String(title))}</strong>${sev}${where}${detail ? `<p>${escapeHtml(String(detail))}</p>` : ''}${extra ? `<em>${escapeHtml(String(extra))}</em>` : ''}</li>`;
+        })
+        .join('')}</ul>`,
+    );
+  }
+
+  if (Array.isArray(findings.caveats) && findings.caveats.length) {
+    parts.push(
+      `<ul class="analysis-caveats">${findings.caveats.map((c) => `<li>${escapeHtml(String(c))}</li>`).join('')}</ul>`,
+    );
+  }
+  if (findings.strongestConclusion) {
+    parts.push(`<p class="analysis-body"><strong>What the data does support:</strong> ${escapeHtml(String(findings.strongestConclusion))}</p>`);
+  }
+  if (findings.confidence) {
+    parts.push(
+      `<p class="analysis-tag">Confidence: ${escapeHtml(String(findings.confidence))}${findings.confidenceReason ? ` — ${escapeHtml(String(findings.confidenceReason))}` : ''}</p>`,
+    );
+  }
+  return parts.join('');
+}
+
+function renderAllocationAnalysis() {
+  const container = $('[data-allocation-analysis]');
+  if (!container) return;
+  if (!allocationInputs()) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const buttons = ANALYSIS_OPTIONS.map(
+    (o) =>
+      `<button type="button" class="analysis-button${allocationAnalysis.id === o.id ? ' is-active' : ''}" data-run-analysis="${o.id}"${allocationAnalysis.status === 'running' ? ' disabled' : ''}>${escapeHtml(o.label)}</button>`,
+  ).join('');
+
+  let body = '';
+  if (allocationAnalysis.status === 'running') {
+    body = `<p class="analysis-status"><i class="live-dot"></i> Reading the allocation…</p>`;
+  } else if (allocationAnalysis.status === 'error') {
+    body = `<p class="analysis-status is-blocked">${escapeHtml(allocationAnalysis.error)}</p>`;
+  } else if (allocationAnalysis.status === 'done' && allocationAnalysis.data) {
+    const { data } = allocationAnalysis;
+    body = `${analysisFindingsMarkup(data.findings)}
+      <p class="analysis-provenance">${icon('check')} Interpretation only — every figure comes from the solver. ${escapeHtml(String(data.model ?? ''))}</p>`;
+  }
+
+  container.innerHTML = `
+    <div class="analysis-heading">
+      <div><p class="panel-kicker">Analysis</p><h4>Ask about this wave</h4></div>
+      <div class="analysis-buttons">${buttons}</div>
+    </div>
+    ${body}`;
+}
+
 function renderDashboardAllocation() {
   const container = $('[data-dashboard-allocation]');
   if (!container) return;
@@ -1106,9 +1259,11 @@ function renderDashboardAllocation() {
       <div><p class="panel-kicker">Wave allocation</p><h4>Where the next boxes should go</h4></div>
       <label class="allocation-supply"><span>Boxes this wave</span><input type="number" min="0" step="10" value="${allocationSupply}" data-allocation-supply aria-label="Boxes available this wave" /></label>
     </div>
-    <div data-allocation-body></div>`;
+    <div data-allocation-body></div>
+    <div class="allocation-analysis" data-allocation-analysis></div>`;
 
   renderAllocationBody();
+  renderAllocationAnalysis();
 }
 
 function focusDashboardFoodBank(id) {
@@ -1448,7 +1603,15 @@ dashboardApp.addEventListener('input', (event) => {
   const next = Math.max(0, Math.floor(Number(event.target.value) || 0));
   if (next === allocationSupply) return;
   allocationSupply = next;
+  allocationAnalysis = { status: 'idle', id: null, data: null, error: null };
   renderAllocationBody();
+  renderAllocationAnalysis();
+});
+
+dashboardApp.addEventListener('click', (event) => {
+  const trigger = event.target.closest('[data-run-analysis]');
+  if (!trigger) return;
+  void runAllocationAnalysis(trigger.dataset.runAnalysis);
 });
 
 $('[data-use-location]').addEventListener('click', () => {
