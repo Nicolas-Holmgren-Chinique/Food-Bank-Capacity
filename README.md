@@ -38,16 +38,21 @@ The existing `heurchain` Pages project is intentionally not referenced by the wo
 ## Product surface
 
 - Live-signal network map with supply, demand, capacity, and logistics filters
-- Role-aware dashboard prototype for people in need and food-bank operators
+- San Diego County food-bank layer sourced from the county-scoped D1 API, with a named fallback if the API is unavailable
+- No-auth role picker that flips into distinct person-in-need, food-bank, and food-supplier dashboard views
 - Report-food, report-need, and report-capacity entry points
 - Match flow: report → match → move → confirm
 - Privacy/trust framing for community-level signals
 - Public machine-readable declarations at `/capabilities.json` and `/.well-known/capabilities.json`
 - Static build with no authoritative personal or case data
 
+## Allocation model
+
+The About section links to the [The Indivisible Box — Allocation Framework](https://claude.ai/code/artifact/0380ce46-57db-4d47-82db-1a6902de62ed?via=auto_preview). The POC treats each ration as a whole box, finds the minimum usable capacity across storage dimensions, nets current inventory from need and free space, and uses a water-fill allocation to diagnose whether a site needs food, storage, or no further action.
+
 ## Live map data
 
-The network card loads [`public/network-data.json`](public/network-data.json) at runtime and renders latitude/longitude signals on a live Leaflet map using OpenStreetMap/CARTO tiles. The demo is scoped to San Diego County, California (`geoid` `0500000US06073`, FIPS `06073`); the map is locked to the county envelope and ignores signals outside it. It also requests the official 2020 Census TIGERweb county boundary when available. The data shape includes `location`, freshness fields, provenance, and a PUMA-compatible `geography` object nested under the county scope. PUMAs are Census geographic areas, so replace the demo `puma_geoid`, county bounds, and optional boundary data with authoritative sources before using production data.
+The network card renders latitude/longitude signals on a live Leaflet map using OpenStreetMap/CARTO tiles. The demo is scoped to San Diego County, California (`geoid` `0500000US06073`, FIPS `06073`); the map is locked to the county envelope. Food-bank markers are loaded from `/api/v1/food-banks?limit=500`, which is county-filtered at the D1 layer, and the browser keeps a small named fallback for offline preview. Random marker generation is intentionally not used.
 
 To point the static site at a live JSON feed, set `VITE_NETWORK_DATA_URL` during the build. The demo intentionally uses fictional organization names and approximate locations.
 

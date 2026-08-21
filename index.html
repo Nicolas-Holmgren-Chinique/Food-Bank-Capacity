@@ -449,6 +449,112 @@
       max-width: 280px;
     }
 
+    /* ── No-auth dashboard POC ── */
+    .dashboard-section { background: #f4f1ea; }
+    .dashboard-heading, .allocation-model-heading {
+      max-width: 1000px;
+      margin: 0 auto 2.5rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    .dashboard-heading h2, .allocation-model-heading h2 {
+      font-size: 2.5rem;
+      line-height: 1.08;
+      margin: 0.35rem 0 0;
+    }
+    .dashboard-heading h2 em, .allocation-model-heading h2 em { color: var(--teal); font-style: normal; }
+    .dashboard-heading > p, .allocation-model-heading > p {
+      color: var(--gray);
+      line-height: 1.6;
+      max-width: 390px;
+      margin: 0;
+    }
+    .dashboard-stage { max-width: 1000px; margin: 0 auto; perspective: 1500px; }
+    .dashboard-card {
+      min-height: 470px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 700ms cubic-bezier(.2,.75,.2,1);
+    }
+    .dashboard-card.is-open { transform: rotateY(180deg); }
+    .dashboard-face {
+      position: absolute;
+      inset: 0;
+      min-height: 470px;
+      padding: 2.2rem;
+      border: 1px solid #dedbd4;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 16px 40px rgba(16, 45, 50, 0.1);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .dashboard-gate-face { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 2.2rem; }
+    .dashboard-kicker { color: var(--red); font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+    .dashboard-gate-face h3 { font-size: 2rem; line-height: 1.1; margin: 0.55rem 0 0.8rem; }
+    .dashboard-gate-intro { color: var(--gray); line-height: 1.6; margin: 0 0 1.25rem; max-width: 430px; }
+    .dashboard-role-grid { display: grid; gap: 0.65rem; }
+    .dashboard-role {
+      display: grid;
+      grid-template-columns: 2rem 1fr auto;
+      grid-template-rows: auto auto;
+      align-items: center;
+      column-gap: 0.75rem;
+      text-align: left;
+      border: 1px solid #dedbd4;
+      border-radius: 11px;
+      background: #fff;
+      padding: 0.8rem 0.9rem;
+      cursor: pointer;
+      transition: border-color 180ms, transform 180ms, box-shadow 180ms;
+    }
+    .dashboard-role:hover, .dashboard-role:focus-visible { border-color: var(--teal); box-shadow: 0 5px 16px rgba(0, 128, 128, 0.12); transform: translateX(3px); outline: none; }
+    .dashboard-role > span { grid-row: 1 / span 2; color: var(--teal); font-size: 0.72rem; font-weight: 800; }
+    .dashboard-role strong { font-size: 0.92rem; }
+    .dashboard-role small { color: var(--gray); font-size: 0.76rem; margin-top: 0.2rem; }
+    .dashboard-role b { grid-column: 3; grid-row: 1 / span 2; color: var(--teal); font-size: 0.75rem; white-space: nowrap; }
+    .dashboard-demo-aside { display: flex; flex-direction: column; justify-content: center; padding: 1.75rem; border-radius: 14px; background: #dff1e7; }
+    .dashboard-demo-aside strong { font-size: 1.15rem; line-height: 1.2; }
+    .dashboard-demo-aside p { color: #315a5d; line-height: 1.6; margin: 0.75rem 0 0; }
+    .dashboard-demo-aside ul { color: #315a5d; line-height: 1.8; margin: 1.1rem 0 0; padding-left: 1.1rem; }
+    .dashboard-note { color: #777; display: block; font-size: 0.72rem; margin-top: 1.15rem; }
+    .dashboard-app-face { transform: rotateY(180deg); overflow: auto; }
+    .dashboard-appbar { align-items: flex-start; display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #eee; padding-bottom: 1.25rem; }
+    .dashboard-appbar h3 { font-size: 1.65rem; margin: 0.3rem 0; }
+    .dashboard-appbar p { color: var(--gray); margin: 0; }
+    .dashboard-back { border: 1px solid #d6d3cc; border-radius: 999px; background: #fff; color: var(--dark); cursor: pointer; font-weight: 700; padding: 0.6rem 0.9rem; white-space: nowrap; }
+    .dashboard-back:hover, .dashboard-back:focus-visible { border-color: var(--teal); color: var(--teal); outline: none; }
+    .dashboard-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin: 1.2rem 0; }
+    .dashboard-metric { border-radius: 10px; background: #f4f1ea; padding: 0.9rem 1rem; }
+    .dashboard-metric strong { display: block; color: var(--teal); font-size: 1.45rem; }
+    .dashboard-metric span { color: var(--gray); font-size: 0.75rem; }
+    .dashboard-content-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 0.9rem; }
+    .dashboard-panel { border: 1px solid #e5e2dc; border-radius: 11px; padding: 1rem; }
+    .dashboard-panel h4 { font-size: 0.95rem; margin: 0 0 0.65rem; }
+    .dashboard-list { display: grid; gap: 0.4rem; }
+    .dashboard-list-row { align-items: center; display: flex; justify-content: space-between; gap: 0.75rem; border-top: 1px solid #eee; padding: 0.65rem 0; }
+    .dashboard-list-row:first-child { border-top: 0; padding-top: 0; }
+    .dashboard-list-row strong { font-size: 0.82rem; }
+    .dashboard-list-row small { color: var(--gray); display: block; font-size: 0.7rem; margin-top: 0.15rem; }
+    .dashboard-status { color: var(--teal); font-size: 0.72rem; font-weight: 800; white-space: nowrap; }
+    .dashboard-model { color: var(--gray); font-size: 0.8rem; line-height: 1.6; }
+    .dashboard-model b { color: var(--dark); }
+
+    /* ── Allocation model / About ── */
+    .allocation-model-section { background: var(--white); }
+    .allocation-model-heading { align-items: flex-start; }
+    .allocation-model-heading h2 { font-size: 2.35rem; }
+    .allocation-model-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; max-width: 1000px; margin: 0 auto 1rem; }
+    .allocation-model-step { border-top: 3px solid var(--teal); padding: 1rem 0.85rem 0; }
+    .allocation-model-step span { color: var(--red); font-size: 0.72rem; font-weight: 800; }
+    .allocation-model-step h3 { font-size: 1rem; margin: 0.45rem 0; }
+    .allocation-model-step p { color: var(--gray); font-size: 0.82rem; line-height: 1.55; margin: 0; }
+    .allocation-model-footer { align-items: center; display: flex; justify-content: space-between; gap: 1rem; max-width: 1000px; margin: 1.7rem auto 0; padding: 1rem 1.1rem; border-radius: 10px; background: #dff1e7; }
+    .allocation-model-footer p { color: #315a5d; font-size: 0.82rem; line-height: 1.5; margin: 0; }
+    .allocation-model-footer a { color: var(--teal); font-weight: 800; white-space: nowrap; }
+
     /* ── Responsive ── */
     @media (max-width: 1024px) {
       .section { padding: 3.5rem 2rem; }
@@ -467,6 +573,10 @@
       .map-body { flex-direction: column; }
       .signal-panel { width: 100%; border-left: none; border-top: 1px solid #f0f0f0; }
       .steps-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .dashboard-heading, .allocation-model-heading { align-items: flex-start; flex-direction: column; }
+      .dashboard-gate-face { grid-template-columns: 1fr; }
+      .dashboard-demo-aside { display: none; }
+      .allocation-model-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 640px) {
@@ -477,6 +587,12 @@
       .hero-content h1 { font-size: 2rem; }
       .section { padding: 2.5rem 1.25rem; }
       .map-card-header { padding: 0.75rem 1rem; }
+      .dashboard-face { padding: 1.25rem; }
+      .dashboard-card, .dashboard-face { min-height: 590px; }
+      .dashboard-metrics, .dashboard-content-grid, .allocation-model-grid { grid-template-columns: 1fr; }
+      .dashboard-appbar { flex-direction: column; }
+      .dashboard-back { align-self: flex-start; }
+      .allocation-model-footer { align-items: flex-start; flex-direction: column; }
     }
   </style>
 </head>
@@ -487,8 +603,10 @@
   <a href="#top" class="logo">Care<span>Space</span></a>
   <div class="nav-links">
     <a href="#vision">Vision</a>
+    <a href="#dashboard">Dashboard</a>
     <a href="#features">Features</a>
     <a href="#how-it-works">How it Works</a>
+    <a href="#allocation-model">About the model</a>
   </div>
   <div class="menu-icon" aria-label="Menu">
     <span></span><span></span><span></span>
@@ -673,6 +791,52 @@
   </div>
 </section>
 
+<!-- ═══════════════ NO-AUTH DASHBOARD POC ═══════════════ -->
+<section id="dashboard" class="section dashboard-section">
+  <div class="dashboard-heading">
+    <div>
+      <p class="section-label"><span class="num">02</span> Dashboard</p>
+      <h2>Choose a view.<br /><em>See the next step.</em></h2>
+    </div>
+    <p>This POC opens a role-specific view without authentication. Each role sees the same San Diego County network through a different operational lens.</p>
+  </div>
+
+  <div class="dashboard-stage">
+    <div class="dashboard-card" data-dashboard-card>
+      <div class="dashboard-face dashboard-gate-face" data-dashboard-gate aria-hidden="false">
+        <div>
+          <span class="dashboard-kicker">POC demo · no login required</span>
+          <h3>Open a CareSpace dashboard.</h3>
+          <p class="dashboard-gate-intro">Choose the person or organization you want to represent. The card rotates into that dashboard so the public demo never asks for a real password.</p>
+          <div class="dashboard-role-grid" role="group" aria-label="Open a demo dashboard">
+            <button class="dashboard-role" type="button" data-demo-role="need"><span>01</span><strong>Person in need</strong><small>Find nearby food, hours, and access notes.</small><b>Open view →</b></button>
+            <button class="dashboard-role" type="button" data-demo-role="food-bank"><span>02</span><strong>Food bank operator</strong><small>See inventory, capacity, and the next wave.</small><b>Open view →</b></button>
+            <button class="dashboard-role" type="button" data-demo-role="food-supplier"><span>03</span><strong>Food supplier</strong><small>Offer surplus and see where it can land.</small><b>Open view →</b></button>
+          </div>
+          <small class="dashboard-note">Demo data only · no credentials or personal information are required.</small>
+        </div>
+        <aside class="dashboard-demo-aside">
+          <strong>One network, three useful views.</strong>
+          <p>The same map and allocation logic changes emphasis based on the person using it.</p>
+          <ul><li>Nearby access for people in need</li><li>Inventory and capacity for food banks</li><li>Handoff opportunities for suppliers</li></ul>
+        </aside>
+      </div>
+
+      <div class="dashboard-face dashboard-app-face" data-dashboard-app aria-hidden="true">
+        <div class="dashboard-appbar">
+          <div><span class="dashboard-kicker" data-dashboard-kicker>PERSON IN NEED</span><h3 data-dashboard-title>Find food near you</h3><p data-dashboard-subtitle>Food access across San Diego County.</p></div>
+          <button class="dashboard-back" type="button" data-dashboard-back>Change demo role ↩</button>
+        </div>
+        <div class="dashboard-metrics" data-dashboard-metrics></div>
+        <div class="dashboard-content-grid">
+          <section class="dashboard-panel"><h4 data-dashboard-list-title>Nearby food locations</h4><div class="dashboard-list" data-dashboard-list></div></section>
+          <section class="dashboard-panel"><h4>What the model says</h4><div class="dashboard-model" data-dashboard-model></div></section>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
 <section id="how-it-works" class="section how-section">
   <h2>How <em>CareSpace</em> Works</h2>
@@ -765,12 +929,30 @@
   </div>
 </section>
 
+<!-- ═══════════════ ALLOCATION MODEL / ABOUT ═══════════════ -->
+<section id="allocation-model" class="section allocation-model-section">
+  <div class="allocation-model-heading">
+    <div>
+      <p class="section-label"><span class="num">04</span> About the mechanism</p>
+      <h2>Coverage first.<br /><em>Space tells us why.</em></h2>
+    </div>
+    <p>CareSpace turns a changing food network into a decision: what can move now, where it can land, and whether the next investment should be food or storage.</p>
+  </div>
+  <div class="allocation-model-grid">
+    <article class="allocation-model-step"><span>01 · ATOMIZE</span><h3>Count whole boxes</h3><p>One ration is an indivisible unit with one destination, so the allocation stays honest.</p></article>
+    <article class="allocation-model-step"><span>02 · DIMENSIONALIZE</span><h3>Measure every wall</h3><p>Dry, cold, pallet, vehicle, and other capacities can bind at the same time.</p></article>
+    <article class="allocation-model-step"><span>03 · NET</span><h3>Subtract current state</h3><p>Free space and residual need both start from what is already on hand today.</p></article>
+    <article class="allocation-model-step"><span>04 · FILL & DIAGNOSE</span><h3>Raise the waterline</h3><p>Max-min coverage reveals whether a site needs food, storage, or no further action.</p></article>
+  </div>
+  <div class="allocation-model-footer"><p><strong>Operational rule:</strong> a capacity-bound site needs shelving or cold space, not another delivery. The network is re-solved as inventory moves.</p><a href="https://claude.ai/code/artifact/0380ce46-57db-4d47-82db-1a6902de62ed?via=auto_preview" target="_blank" rel="noreferrer">Read the full Allocation Framework →</a></div>
+</section>
+
 <!-- ═══════════════ MAP SCRIPT ═══════════════ -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function() {
   // San Diego County food bank data (sample subset for demo)
-  const foodBanks = [
+  let foodBanks = [
     { name: "Northside Market", lat: 33.1192, lng: -117.0864, type: "supply", meta: "84 meal equivalents" },
     { name: "Oak Street Kitchen", lat: 32.7157, lng: -117.1611, type: "capacity", meta: "Open until 9:00 pm" },
     { name: "Harbor House", lat: 32.6401, lng: -117.0842, type: "demand", meta: "Needs 120 dinners" },
@@ -801,27 +983,23 @@
     { name: "Fallbrook Community Table", lat: 33.3790, lng: -117.2460, type: "bank", meta: "Food bank" },
   ];
 
-  // Generate additional random food bank positions to reach ~153
-  for (let i = 0; i < 126; i++) {
-    foodBanks.push({
-      name: "Food Bank #" + (i + 28),
-      lat: 32.55 + Math.random() * 0.8,
-      lng: -117.55 + Math.random() * 1.4,
-      type: "bank",
-      meta: "Food bank"
-    });
-  }
-
+  // The named points above are a visible fallback. The live map replaces
+  // them with the county-scoped D1 feed below, so markers never drift from
+  // the source records or get generated outside San Diego County.
+  const countyBounds = L.latLngBounds([[32.53, -117.60], [33.39, -116.08]]);
   const map = L.map('liveMap', {
     center: [32.95, -117.12],
     zoom: 9,
     zoomControl: true,
+    maxBounds: countyBounds.pad(0.04),
+    maxBoundsViscosity: 0.85,
   });
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
     maxZoom: 18,
   }).addTo(map);
+  map.fitBounds(countyBounds, { padding: [12, 12] });
 
   // Custom purple diamond icon for food banks
   const bankIcon = L.divIcon({
@@ -860,6 +1038,7 @@
   };
 
   let markers = [];
+  let activeFilter = 'all';
 
   function renderMarkers(filter) {
     markers.forEach(m => map.removeLayer(m));
@@ -888,8 +1067,112 @@
     btn.addEventListener('click', () => {
       document.querySelectorAll('.map-filter').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      renderMarkers(btn.dataset.filter);
+      activeFilter = btn.dataset.filter;
+      renderMarkers(activeFilter);
     });
+  });
+
+  async function loadFoodBankLocations() {
+    try {
+      const response = await fetch('/api/v1/food-banks?limit=500', { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error('Food-bank API returned ' + response.status);
+      const payload = await response.json();
+      const locations = Array.isArray(payload.locations) ? payload.locations : [];
+      const points = locations
+        .filter(item => Number.isFinite(Number(item?.location?.latitude)) && Number.isFinite(Number(item?.location?.longitude)))
+        .map(item => ({
+          name: item.label || 'Food bank location',
+          lat: Number(item.location.latitude),
+          lng: Number(item.location.longitude),
+          type: 'bank',
+          meta: item.meta || item.area || 'Food bank',
+        }));
+
+      if (!points.length) return;
+      foodBanks = foodBanks.filter(item => item.type !== 'bank').concat(points);
+      renderMarkers(activeFilter);
+      const countLabel = document.querySelector('.map-location small');
+      if (countLabel) countLabel.textContent = '6 signals · ' + points.length + ' food banks · D1 synced';
+      const statusLabel = document.querySelector('.map-status-bar');
+      if (statusLabel) statusLabel.innerHTML = '<span class="dot"></span>Showing ' + (points.length + 6) + ' county-scoped locations · ' + points.length + ' food banks';
+      const footerLabel = document.querySelector('.signal-panel-footer > span:last-child');
+      if (footerLabel) footerLabel.textContent = '+ ' + points.length + ' food-bank locations are active';
+    } catch (error) {
+      console.warn('Using named fallback food-bank points.', error);
+    }
+  }
+
+  loadFoodBankLocations();
+})();
+</script>
+
+<script>
+(function() {
+  const profiles = {
+    need: {
+      kicker: 'PERSON IN NEED',
+      title: 'Find food near you',
+      subtitle: 'Nearby food access across San Diego County.',
+      metrics: [['4', 'food locations in scope'], ['84', 'meal equivalents ready'], ['Today', 'next open window']],
+      listTitle: 'Nearby food access',
+      rows: [['North County Food Hub', 'Oceanside · community distribution', 'Open'], ['Central Care Food Bank', 'San Diego · produce and dry goods', 'Today'], ['South Bay Community Pantry', 'Chula Vista · walk-up service', 'Open']],
+      model: '<p><b>Start with the nearest landing place.</b> The public view keeps location approximate, then prioritizes a food bank with an open service window and room to receive the next handoff.</p>'
+    },
+    'food-bank': {
+      kicker: 'FOOD BANK OPERATOR',
+      title: 'Run the next wave',
+      subtitle: 'Inventory, free space, and residual need in one view.',
+      metrics: [['124', 'grocery boxes'], ['210', 'fresh portions'], ['2,600', 'boxes in this wave']],
+      listTitle: 'Where the next boxes should go',
+      rows: [['North County Food Hub', '1,800 can hold · 791 assigned', 'Room for more'], ['Central Care Food Bank', '900 can hold · 900 assigned', 'Storage full'], ['South Bay Community Pantry', '1,200 can hold · 589 assigned', 'Room for more']],
+      model: '<p><b>Capacity is the wall.</b> Each ration is an indivisible box. The model takes the minimum across storage dimensions, nets current inventory, and water-fills the wave across residual need.</p>'
+    },
+    'food-supplier': {
+      kicker: 'FOOD SUPPLIER',
+      title: 'See where surplus can land',
+      subtitle: 'Turn a restaurant, market, farm, or kitchen offer into a next handoff.',
+      metrics: [['84', 'meal equivalents'], ['3', 'nearby recipients'], ['6:15', 'ready-to-move time']],
+      listTitle: 'Potential handoffs',
+      rows: [['North County Food Hub', 'Room for 1,800 boxes · Oceanside', 'Best fit'], ['South Bay Community Pantry', 'Produce accepted · Chula Vista', 'Open'], ['Central Care Food Bank', 'Cold storage currently full', 'Storage wall']],
+      model: '<p><b>Match fit before movement.</b> CareSpace compares quantity, timing, location, and receiving capacity so a supplier can choose a real landing place instead of sending food into a storage wall.</p>'
+    }
+  };
+
+  const card = document.querySelector('[data-dashboard-card]');
+  const gate = document.querySelector('[data-dashboard-gate]');
+  const app = document.querySelector('[data-dashboard-app]');
+  const kicker = document.querySelector('[data-dashboard-kicker]');
+  const title = document.querySelector('[data-dashboard-title]');
+  const subtitle = document.querySelector('[data-dashboard-subtitle]');
+  const metrics = document.querySelector('[data-dashboard-metrics]');
+  const listTitle = document.querySelector('[data-dashboard-list-title]');
+  const list = document.querySelector('[data-dashboard-list]');
+  const model = document.querySelector('[data-dashboard-model]');
+
+  function openDashboard(role) {
+    const profile = profiles[role] || profiles.need;
+    kicker.textContent = profile.kicker;
+    title.textContent = profile.title;
+    subtitle.textContent = profile.subtitle;
+    metrics.innerHTML = profile.metrics.map(([value, label]) => '<div class="dashboard-metric"><strong>' + value + '</strong><span>' + label + '</span></div>').join('');
+    listTitle.textContent = profile.listTitle;
+    list.innerHTML = profile.rows.map(([name, detail, status]) => '<div class="dashboard-list-row"><div><strong>' + name + '</strong><small>' + detail + '</small></div><span class="dashboard-status">' + status + '</span></div>').join('');
+    model.innerHTML = profile.model;
+    card.classList.add('is-open');
+    gate.setAttribute('aria-hidden', 'true');
+    app.setAttribute('aria-hidden', 'false');
+    window.setTimeout(() => document.querySelector('[data-dashboard-back]').focus(), 450);
+  }
+
+  document.querySelectorAll('[data-demo-role]').forEach(button => {
+    button.addEventListener('click', () => openDashboard(button.dataset.demoRole));
+  });
+
+  document.querySelector('[data-dashboard-back]').addEventListener('click', () => {
+    card.classList.remove('is-open');
+    gate.setAttribute('aria-hidden', 'false');
+    app.setAttribute('aria-hidden', 'true');
+    window.setTimeout(() => document.querySelector('[data-demo-role]').focus(), 450);
   });
 })();
 </script>
