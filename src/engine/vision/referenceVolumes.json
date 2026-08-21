@@ -1,0 +1,15 @@
+{
+  "unitVolumes": {
+    "refrigerator_cold": 20,
+    "refrigerator_freezer_compartment": 6,
+    "chest_freezer": 15,
+    "upright_freezer": 15,
+    "base_cabinet": 6,
+    "wall_cabinet": 4,
+    "shelving_unit": 12,
+    "pantry_shelf": 12
+  },
+  "palletSlotFt2": 13.3,
+  "assumedRoomFloorFt2": 200,
+  "floorBandHeightFraction": 0.4
+}

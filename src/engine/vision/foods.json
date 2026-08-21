@@ -1,0 +1,20 @@
+[
+  { "id": "milk_crate", "name": "Milk (crate)", "category": "cold", "unit": "crate", "volumePerUnit": 1.5, "mealsEquivalent": 12, "icon": "🥛" },
+  { "id": "produce_box_cold", "name": "Fresh produce (box)", "category": "cold", "unit": "box", "volumePerUnit": 2, "mealsEquivalent": 10, "icon": "🥬" },
+  { "id": "dairy_box", "name": "Dairy assortment (box)", "category": "cold", "unit": "box", "volumePerUnit": 1.8, "mealsEquivalent": 14, "icon": "🧀" },
+  { "id": "deli_tray", "name": "Prepared meals (tray)", "category": "cold", "unit": "tray", "volumePerUnit": 0.6, "mealsEquivalent": 8, "icon": "🍱" },
+  { "id": "cold_pallet", "name": "Mixed refrigerated (pallet)", "category": "cold", "unit": "pallet", "volumePerUnit": 40, "footprintFt2": 13.3, "mealsEquivalent": 260, "icon": "🧊" },
+  { "id": "frozen_meat_box", "name": "Frozen meat (box)", "category": "frozen", "unit": "box", "volumePerUnit": 1.5, "mealsEquivalent": 18, "icon": "🥩" },
+  { "id": "frozen_meal_box", "name": "Frozen prepared meals (box)", "category": "frozen", "unit": "box", "volumePerUnit": 1.2, "mealsEquivalent": 20, "icon": "🍲" },
+  { "id": "frozen_veg_box", "name": "Frozen vegetables (box)", "category": "frozen", "unit": "box", "volumePerUnit": 1.3, "mealsEquivalent": 15, "icon": "🥦" },
+  { "id": "frozen_pallet", "name": "Mixed frozen (pallet)", "category": "frozen", "unit": "pallet", "volumePerUnit": 40, "footprintFt2": 13.3, "mealsEquivalent": 480, "icon": "🧊" },
+  { "id": "canned_goods_box", "name": "Canned goods (box)", "category": "dry", "unit": "box", "volumePerUnit": 1.2, "mealsEquivalent": 16, "icon": "🥫" },
+  { "id": "dry_staples_box", "name": "Rice & pasta (box)", "category": "dry", "unit": "box", "volumePerUnit": 1, "mealsEquivalent": 20, "icon": "🍚" },
+  { "id": "cereal_box", "name": "Cereal & breakfast (box)", "category": "dry", "unit": "box", "volumePerUnit": 1.4, "mealsEquivalent": 12, "icon": "🥣" },
+  { "id": "bread_crate", "name": "Bread & bakery (crate)", "category": "dry", "unit": "crate", "volumePerUnit": 2, "mealsEquivalent": 18, "icon": "🍞" },
+  { "id": "snack_box", "name": "Snacks & shelf-stable (box)", "category": "dry", "unit": "box", "volumePerUnit": 0.9, "mealsEquivalent": 10, "icon": "🍪" },
+  { "id": "baby_formula_box", "name": "Baby formula & supplies (box)", "category": "dry", "unit": "box", "volumePerUnit": 0.8, "mealsEquivalent": 8, "icon": "🍼" },
+  { "id": "water_case", "name": "Bottled water (case)", "category": "dry", "unit": "case", "volumePerUnit": 1.1, "mealsEquivalent": 4, "icon": "💧" },
+  { "id": "dry_pallet", "name": "Mixed dry goods (pallet)", "category": "dry", "unit": "pallet", "volumePerUnit": 40, "footprintFt2": 13.3, "mealsEquivalent": 640, "icon": "📦" },
+  { "id": "hygiene_box", "name": "Hygiene & non-food (box)", "category": "dry", "unit": "box", "volumePerUnit": 1, "mealsEquivalent": 0, "icon": "🧻" }
+]

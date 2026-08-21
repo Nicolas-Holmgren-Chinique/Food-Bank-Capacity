@@ -1,0 +1,5 @@
+{
+  "fixtures": [
+    { "class": "shelving unit", "confidence": 0.85, "bbox": { "x": 0.1, "y": 0.08, "width": 0.35, "height": 0.6 } }
+  ]
+}

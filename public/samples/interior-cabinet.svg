@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600">
+  <rect width="1200" height="1600" fill="#241a10"/>
+  <rect x="60" y="60" width="1080" height="1480" rx="20" fill="#2c2015" stroke="#f2d77e" stroke-width="3"/>
+  <rect x="110" y="140" width="980" height="440" rx="8" fill="#3a2c1c"/>
+  <rect x="140" y="170" width="260" height="380" fill="#ff725c" opacity="0.75"/>
+  <rect x="430" y="170" width="220" height="380" fill="#b4e4bc" opacity="0.75"/>
+  <rect x="110" y="620" width="980" height="440" rx="8" fill="#3a2c1c"/>
+  <rect x="140" y="650" width="180" height="380" fill="#f2d77e" opacity="0.75"/>
+  <rect x="110" y="1100" width="980" height="430" rx="8" fill="#3a2c1c"/>
+  <text x="600" y="1500" text-anchor="middle" font-family="sans-serif" font-size="34" fill="#f2d77e">Cabinet interior — schematic placeholder, ~30% full</text>
+</svg>

@@ -1,0 +1,12 @@
+{
+  "source_width": 1600,
+  "source_height": 1200,
+  "objects": [
+    { "classLabel": "refrigerator", "confidence": 0.93, "x": 40, "y": 180, "width": 340, "height": 620 },
+    { "classLabel": "chest freezer", "confidence": 0.88, "x": 430, "y": 560, "width": 380, "height": 260 },
+    { "classLabel": "shelving unit", "confidence": 0.81, "x": 860, "y": 140, "width": 380, "height": 700 },
+    { "classLabel": "wall cabinet", "confidence": 0.77, "x": 1280, "y": 120, "width": 260, "height": 220 },
+    { "classLabel": "base cabinet", "confidence": 0.74, "x": 1280, "y": 620, "width": 260, "height": 200 },
+    { "classLabel": "sink", "confidence": 0.9, "x": 430, "y": 130, "width": 220, "height": 180 }
+  ]
+}

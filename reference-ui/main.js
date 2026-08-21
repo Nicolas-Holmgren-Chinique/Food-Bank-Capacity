@@ -1,4 +1,11 @@
 import './styles.css';
+import { icon } from './icons.js';
+import { initGuidedCaptureFlow } from './guidedCaptureUI.js';
+
+// Set VITE_VISION_BACKEND=demo in .env.local to force the fully-offline demo backend
+// (no server/network calls at all — see src/engine/demoBackend.js and docs/MOBILE_TESTING.md
+// test #11). Unset lets the server's VISION_PROVIDER decide (gemini by default).
+const VISION_BACKEND = import.meta.env.VITE_VISION_BACKEND || undefined;
 
 const networkNodes = [
   { id: 'north', type: 'supply', label: 'Northside Market', meta: '84 meal equivalents', x: 17, y: 30 },
@@ -19,23 +26,6 @@ const markerMarkup = networkNodes
       </button>`,
   )
   .join('');
-
-const icon = (name) => {
-  const paths = {
-    arrow: '<path d="M5 12h13M13 6l6 6-6 6"/>',
-    arrowUp: '<path d="M12 19V5m-6 6 6-6 6 6"/>',
-    check: '<path d="m5 12 4 4L19 6"/>',
-    chevron: '<path d="m7 9 5 5 5-5"/>',
-    close: '<path d="M6 6l12 12M18 6 6 18"/>',
-    copy: '<rect x="9" y="9" width="10" height="10" rx="1.5"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/>',
-    heart: '<path d="M20.8 8.7c0 5.5-8.8 10.4-8.8 10.4S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z"/>',
-    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
-    pin: '<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
-    spark: '<path d="m12 3 1.5 6.5L20 11l-6.5 1.5L12 19l-1.5-6.5L4 11l6.5-1.5L12 3Z"/>',
-    users: '<path d="M16 20v-1.7a3.3 3.3 0 0 0-3.3-3.3H7.3A3.3 3.3 0 0 0 4 18.3V20M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 20v-1.7a3.3 3.3 0 0 0-2.5-3.2M16.5 3.1a4 4 0 0 1 0 7.8"/>',
-  };
-  return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name] ?? paths.spark}</svg>`;
-};
 
 const app = document.querySelector('#app');
 
@@ -255,6 +245,11 @@ function renderModal(kind) {
   const copy = reportCopy[kind] ?? reportCopy.resource;
   if (copy.options) {
     modalContent.innerHTML = `<p class="eyebrow">${copy.kicker}</p><h2 id="modal-title">${copy.title}</h2><p class="modal-intro">${copy.intro}</p><div class="modal-options">${copy.options.map(([value, title, detail]) => `<button class="modal-option" type="button" data-report="${value}"><span class="modal-option-icon icon-${value}">${icon(value === 'supply' ? 'heart' : value === 'demand' ? 'users' : 'spark')}</span><span><strong>${title}</strong><small>${detail}</small></span><span class="signal-card-arrow">${icon('arrow')}</span></button>`).join('')}</div>`;
+    return;
+  }
+  if (kind === 'capacity') {
+    closeModal();
+    initGuidedCaptureFlow({ onDone: () => {}, visionBackend: VISION_BACKEND });
     return;
   }
   modalContent.innerHTML = `<p class="eyebrow">${copy.kicker}</p><h2 id="modal-title">${copy.title}</h2><p class="modal-intro">${copy.intro}</p><form class="report-form" data-report-form><div class="form-grid">${copy.fields.map(fieldMarkup).join('')}</div><label class="form-consent"><input type="checkbox" required /><span>I’m sharing an organization-level signal, not private information about an individual.</span></label><button class="button button-dark form-submit" type="submit">Preview my signal ${icon('arrow')}</button><p class="form-footnote">No account required for this prototype. Your details stay in this browser.</p></form>`;

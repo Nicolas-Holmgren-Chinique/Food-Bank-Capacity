@@ -1,4 +1,4 @@
-# CareForce
+# CareSpace
 ## Product Requirements Document — Revision 0.1
 
 **Working concept:** A real-time coordination layer connecting excess food, nonprofit capacity, logistics, and people experiencing food insecurity.
@@ -6,7 +6,7 @@
 **Core proposition:**  
 **“Space exists. Food exists. But the systems cannot see each other.”**
 
-CareForce makes them visible to each other—and gives both humans and AI agents a common interface through which they can coordinate.
+CareSpace makes them visible to each other—and gives both humans and AI agents a common interface through which they can coordinate.
 
 ---
 
@@ -25,7 +25,7 @@ Food may exist while:
 - physical space exists but is not mapped;
 - operating hours and delivery schedules are misaligned.
 
-CareForce will create a shared operational map of these resources and constraints.
+CareSpace will create a shared operational map of these resources and constraints.
 
 The initial system focuses on three dimensions identified during discovery:
 
@@ -78,19 +78,19 @@ Examples:
 - volunteer capacity;
 - loading/unloading capacity.
 
-CareForce must therefore model **capacity as dynamic state**, rather than simply recording that a facility exists.
+CareSpace must therefore model **capacity as dynamic state**, rather than simply recording that a facility exists.
 
 ---
 
 # 2. Product Thesis
 
-CareForce should operate as a **marketplace of supply, demand, capacity, and logistics**.
+CareSpace should operate as a **marketplace of supply, demand, capacity, and logistics**.
 
 Instead of:
 
 > Donor → Food Bank
 
-CareForce models:
+CareSpace models:
 
 > **Supply + Demand + Physical Access + Time Access + Capacity + Logistics → Match**
 
@@ -143,7 +143,7 @@ Organizations or individuals capable of moving resources:
 - municipal services;
 - participating commercial logistics providers.
 
-### CareForce Operators
+### CareSpace Operators
 
 Users responsible for:
 
@@ -164,10 +164,10 @@ An authorized agent should ultimately be capable of discovering resources, query
 
 # 4. Initial Product Architecture
 
-CareForce should consist of four major layers.
+CareSpace should consist of four major layers.
 
 ```text
-                 CAREFORCE
+                 CARESPACE
 
         ┌───────────────────────┐
         │      Web Interface    │
@@ -175,12 +175,12 @@ CareForce should consist of four major layers.
         └───────────┬───────────┘
                     │
         ┌───────────▼───────────┐
-        │    CareForce API      │
+        │    CareSpace API      │
         │ Human + Agent Access  │
         └───────────┬───────────┘
                     │
         ┌───────────▼───────────┐
-        │ CareForce Application │
+        │ CareSpace Application │
         │ Matching / Rules /    │
         │ Capacity / Logistics  │
         └───────────┬───────────┘
@@ -194,7 +194,7 @@ CareForce should consist of four major layers.
 
 The public website should **not contain the authoritative operational database**.
 
-The frontend consumes the CareForce API, while operational data resides in an independently hosted backend.
+The frontend consumes the CareSpace API, while operational data resides in an independently hosted backend.
 
 This separation allows the web interface, mobile clients, nonprofit systems, and autonomous agents to interact with the same underlying network.
 
@@ -202,13 +202,13 @@ This separation allows the web interface, mobile clients, nonprofit systems, and
 
 # 5. Revision-One Website
 
-The first website should establish the CareForce concept while simultaneously functioning as the entry point into the network.
+The first website should establish the CareSpace concept while simultaneously functioning as the entry point into the network.
 
 The initial landing page should communicate within seconds:
 
 **There is food.  
 There is need.  
-CareForce connects them.**
+CareSpace connects them.**
 
 The page should contain four primary actions:
 
@@ -226,7 +226,7 @@ For organizations reporting storage, kitchen, distribution, transportation, or s
 
 **Explore the Network**
 
-For viewing the geographic CareForce network.
+For viewing the geographic CareSpace network.
 
 A secondary action should be available for:
 
@@ -236,7 +236,7 @@ A secondary action should be available for:
 
 # 6. Geographic Interface
 
-Mapping should become one of the defining interfaces of CareForce.
+Mapping should become one of the defining interfaces of CareSpace.
 
 The map should eventually display:
 
@@ -418,7 +418,7 @@ Later revisions can introduce optimization across multiple suppliers, recipients
 
 Agent communication should exist **from the first public release.**
 
-CareForce should publish machine-readable declarations describing the actions an agent may perform.
+CareSpace should publish machine-readable declarations describing the actions an agent may perform.
 
 The API should initially expose capabilities conceptually equivalent to:
 
@@ -446,13 +446,13 @@ The exact API contract should be expressed through an OpenAPI specification.
 
 The public site should expose a machine-readable description allowing an agent to determine immediately:
 
-> “What can I do with CareForce?”
+> “What can I do with CareSpace?”
 
 For example, the declared capabilities could include:
 
 ```json
 {
-  "service": "CareForce",
+  "service": "CareSpace",
   "api_version": "1.0",
   "capabilities": [
     "discover_facilities",
@@ -469,7 +469,7 @@ The architecture should deliberately separate:
 
 **Discovery**
 
-“What does CareForce support?”
+“What does CareSpace support?”
 
 from:
 
@@ -490,32 +490,32 @@ Authenticated agents should use scoped credentials.
 Example scopes:
 
 ```text
-careforce.read.facilities
-careforce.read.supply
-careforce.read.demand
+carespace.read.facilities
+carespace.read.supply
+carespace.read.demand
 
-careforce.write.supply
-careforce.write.demand
-careforce.write.capacity
+carespace.write.supply
+carespace.write.demand
+carespace.write.capacity
 
-careforce.match.create
-careforce.logistics.commit
+carespace.match.create
+carespace.logistics.commit
 ```
 
 High-impact actions should require stronger authorization than simple discovery.
 
-An agent should not automatically gain the ability to commit an organization to accepting food simply because it can query the CareForce database.
+An agent should not automatically gain the ability to commit an organization to accepting food simply because it can query the CareSpace database.
 
 ---
 
 # 12. Human + Agent Interaction Model
 
-CareForce should avoid creating separate networks for humans and agents.
+CareSpace should avoid creating separate networks for humans and agents.
 
 Instead:
 
 ```text
-                 CareForce API
+                 CareSpace API
                       │
        ┌──────────────┼──────────────┐
        │              │              │
@@ -523,7 +523,7 @@ Instead:
        │              │              │
        └──────────────┼──────────────┘
                       │
-                CareForce Data
+                CareSpace Data
 ```
 
 Everything operates against the same resource model.
@@ -536,7 +536,7 @@ A human reporting 200 meals and an authenticated restaurant agent reporting 200 
 
 A major problem with capacity databases is stale information.
 
-CareForce therefore needs to distinguish:
+CareSpace therefore needs to distinguish:
 
 ```text
 KNOWN CAPACITY
@@ -577,7 +577,7 @@ versus
 
 **Execution**
 
-CareForce should preserve this distinction.
+CareSpace should preserve this distinction.
 
 A match may progress through states such as:
 
@@ -605,7 +605,7 @@ Agents may participate in different portions of this workflow depending upon the
 
 # 15. Trust and Verification
 
-Because CareForce coordinates real-world resources, data provenance is essential.
+Because CareSpace coordinates real-world resources, data provenance is essential.
 
 Every important update should record:
 
@@ -621,7 +621,7 @@ Sources might include:
 
 ```text
 organization_user
-careforce_operator
+carespace_operator
 authenticated_agent
 partner_api
 sensor/system integration
@@ -640,7 +640,7 @@ The MVP should prove three things:
 
 ### 1. Discovery
 
-CareForce can map organizations and resources.
+CareSpace can map organizations and resources.
 
 ### 2. Reporting
 
@@ -652,12 +652,12 @@ Humans and agents can report:
 
 ### 3. Matching
 
-CareForce can identify plausible supply → capacity → demand matches.
+CareSpace can identify plausible supply → capacity → demand matches.
 
 The first release therefore needs:
 
 - public splash page;
-- CareForce explanation;
+- CareSpace explanation;
 - map interface;
 - facility/resource database;
 - supply reporting;
@@ -691,7 +691,7 @@ Those would substantially increase the product's regulatory, security, and imple
 
 # 18. Privacy Principle
 
-CareForce should initially map **resources and organizational demand rather than vulnerable individuals.**
+CareSpace should initially map **resources and organizational demand rather than vulnerable individuals.**
 
 For example, the preferred model is:
 
@@ -720,13 +720,13 @@ must be collected before 8 PM
 requires refrigeration after pickup
 ```
 
-CareForce queries nearby demand.
+CareSpace queries nearby demand.
 
 A shelter needs approximately 100 meals.
 
 However, the shelter cannot receive deliveries after 7 PM.
 
-CareForce finds another community kitchen:
+CareSpace finds another community kitchen:
 
 ```text
 Demand: 150 meals
@@ -737,7 +737,7 @@ Distance: 2.8 miles
 
 A volunteer logistics provider is available.
 
-CareForce produces:
+CareSpace produces:
 
 ```text
 SUPPLY
@@ -761,13 +761,13 @@ IMPACT
 Approximately 120 meals redirected
 ```
 
-That transaction represents the core CareForce product.
+That transaction represents the core CareSpace product.
 
 ---
 
 # 20. Impact Metrics
 
-CareForce should instrument impact from the beginning.
+CareSpace should instrument impact from the beginning.
 
 Primary metrics:
 
@@ -801,16 +801,16 @@ Match completion rate
 
 # 21. Website Messaging
 
-The website should avoid presenting CareForce simply as another charity directory.
+The website should avoid presenting CareSpace simply as another charity directory.
 
 The stronger message is:
 
 # Food exists. Need exists.
-## CareForce connects them.
+## CareSpace connects them.
 
 Supporting copy:
 
-> CareForce maps food, need, capacity, and logistics in real time—helping communities move available resources to the places that can use them.
+> CareSpace maps food, need, capacity, and logistics in real time—helping communities move available resources to the places that can use them.
 
 A second important message:
 
@@ -826,7 +826,7 @@ And the agent-facing proposition:
 
 ```text
 NAVIGATION
-CareForce | Map | Organizations | Developers | About
+CareSpace | Map | Organizations | Developers | About
 
 ------------------------------------------------
 
@@ -835,7 +835,7 @@ HERO
 Food exists.
 Need exists.
 
-CareForce connects them.
+CareSpace connects them.
 
 [Find Food] [Offer Food] [Explore the Map]
 
@@ -843,7 +843,7 @@ CareForce connects them.
 
 LIVE NETWORK
 
-Interactive CareForce map
+Interactive CareSpace map
 
 Supply | Demand | Capacity
 
@@ -869,7 +869,7 @@ I can transport
 
 AGENT API
 
-Connect your agent to CareForce.
+Connect your agent to CareSpace.
 
 [API Documentation]
 [View Capabilities]
@@ -901,7 +901,7 @@ Web Application
 API Gateway
       │
       ▼
-CareForce Backend
+CareSpace Backend
       │
  ┌────┼─────────┐
  │    │         │
@@ -917,10 +917,10 @@ The frontend should remain effectively stateless with respect to authoritative o
 
 The backend becomes the source of truth.
 
-This allows CareForce eventually to support:
+This allows CareSpace eventually to support:
 
 ```text
-careforce.org
+carespace.org
 mobile applications
 partner nonprofit systems
 municipal systems
@@ -937,7 +937,7 @@ without rebuilding the underlying platform.
 
 The central design principle coming from the discovery work should remain visible throughout development:
 
-> **CareForce does not merely map where resources are. It maps whether those resources are usable right now.**
+> **CareSpace does not merely map where resources are. It maps whether those resources are usable right now.**
 
 That means every significant resource should eventually be evaluated across:
 
@@ -947,7 +947,7 @@ That means every significant resource should eventually be evaluated across:
 
 **HOW MUCH — Capacity Access**
 
-Once those three dimensions are combined with **supply and demand**, CareForce becomes substantially more useful than a conventional nonprofit directory.
+Once those three dimensions are combined with **supply and demand**, CareSpace becomes substantially more useful than a conventional nonprofit directory.
 
 ---
 
@@ -958,13 +958,13 @@ Revision One succeeds when the system can demonstrate the following end-to-end w
 ```text
 Food becomes available
         ↓
-CareForce learns about it
+CareSpace learns about it
         ↓
-CareForce identifies current demand
+CareSpace identifies current demand
         ↓
-CareForce checks time + location + capacity
+CareSpace checks time + location + capacity
         ↓
-CareForce proposes a viable destination
+CareSpace proposes a viable destination
         ↓
 Human or authorized agent accepts
         ↓
@@ -975,13 +975,13 @@ Delivery is confirmed
 Capacity + supply + demand update
 ```
 
-If CareForce can reliably execute that loop—even across a small pilot network—the core product hypothesis has been demonstrated.
+If CareSpace can reliably execute that loop—even across a small pilot network—the core product hypothesis has been demonstrated.
 
 ---
 
 ## Product North Star
 
-**CareForce is the real-time coordination layer for community resources.**
+**CareSpace is the real-time coordination layer for community resources.**
 
 The first use case is food insecurity, connecting excess food with organizations that have both **need and actual capacity to receive it**.
 
