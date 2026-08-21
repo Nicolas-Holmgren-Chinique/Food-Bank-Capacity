@@ -72,6 +72,86 @@ const networkDataUrl = import.meta.env.VITE_NETWORK_DATA_URL || '/network-data.j
 let networkData = fallbackNetworkData;
 let mapRuntime = null;
 
+const fallbackDashboardData = {
+  version: '1.0',
+  schema: 'carespace.dashboard',
+  source: 'CareSpace demo food access network',
+  scope: fallbackNetworkData.scope,
+  foodBanks: [
+    {
+      id: 'north-county-food-hub',
+      name: 'North County Food Hub',
+      area: 'Vista',
+      kind: 'Food bank',
+      status: 'Open today',
+      hours: 'Until 6:00 pm',
+      distanceMiles: 4.8,
+      location: { latitude: 33.2007, longitude: -117.2425 },
+      access: 'Walk-ins welcome · no referral required',
+      inventory: [
+        { category: 'Fresh produce', amount: '320 portions', note: 'Available today' },
+        { category: 'Pantry staples', amount: '86 family boxes', note: 'Restock at 2:00 pm' },
+        { category: 'Prepared meals', amount: '42 meals', note: 'Pickup by 5:30 pm' },
+      ],
+    },
+    {
+      id: 'central-care-food-bank',
+      name: 'Central Care Food Bank',
+      area: 'City Heights',
+      kind: 'Food bank',
+      status: 'Open today',
+      hours: 'Until 7:00 pm',
+      distanceMiles: 7.2,
+      location: { latitude: 32.7481, longitude: -117.1014 },
+      access: 'Walk-ins welcome · multilingual intake',
+      inventory: [
+        { category: 'Grocery boxes', amount: '124 boxes', note: 'Available today' },
+        { category: 'Fresh produce', amount: '210 portions', note: 'Best before tomorrow' },
+        { category: 'Baby essentials', amount: '18 kits', note: 'Ask at intake' },
+      ],
+      isDemoUserFoodBank: true,
+    },
+    {
+      id: 'south-bay-pantry',
+      name: 'South Bay Community Pantry',
+      area: 'National City',
+      kind: 'Community pantry',
+      status: 'Open tomorrow',
+      hours: '9:00 am – 4:00 pm',
+      distanceMiles: 9.6,
+      location: { latitude: 32.6781, longitude: -117.0992 },
+      access: 'Appointment preferred · same-day help available',
+      inventory: [
+        { category: 'Pantry staples', amount: '64 family boxes', note: 'Limited supply' },
+        { category: 'Culturally specific foods', amount: '38 boxes', note: 'Available tomorrow' },
+        { category: 'Prepared meals', amount: '76 meals', note: 'Pickup after 4:00 pm' },
+      ],
+    },
+    {
+      id: 'east-county-table',
+      name: 'East County Community Table',
+      area: 'El Cajon',
+      kind: 'Food distribution site',
+      status: 'Open today',
+      hours: 'Until 5:00 pm',
+      distanceMiles: 12.4,
+      location: { latitude: 32.7948, longitude: -116.9625 },
+      access: 'Drive-through and walk-up service',
+      inventory: [
+        { category: 'Grocery boxes', amount: '92 boxes', note: 'Available today' },
+        { category: 'Fresh produce', amount: '140 portions', note: 'Available today' },
+        { category: 'Cold storage items', amount: '24 crates', note: 'Pickup by 4:30 pm' },
+      ],
+    },
+  ],
+};
+
+const dashboardDataUrl = import.meta.env.VITE_DASHBOARD_DATA_URL || '/dashboard-data.json';
+let dashboardData = fallbackDashboardData;
+let dashboardRole = 'need';
+let selectedFoodBankId = fallbackDashboardData.foodBanks[0].id;
+let dashboardRuntime = null;
+
 const icon = (name) => {
   const paths = {
     arrow: '<path d="M5 12h13M13 6l6 6-6 6"/>',
@@ -101,6 +181,7 @@ app.innerHTML = `
 
       <nav class="desktop-nav" aria-label="Main navigation">
         <a href="#network">Network</a>
+        <a href="#dashboard">Dashboard</a>
         <a href="#how-it-works">How it works</a>
         <a href="#community">For organizations</a>
         <a href="#agents">For agents</a>
@@ -196,6 +277,49 @@ app.innerHTML = `
         </div>
       </section>
 
+      <section class="dashboard-section section-pad" id="dashboard">
+        <div class="section-heading dashboard-heading" data-reveal>
+          <div><p class="eyebrow"><span class="eyebrow-number">Your view</span> A personal doorway into the network</p><h2>Find food.<br /><span>Know what’s there.</span></h2></div>
+          <p class="heading-aside standalone">A simple dashboard for people looking for food and the organizations making food available.</p>
+        </div>
+
+        <div class="dashboard-shell" data-reveal data-delay="100">
+          <div class="dashboard-gate" data-dashboard-gate>
+            <div class="dashboard-login-card">
+              <div class="dashboard-login-mark"><span>${icon('pin')}</span></div>
+              <p class="eyebrow">Demo access</p>
+              <h3>Open your CareSpace dashboard.</h3>
+              <p class="dashboard-login-intro">Choose the view that fits you. This prototype does not transmit or store credentials; production sign-in will connect here to the approved auth provider.</p>
+              <div class="dashboard-role-switch" role="group" aria-label="Choose your dashboard role">
+                <button type="button" class="dashboard-role is-active" data-demo-role="need">I need food</button>
+                <button type="button" class="dashboard-role" data-demo-role="food-bank">I run a food bank</button>
+              </div>
+              <form class="dashboard-login-form" data-dashboard-login>
+                <label class="dashboard-email-field"><span>Email for demo access</span><input type="email" name="email" placeholder="you@example.org" autocomplete="email" required /></label>
+                <button class="button button-dark" type="submit" data-dashboard-submit>Enter as a person in need ${icon('arrow')}</button>
+              </form>
+              <p class="dashboard-login-footnote">No account required for this demo · organization-level data only</p>
+            </div>
+            <div class="dashboard-login-aside"><span class="dashboard-aside-number">01</span><p><strong>For people in need</strong><br />See food banks, pantry hours, access notes, and available inventory near you.</p><p><strong>For food banks</strong><br />See your inventory alongside nearby handoff partners and community demand.</p></div>
+          </div>
+
+          <div class="dashboard-app" data-dashboard-app hidden>
+            <div class="dashboard-appbar"><div><span class="dashboard-pill" data-dashboard-role-pill>Person in need</span><h3 data-dashboard-title>Find food near you</h3><p data-dashboard-subtitle>Live food access across San Diego County.</p></div><button class="dashboard-signout" type="button" data-dashboard-logout>Sign out ${icon('arrow')}</button></div>
+            <div class="dashboard-layout">
+              <section class="dashboard-map-card" aria-label="Nearby food access">
+                <div class="dashboard-card-heading"><div><p class="panel-kicker">Nearby food access</p><h4>What can land near you?</h4></div><span class="dashboard-live-label"><i class="live-dot"></i> Live feed</span></div>
+                <div class="dashboard-location-bar"><label for="dashboard-location">Search within</label><input id="dashboard-location" data-dashboard-location value="San Diego County" /><button type="button" class="location-button" data-use-location aria-label="Use my location">${icon('pin')}</button></div>
+                <div class="dashboard-map" id="dashboardMap" aria-label="Map of nearby food banks in San Diego County"><div class="dashboard-map-status" data-dashboard-map-status>Loading food access…</div></div>
+                <p class="dashboard-map-footnote"><span>${icon('pin')} County scope</span><span>Approximate locations protect privacy</span></p>
+              </section>
+              <aside class="dashboard-results-card" aria-label="Nearby food locations"><div class="dashboard-card-heading"><div><p class="panel-kicker">Available nearby</p><h4>Food locations</h4></div><span class="panel-count" data-dashboard-result-count>04</span></div><div class="dashboard-results" data-dashboard-results></div></aside>
+            </div>
+            <section class="dashboard-inventory-card" data-dashboard-inventory aria-label="Food inventory overview"></section>
+            <div class="dashboard-privacy-note">${icon('check')} Location stays at the county and service-area level in this demo. No individual need or case details are shown.</div>
+          </div>
+        </div>
+      </section>
+
       <section class="how-section section-pad" id="how-it-works">
         <div class="section-heading compact-heading" data-reveal>
           <div><p class="eyebrow"><span class="eyebrow-number">02</span> The handoff</p><h2>From signal<br /><span>to shared action.</span></h2></div>
@@ -254,7 +378,7 @@ app.innerHTML = `
     </main>
 
     <footer class="site-footer section-pad">
-      <div class="footer-top"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"><span></span><i></i></span><span class="brand-name">CareSpace</span></a><p>Food, need, capacity, and logistics<br />in the same room.</p><div class="footer-links"><a href="#network">Network</a><a href="#community">Organizations</a><a href="#agents">Developers</a><a href="#about">About</a></div></div>
+      <div class="footer-top"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"><span></span><i></i></span><span class="brand-name">CareSpace</span></a><p>Food, need, capacity, and logistics<br />in the same room.</p><div class="footer-links"><a href="#network">Network</a><a href="#dashboard">Dashboard</a><a href="#community">Organizations</a><a href="#agents">Developers</a><a href="#about">About</a></div></div>
       <div class="footer-bottom"><span>© <span data-year></span> CareSpace</span><span>Carefully coordinated on <a href="https://heurchain.com" target="_blank" rel="noreferrer">HeurChain</a></span><span>Privacy is part of the product.</span></div>
     </footer>
   </div>
@@ -556,6 +680,202 @@ async function initializeLiveMap() {
   }
 }
 
+function dashboardScopeBounds() {
+  const bounds = dashboardData.scope?.bounds;
+  if (!Array.isArray(bounds) || bounds.length !== 2) return null;
+  const [[south, west], [north, east]] = bounds.map((corner) => (Array.isArray(corner) ? corner.map(Number) : []));
+  if (![south, west, north, east].every(Number.isFinite)) return null;
+  if (south >= north || west >= east) return null;
+  return [[south, west], [north, east]];
+}
+
+function foodBanksInScope() {
+  const bounds = dashboardScopeBounds();
+  return (dashboardData.foodBanks ?? []).filter((foodBank) => {
+    const coordinates = signalCoordinates(foodBank);
+    if (!coordinates || !bounds) return Boolean(coordinates);
+    const [[south, west], [north, east]] = bounds;
+    const [latitude, longitude] = coordinates;
+    return latitude >= south && latitude <= north && longitude >= west && longitude <= east;
+  });
+}
+
+function dashboardSearchResults() {
+  const query = $('[data-dashboard-location]')?.value.trim().toLowerCase() || '';
+  const banks = foodBanksInScope();
+  if (!query || query === 'san diego county' || query === 'near me') return banks;
+  return banks.filter((foodBank) => `${foodBank.name} ${foodBank.area} ${foodBank.kind}`.toLowerCase().includes(query));
+}
+
+function createDashboardMarker(foodBank) {
+  const coordinates = signalCoordinates(foodBank);
+  if (!coordinates) return null;
+  const marker = L.marker(coordinates, {
+    icon: L.divIcon({
+      className: 'carespace-marker marker-supply dashboard-marker',
+      html: '<span class="carespace-marker-pulse"></span><span class="carespace-marker-core"></span>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -15],
+    }),
+    title: `${foodBank.name} · ${foodBank.area}`,
+  });
+  marker.bindPopup(`
+    <div class="map-popup">
+      <strong>${escapeHtml(foodBank.name)}</strong>
+      <span>${escapeHtml(foodBank.area)} · ${escapeHtml(foodBank.status)}</span>
+      <small>${escapeHtml(foodBank.hours)}</small>
+    </div>`, { closeButton: false });
+  return marker;
+}
+
+function renderDashboardMarkers() {
+  if (!dashboardRuntime) return;
+  const visibleIds = new Set(dashboardSearchResults().map((foodBank) => foodBank.id));
+  dashboardRuntime.markerLayer.clearLayers();
+  dashboardRuntime.markers.clear();
+  foodBanksInScope().forEach((foodBank) => {
+    const marker = createDashboardMarker(foodBank);
+    if (!marker) return;
+    marker.setOpacity(visibleIds.has(foodBank.id) ? 1 : 0.22);
+    dashboardRuntime.markers.set(foodBank.id, marker);
+    marker.addTo(dashboardRuntime.markerLayer);
+  });
+}
+
+function renderDashboardResults() {
+  const list = $('[data-dashboard-results]');
+  if (!list) return;
+  const results = dashboardSearchResults();
+  list.innerHTML = results.length
+    ? results.map((foodBank) => `
+      <button class="dashboard-result" type="button" data-food-bank="${escapeHtml(foodBank.id)}">
+        <span class="dashboard-result-icon">${icon('heart')}</span>
+        <span class="dashboard-result-copy"><strong>${escapeHtml(foodBank.name)}</strong><small>${escapeHtml(foodBank.area)} · ${escapeHtml(foodBank.kind)}</small><em>${escapeHtml(foodBank.access)}</em></span>
+        <span class="dashboard-result-meta"><b>${escapeHtml(String(foodBank.distanceMiles))} mi</b><small>${escapeHtml(foodBank.status)}</small></span>
+      </button>`).join('')
+    : '<p class="dashboard-empty">No food locations match that search yet. Try another San Diego County city.</p>';
+  const count = $('[data-dashboard-result-count]');
+  if (count) count.textContent = String(results.length).padStart(2, '0');
+}
+
+function renderDashboardInventory() {
+  const container = $('[data-dashboard-inventory]');
+  if (!container) return;
+  const foodBanks = foodBanksInScope();
+  const selected = dashboardRole === 'food-bank'
+    ? foodBanks.find((foodBank) => foodBank.isDemoUserFoodBank) ?? foodBanks[0]
+    : foodBanks.find((foodBank) => foodBank.id === selectedFoodBankId) ?? foodBanks[0];
+  if (!selected) {
+    container.innerHTML = '<p class="dashboard-empty">Inventory will appear when food access data is available.</p>';
+    return;
+  }
+
+  const title = dashboardRole === 'food-bank' ? 'Your inventory' : `Inventory at ${escapeHtml(selected.name)}`;
+  const intro = dashboardRole === 'food-bank'
+    ? 'Keep today’s available food visible to people and partners nearby.'
+    : `${escapeHtml(selected.status)} · ${escapeHtml(selected.hours)} · ${escapeHtml(selected.access)}`;
+  const action = dashboardRole === 'food-bank'
+    ? `<button class="text-button" type="button" data-dashboard-report>Update inventory ${icon('arrow')}</button>`
+    : `<button class="text-button" type="button" data-dashboard-request="${escapeHtml(selected.id)}">Request help from this location ${icon('arrow')}</button>`;
+  container.innerHTML = `
+    <div class="dashboard-inventory-heading"><div><p class="panel-kicker">${dashboardRole === 'food-bank' ? 'Operator view' : 'Food available'}</p><h4>${title}</h4><p>${intro}</p></div>${action}</div>
+    <div class="dashboard-inventory-list">${(selected.inventory ?? []).map((item) => `<div class="dashboard-inventory-row"><span class="inventory-spark">${icon('spark')}</span><span><strong>${escapeHtml(item.category)}</strong><small>${escapeHtml(item.note)}</small></span><b>${escapeHtml(item.amount)}</b></div>`).join('')}</div>`;
+}
+
+function focusDashboardFoodBank(id) {
+  const foodBank = foodBanksInScope().find((candidate) => candidate.id === id);
+  if (!foodBank) return;
+  selectedFoodBankId = foodBank.id;
+  renderDashboardInventory();
+  const coordinates = signalCoordinates(foodBank);
+  const marker = dashboardRuntime?.markers.get(foodBank.id);
+  if (dashboardRuntime?.map && coordinates) {
+    dashboardRuntime.map.setView(coordinates, Math.max(dashboardRuntime.map.getZoom(), 12), { animate: true });
+    marker?.openPopup();
+  }
+}
+
+function initializeDashboardMap() {
+  const mapElement = $('#dashboardMap');
+  if (!mapElement || dashboardRuntime) return;
+  const center = dashboardData.scope?.center ?? { latitude: 32.95, longitude: -117.12, zoom: 9 };
+  const bounds = dashboardScopeBounds();
+  const map = L.map(mapElement, {
+    center: [Number(center.latitude), Number(center.longitude)],
+    zoom: Number(center.zoom) || 9,
+    minZoom: bounds ? 8 : 10,
+    maxBounds: bounds ? L.latLngBounds(bounds) : undefined,
+    maxBoundsViscosity: bounds ? 1 : undefined,
+    zoomControl: true,
+    scrollWheelZoom: false,
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 20,
+    detectRetina: true,
+  }).addTo(map);
+  L.control.scale({ imperial: true, metric: false, position: 'bottomleft' }).addTo(map);
+  dashboardRuntime = { map, boundaryLayer: null, markerLayer: L.layerGroup().addTo(map), markers: new Map() };
+  renderDashboardMarkers();
+  void loadServiceAreaBoundaryLayer(map).then((boundaryLayer) => {
+    if (dashboardRuntime?.map === map) dashboardRuntime.boundaryLayer = boundaryLayer;
+  });
+  requestAnimationFrame(() => map.invalidateSize());
+}
+
+function renderDashboard() {
+  const isFoodBank = dashboardRole === 'food-bank';
+  $('[data-dashboard-role-pill]').textContent = isFoodBank ? 'Food bank operator' : 'Person in need';
+  $('[data-dashboard-title]').textContent = isFoodBank ? 'Keep your inventory visible' : 'Find food near you';
+  $('[data-dashboard-subtitle]').textContent = isFoodBank
+    ? 'See your inventory and nearby partners across San Diego County.'
+    : 'See open food banks, access notes, and available inventory across San Diego County.';
+  $('[data-dashboard-map-status]').textContent = `${foodBanksInScope().length} food locations in San Diego County`;
+  renderDashboardResults();
+  renderDashboardInventory();
+  renderDashboardMarkers();
+}
+
+async function loadDashboardData() {
+  const response = await fetch(dashboardDataUrl, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`Dashboard feed returned ${response.status}`);
+  const payload = await response.json();
+  if (!Array.isArray(payload.foodBanks)) throw new Error('Dashboard feed has no foodBanks array');
+  return { ...fallbackDashboardData, ...payload, scope: { ...fallbackDashboardData.scope, ...payload.scope }, foodBanks: payload.foodBanks };
+}
+
+function setDashboardRole(role) {
+  dashboardRole = role === 'food-bank' ? 'food-bank' : 'need';
+  selectedFoodBankId = dashboardRole === 'food-bank'
+    ? (dashboardData.foodBanks.find((foodBank) => foodBank.isDemoUserFoodBank)?.id ?? dashboardData.foodBanks[0]?.id)
+    : dashboardData.foodBanks[0]?.id;
+  $$('[data-demo-role]').forEach((button) => button.classList.toggle('is-active', button.dataset.demoRole === dashboardRole));
+  const submit = $('[data-dashboard-submit]');
+  if (submit) submit.innerHTML = `${dashboardRole === 'food-bank' ? 'Enter as a food bank' : 'Enter as a person in need'} ${icon('arrow')}`;
+}
+
+async function enterDashboard() {
+  const gate = $('[data-dashboard-gate]');
+  const dashboardApp = $('[data-dashboard-app]');
+  gate.hidden = true;
+  dashboardApp.hidden = false;
+  dashboardApp.classList.add('is-loading');
+  try {
+    dashboardData = await loadDashboardData();
+  } catch (error) {
+    dashboardData = fallbackDashboardData;
+    console.warn('CareSpace dashboard feed unavailable; showing demo inventory.', error);
+  }
+  setDashboardRole(dashboardRole);
+  initializeDashboardMap();
+  renderDashboard();
+  dashboardApp.classList.remove('is-loading');
+  announce(`${dashboardRole === 'food-bank' ? 'Food bank' : 'Person in need'} dashboard opened.`);
+  requestAnimationFrame(() => dashboardRuntime?.map.invalidateSize());
+}
+
 $$('[data-report]').forEach((element) => {
   element.addEventListener('click', (event) => {
     event.preventDefault();
@@ -599,6 +919,72 @@ $('[data-signal-list]').addEventListener('click', (event) => {
     mapRuntime.map.setView(coordinates, Math.max(mapRuntime.map.getZoom(), 14), { animate: true });
     marker?.openPopup();
   }
+});
+
+$$('[data-demo-role]').forEach((button) => button.addEventListener('click', () => setDashboardRole(button.dataset.demoRole)));
+$('[data-dashboard-login]').addEventListener('submit', (event) => {
+  event.preventDefault();
+  void enterDashboard();
+});
+
+const dashboardApp = $('[data-dashboard-app]');
+dashboardApp.addEventListener('click', (event) => {
+  const result = event.target.closest('[data-food-bank]');
+  if (result) {
+    focusDashboardFoodBank(result.dataset.foodBank);
+    return;
+  }
+  if (event.target.closest('[data-dashboard-report]')) {
+    openModal('supply');
+    return;
+  }
+  const request = event.target.closest('[data-dashboard-request]');
+  if (request) announce('A food request draft has been started for this location.');
+});
+
+$('[data-dashboard-location]').addEventListener('input', () => {
+  renderDashboardResults();
+  renderDashboardMarkers();
+});
+
+$('[data-use-location]').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    announce('Location access is not available in this browser.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => {
+      const location = [coords.latitude, coords.longitude];
+      const bounds = dashboardScopeBounds();
+      const inside = bounds && location[0] >= bounds[0][0] && location[0] <= bounds[1][0] && location[1] >= bounds[0][1] && location[1] <= bounds[1][1];
+      if (!inside) {
+        announce('CareSpace is currently scoped to San Diego County.');
+        return;
+      }
+      const nearest = foodBanksInScope().sort((a, b) => {
+        const aLocation = signalCoordinates(a);
+        const bLocation = signalCoordinates(b);
+        return Math.hypot(aLocation[0] - location[0], aLocation[1] - location[1]) - Math.hypot(bLocation[0] - location[0], bLocation[1] - location[1]);
+      })[0];
+      $('[data-dashboard-location]').value = 'Near me';
+      renderDashboardResults();
+      renderDashboardMarkers();
+      if (nearest) focusDashboardFoodBank(nearest.id);
+      announce(nearest ? `Showing the closest food location: ${nearest.name}.` : 'No food locations are available yet.');
+    },
+    () => announce('Location access was not available. Search by city instead.'),
+    { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 },
+  );
+});
+
+$('[data-dashboard-logout]').addEventListener('click', () => {
+  dashboardApp.hidden = true;
+  $('[data-dashboard-gate]').hidden = false;
+  if (dashboardRuntime) {
+    dashboardRuntime.map.remove();
+    dashboardRuntime = null;
+  }
+  announce('You have been signed out of the demo dashboard.');
 });
 
 const menuButton = $('[data-menu]');
