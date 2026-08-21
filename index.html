@@ -1267,11 +1267,24 @@
 
   function renderHeatmap(points) {
     clearMarkers();
+    clearHeat();
     const locations = points.map(point => [point.lat, point.lng, 1]);
+    let heatmapRendered = false;
     if (heatLayer) {
-      heatLayer.setLatLngs(locations);
-      if (!map.hasLayer(heatLayer)) heatLayer.addTo(map);
-    } else {
+      try {
+        heatLayer.setLatLngs(locations);
+        heatLayer.addTo(map);
+        heatmapRendered = true;
+      } catch (error) {
+        console.warn('Heatmap layer unavailable; using density fallback.', error);
+        try {
+          if (map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
+        } catch (cleanupError) {
+          console.warn('Could not remove the failed heatmap layer.', cleanupError);
+        }
+      }
+    }
+    if (!heatmapRendered) {
       densityCircles = points.map(point => L.circle([point.lat, point.lng], {
         radius: 850,
         color: '#8b5cf6',
@@ -1365,7 +1378,7 @@
         return;
       }
       map.invalidateSize({ pan: false });
-      if (activeView === 'heatmap' && heatLayer && typeof heatLayer.redraw === 'function') {
+      if (activeView === 'heatmap' && heatLayer && map.hasLayer(heatLayer) && typeof heatLayer.redraw === 'function') {
         heatmapRedrawFrame = window.requestAnimationFrame(() => {
           heatmapRedrawFrame = null;
           if (activeView !== 'heatmap') return;
