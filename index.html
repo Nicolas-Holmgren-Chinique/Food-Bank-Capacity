@@ -1207,6 +1207,8 @@
   let activeView = 'markers';
   let analyticsRecords = [];
   let dataSource = 'D1 synced';
+  let mapRenderFrame = null;
+  let heatmapRedrawFrame = null;
   const heatLayer = typeof L.heatLayer === 'function'
     ? L.heatLayer([], { radius: 22, blur: 18, maxZoom: 12, minOpacity: 0.35, gradient: { 0.25: '#9be7ad', 0.55: '#f3c84b', 0.8: '#f08b76', 1: '#8b5cf6' } })
     : null;
@@ -1268,7 +1270,7 @@
     const locations = points.map(point => [point.lat, point.lng, 1]);
     if (heatLayer) {
       heatLayer.setLatLngs(locations);
-      heatLayer.addTo(map);
+      if (!map.hasLayer(heatLayer)) heatLayer.addTo(map);
     } else {
       densityCircles = points.map(point => L.circle([point.lat, point.lng], {
         radius: 850,
@@ -1279,6 +1281,17 @@
       }).addTo(map));
     }
     updateMapSummary(points);
+  }
+
+  function cancelPendingMapRenders() {
+    if (mapRenderFrame !== null) {
+      window.cancelAnimationFrame(mapRenderFrame);
+      mapRenderFrame = null;
+    }
+    if (heatmapRedrawFrame !== null) {
+      window.cancelAnimationFrame(heatmapRedrawFrame);
+      heatmapRedrawFrame = null;
+    }
   }
 
   function aggregate(records, key) {
@@ -1331,6 +1344,7 @@
 
   function renderActiveView() {
     const points = visiblePoints();
+    cancelPendingMapRenders();
     if (activeView === 'charts') {
       clearMarkers();
       clearHeat();
@@ -1341,9 +1355,28 @@
     }
     liveMap.hidden = false;
     mapCharts.hidden = true;
-    if (activeView === 'heatmap') renderHeatmap(points);
-    else renderMarkers(points);
-    window.requestAnimationFrame(() => map.invalidateSize());
+    mapRenderFrame = window.requestAnimationFrame(() => {
+      mapRenderFrame = null;
+      if (activeView === 'charts') {
+        renderActiveView();
+        return;
+      }
+      map.invalidateSize({ pan: false });
+      const currentPoints = visiblePoints();
+      if (activeView === 'heatmap') {
+        renderHeatmap(currentPoints);
+        if (heatLayer && typeof heatLayer.redraw === 'function') {
+          heatmapRedrawFrame = window.requestAnimationFrame(() => {
+            heatmapRedrawFrame = null;
+            if (activeView !== 'heatmap') return;
+            map.invalidateSize({ pan: false });
+            heatLayer.redraw();
+          });
+        }
+      } else {
+        renderMarkers(currentPoints);
+      }
+    });
   }
 
   async function loadAnalytics() {
