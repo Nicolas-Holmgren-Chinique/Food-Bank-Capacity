@@ -543,6 +543,39 @@
     .dashboard-status { color: var(--teal); font-size: 0.72rem; font-weight: 800; white-space: nowrap; }
     .dashboard-model { color: var(--gray); font-size: 0.8rem; line-height: 1.6; }
     .dashboard-model b { color: var(--dark); }
+    .dashboard-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-top: 0.9rem; }
+    .dashboard-detail-panel { min-width: 0; border: 1px solid #e5e2dc; border-radius: 11px; padding: 1rem; background: #fff; }
+    .dashboard-detail-panel h4 { font-size: 0.95rem; margin: 0; }
+    .dashboard-detail-kicker { color: var(--gray-light); display: block; font-size: 0.68rem; letter-spacing: 0.04em; margin: 0.3rem 0 0.85rem; text-transform: uppercase; }
+    .dashboard-detail-list { display: grid; gap: 0.45rem; }
+    .dashboard-detail-row { align-items: center; display: flex; justify-content: space-between; gap: 0.8rem; border-top: 1px solid #eee; padding: 0.65rem 0; }
+    .dashboard-detail-row:first-child { border-top: 0; padding-top: 0; }
+    .dashboard-detail-row strong { display: block; font-size: 0.78rem; }
+    .dashboard-detail-row small { color: var(--gray); display: block; font-size: 0.68rem; line-height: 1.45; margin-top: 0.18rem; }
+    .dashboard-detail-row span { color: var(--teal); font-size: 0.68rem; font-weight: 800; text-align: right; white-space: nowrap; }
+    .dashboard-detail-row span.warning { color: var(--red); }
+    .dashboard-detail-row span.neutral { color: var(--gray); }
+    .dashboard-inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.55rem; }
+    .dashboard-inventory-card { background: #f4f1ea; border-radius: 9px; min-width: 0; padding: 0.75rem; }
+    .dashboard-inventory-card strong { color: var(--teal); display: block; font-size: 1.3rem; letter-spacing: -0.04em; }
+    .dashboard-inventory-card span { display: block; font-size: 0.72rem; font-weight: 700; margin-top: 0.18rem; }
+    .dashboard-inventory-card small { color: var(--gray); display: block; font-size: 0.65rem; line-height: 1.4; margin-top: 0.25rem; }
+    .dashboard-allocation-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; margin-bottom: 0.8rem; }
+    .dashboard-allocation-metric { background: #f4f1ea; border-radius: 9px; padding: 0.65rem 0.75rem; }
+    .dashboard-allocation-metric strong { display: block; font-size: 1.1rem; }
+    .dashboard-allocation-metric span { color: var(--gray); display: block; font-size: 0.63rem; line-height: 1.35; margin-top: 0.15rem; }
+    .dashboard-allocation-table-wrap { overflow-x: auto; }
+    .dashboard-allocation-table { border-collapse: collapse; font-size: 0.65rem; min-width: 470px; width: 100%; }
+    .dashboard-allocation-table th { color: var(--gray-light); font-size: 0.6rem; letter-spacing: 0.04em; padding: 0 0.3rem 0.45rem; text-align: left; text-transform: uppercase; }
+    .dashboard-allocation-table td { border-top: 1px solid #eee; padding: 0.55rem 0.3rem; vertical-align: top; }
+    .dashboard-allocation-table td strong { display: block; font-size: 0.68rem; }
+    .dashboard-allocation-table td small { color: var(--gray); display: block; font-size: 0.6rem; line-height: 1.3; margin-top: 0.15rem; }
+    .dashboard-allocation-table tr.warning { background: #fff2ee; }
+    .dashboard-allocation-table .allocation-status { color: #4f9c77; font-weight: 800; white-space: nowrap; }
+    .dashboard-allocation-table tr.warning .allocation-status { color: var(--red); }
+    .dashboard-detail-callout { background: #dff1e7; border-radius: 9px; color: #315a5d; font-size: 0.72rem; line-height: 1.5; margin-top: 0.8rem; padding: 0.8rem; }
+    .dashboard-detail-callout strong { color: var(--dark); display: block; margin-bottom: 0.18rem; }
+    .dashboard-privacy-note { color: var(--gray-light); display: block; font-size: 0.68rem; line-height: 1.45; margin-top: 0.8rem; }
 
     /* ── Allocation model / About ── */
     .allocation-model-section { background: var(--white); }
@@ -602,6 +635,7 @@
       .dashboard-heading, .allocation-model-heading { align-items: flex-start; flex-direction: column; }
       .dashboard-gate-face { grid-template-columns: 1fr; }
       .dashboard-demo-aside { display: none; }
+      .dashboard-detail-grid { grid-template-columns: 1fr; }
       .allocation-model-grid { grid-template-columns: repeat(2, 1fr); }
       .agent-heading { align-items: flex-start; flex-direction: column; }
       .agent-grid { grid-template-columns: 1fr; }
@@ -618,6 +652,7 @@
       .dashboard-face { padding: 1.25rem; }
       .dashboard-card { height: 590px; min-height: 590px; }
       .dashboard-metrics, .dashboard-content-grid, .allocation-model-grid { grid-template-columns: 1fr; }
+      .dashboard-inventory-grid { grid-template-columns: 1fr; }
       .dashboard-appbar { flex-direction: column; }
       .dashboard-back { align-self: flex-start; }
       .allocation-model-footer { align-items: flex-start; flex-direction: column; }
@@ -862,6 +897,11 @@
           <section class="dashboard-panel"><h4 data-dashboard-list-title>Nearby food locations</h4><div class="dashboard-list" data-dashboard-list></div></section>
           <section class="dashboard-panel"><h4>What the model says</h4><div class="dashboard-model" data-dashboard-model></div></section>
         </div>
+        <div class="dashboard-detail-grid">
+          <section class="dashboard-detail-panel" data-dashboard-detail-primary></section>
+          <section class="dashboard-detail-panel" data-dashboard-detail-secondary></section>
+        </div>
+        <small class="dashboard-privacy-note" data-dashboard-privacy>Demo data only. Public location details remain approximate.</small>
       </div>
     </div>
   </div>
@@ -1183,7 +1223,26 @@
       metrics: [['4', 'food locations in scope'], ['84', 'meal equivalents ready'], ['Today', 'next open window']],
       listTitle: 'Nearby food access',
       rows: [['North County Food Hub', 'Oceanside · community distribution', 'Open'], ['Central Care Food Bank', 'San Diego · produce and dry goods', 'Today'], ['South Bay Community Pantry', 'Chula Vista · walk-up service', 'Open']],
-      model: '<p><b>Start with the nearest landing place.</b> The public view keeps location approximate, then prioritizes a food bank with an open service window and room to receive the next handoff.</p>'
+      model: '<p><b>Start with the nearest landing place.</b> The public view keeps location approximate, then prioritizes a food bank with an open service window and room to receive the next handoff.</p>',
+      detail: {
+        type: 'access',
+        primaryTitle: 'Access details',
+        primaryKicker: 'Open windows + arrival notes',
+        primaryRows: [
+          ['North County Food Hub', 'Oceanside · 4.8 mi · community distribution', 'Today · until 6:00 pm'],
+          ['Central Care Food Bank', 'City Heights · 7.2 mi · multilingual intake', 'Today · until 7:00 pm'],
+          ['South Bay Community Pantry', 'National City · 9.6 mi · walk-up service', 'Open · appointment preferred'],
+          ['East County Community Table', 'El Cajon · 12.4 mi · drive-through / walk-up', 'Today · until 5:00 pm']
+        ],
+        secondaryTitle: 'Food visible now',
+        secondaryKicker: 'County-scoped demo inventory',
+        secondaryCards: [
+          ['320', 'Fresh produce', 'North County · portions'],
+          ['124', 'Grocery boxes', 'Central Care · available today'],
+          ['76', 'Prepared meals', 'South Bay · pickup window']
+        ],
+        note: 'Public view keeps exact addresses and individual case details private. Distances and inventory are demo values for San Diego County.'
+      }
     },
     'food-bank': {
       kicker: 'FOOD BANK OPERATOR',
@@ -1192,7 +1251,33 @@
       metrics: [['124', 'grocery boxes'], ['210', 'fresh portions'], ['2,600', 'boxes in this wave']],
       listTitle: 'Where the next boxes should go',
       rows: [['North County Food Hub', '1,800 can hold · 791 assigned', 'Room for more'], ['Central Care Food Bank', '900 can hold · 900 assigned', 'Storage full'], ['South Bay Community Pantry', '1,200 can hold · 589 assigned', 'Room for more']],
-      model: '<p><b>Capacity is the wall.</b> Each ration is an indivisible box. The model takes the minimum across storage dimensions, nets current inventory, and water-fills the wave across residual need.</p>'
+      model: '<p><b>Capacity is the wall.</b> Each ration is an indivisible box. The model takes the minimum across storage dimensions, nets current inventory, and water-fills the wave across residual need.</p>',
+      detail: {
+        type: 'allocation',
+        primaryTitle: 'Your inventory',
+        primaryKicker: 'Central Care Food Bank · updated today',
+        primaryCards: [
+          ['124', 'Grocery boxes', 'Available today'],
+          ['210', 'Fresh produce', 'Best before tomorrow'],
+          ['18', 'Baby essentials', 'Ask at intake']
+        ],
+        primaryRows: [
+          ['Receiving window', 'Today · 8:00 am–7:00 pm', 'Ready'],
+          ['Cold storage', '900 box-equivalents available', 'At limit', 'warning'],
+          ['Next review', 'Reconcile inventory after the next handoff', 'Today']
+        ],
+        secondaryTitle: 'Wave allocation',
+        secondaryKicker: 'Where the next boxes should go',
+        allocationMetrics: [['2,600', 'boxes placed of 2,600 available'], ['17.7%', 'residual need met this wave'], ['13.9%', 'worst-served facility'], ['1,000', 'boxes of capacity stranded']],
+        allocationRows: [
+          ['North County Food Hub', '1,800', '791', '20.4%', 'Room for more'],
+          ['Central Care Food Bank', '900', '900', '16.1%', 'Storage full', 'warning'],
+          ['South Bay Community Pantry', '1,200', '589', '20.4%', 'Room for more'],
+          ['East County Community Table', '320', '320', '13.9%', 'Storage full', 'warning']
+        ],
+        callout: ['Add storage at East County Community Table, not food.', '0.755 m³ more frozen storage lets it take 471 boxes instead of 320 — lifting the worst-served facility from 13.9% to 16.1%.'],
+        note: 'Planned against free space reported now. Expired records are excluded; records without a verification timestamp remain flagged for follow-up.'
+      }
     },
     'food-supplier': {
       kicker: 'FOOD SUPPLIER',
@@ -1201,7 +1286,32 @@
       metrics: [['84', 'meal equivalents'], ['3', 'nearby recipients'], ['6:15', 'ready-to-move time']],
       listTitle: 'Potential handoffs',
       rows: [['North County Food Hub', 'Room for 1,800 boxes · Oceanside', 'Best fit'], ['South Bay Community Pantry', 'Produce accepted · Chula Vista', 'Open'], ['Central Care Food Bank', 'Cold storage currently full', 'Storage wall']],
-      model: '<p><b>Match fit before movement.</b> CareSpace compares quantity, timing, location, and receiving capacity so a supplier can choose a real landing place instead of sending food into a storage wall.</p>'
+      model: '<p><b>Match fit before movement.</b> CareSpace compares quantity, timing, location, and receiving capacity so a supplier can choose a real landing place instead of sending food into a storage wall.</p>',
+      detail: {
+        type: 'supplier',
+        primaryTitle: 'Offer readiness',
+        primaryKicker: 'Restaurant · market · farm handoff',
+        primaryCards: [
+          ['84', 'Meal equivalents', 'Prepared food offer'],
+          ['3', 'Recipient matches', 'Within county scope'],
+          ['6:15', 'Ready-to-move', 'Today · local time']
+        ],
+        primaryRows: [
+          ['Handling', 'Refrigerated · 18-hour shelf life', 'Confirmed'],
+          ['Pickup', 'Supplier-arranged driver or receiving partner', 'Flexible'],
+          ['Data shared', 'Quantity, timing, food type, and service area', 'Minimum']
+        ],
+        secondaryTitle: 'Potential handoffs',
+        secondaryKicker: 'Ranked by fit, timing, and receiving space',
+        secondaryRows: [
+          ['North County Food Hub', 'Oceanside · room for 1,800 boxes', 'Best fit'],
+          ['South Bay Community Pantry', 'Chula Vista · produce accepted', 'Open'],
+          ['Central Care Food Bank', 'City Heights · cold storage full', 'Storage wall', 'warning'],
+          ['East County Community Table', 'El Cajon · drive-through receiving', 'Check window']
+        ],
+        callout: ['Choose a landing place before dispatch.', 'The match view keeps surplus moving toward a receiving window and usable capacity, rather than adding food to a site already limited by storage.'],
+        note: 'Supplier quantities and recipient readiness are demo values. Confirm the handoff directly before moving food.'
+      }
     }
   };
 
@@ -1215,6 +1325,42 @@
   const listTitle = document.querySelector('[data-dashboard-list-title]');
   const list = document.querySelector('[data-dashboard-list]');
   const model = document.querySelector('[data-dashboard-model]');
+  const detailPrimary = document.querySelector('[data-dashboard-detail-primary]');
+  const detailSecondary = document.querySelector('[data-dashboard-detail-secondary]');
+  const privacy = document.querySelector('[data-dashboard-privacy]');
+
+  function inventoryMarkup(cards) {
+    return '<div class="dashboard-inventory-grid">' + cards.map(([value, label, note]) => '<div class="dashboard-inventory-card"><strong>' + value + '</strong><span>' + label + '</span><small>' + note + '</small></div>').join('') + '</div>';
+  }
+
+  function detailRowsMarkup(rows) {
+    return '<div class="dashboard-detail-list">' + rows.map(([name, detail, status, tone]) => '<div class="dashboard-detail-row"><div><strong>' + name + '</strong><small>' + detail + '</small></div><span class="' + (tone || '') + '">' + status + '</span></div>').join('') + '</div>';
+  }
+
+  function allocationMarkup(detail) {
+    const metricsMarkup = '<div class="dashboard-allocation-metrics">' + detail.allocationMetrics.map(([value, label]) => '<div class="dashboard-allocation-metric"><strong>' + value + '</strong><span>' + label + '</span></div>').join('') + '</div>';
+    const rowsMarkup = detail.allocationRows.map(([facility, canHold, send, coverage, status, tone]) => '<tr class="' + (tone || '') + '"><td><strong>' + facility + '</strong></td><td>' + canHold + '</td><td><strong>' + send + '</strong></td><td>' + coverage + '</td><td class="allocation-status">' + status + '</td></tr>').join('');
+    const tableMarkup = '<div class="dashboard-allocation-table-wrap"><table class="dashboard-allocation-table"><thead><tr><th>Facility</th><th>Can hold</th><th>Send</th><th>Coverage</th><th>Limited by</th></tr></thead><tbody>' + rowsMarkup + '</tbody></table></div>';
+    const calloutMarkup = '<div class="dashboard-detail-callout"><strong>' + detail.callout[0] + '</strong>' + detail.callout[1] + '</div>';
+    return metricsMarkup + tableMarkup + calloutMarkup;
+  }
+
+  function renderDashboardDetails(profile) {
+    const detail = profile.detail;
+    let primaryMarkup = '<h4>' + detail.primaryTitle + '</h4><span class="dashboard-detail-kicker">' + detail.primaryKicker + '</span>';
+    if (detail.primaryCards) primaryMarkup += inventoryMarkup(detail.primaryCards);
+    if (detail.primaryRows) primaryMarkup += detailRowsMarkup(detail.primaryRows);
+
+    let secondaryMarkup = '<h4>' + detail.secondaryTitle + '</h4><span class="dashboard-detail-kicker">' + detail.secondaryKicker + '</span>';
+    if (detail.secondaryCards) secondaryMarkup += inventoryMarkup(detail.secondaryCards);
+    if (detail.secondaryRows) secondaryMarkup += detailRowsMarkup(detail.secondaryRows);
+    if (detail.type === 'allocation') secondaryMarkup += allocationMarkup(detail);
+    if (detail.callout && detail.type !== 'allocation') secondaryMarkup += '<div class="dashboard-detail-callout"><strong>' + detail.callout[0] + '</strong>' + detail.callout[1] + '</div>';
+
+    detailPrimary.innerHTML = primaryMarkup;
+    detailSecondary.innerHTML = secondaryMarkup;
+    privacy.textContent = detail.note;
+  }
 
   function sizeDashboardCard(face) {
     window.requestAnimationFrame(() => {
@@ -1232,6 +1378,7 @@
     listTitle.textContent = profile.listTitle;
     list.innerHTML = profile.rows.map(([name, detail, status]) => '<div class="dashboard-list-row"><div><strong>' + name + '</strong><small>' + detail + '</small></div><span class="dashboard-status">' + status + '</span></div>').join('');
     model.innerHTML = profile.model;
+    renderDashboardDetails(profile);
     card.classList.add('is-open');
     gate.setAttribute('aria-hidden', 'true');
     app.setAttribute('aria-hidden', 'false');
