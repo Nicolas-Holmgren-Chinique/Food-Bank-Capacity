@@ -314,32 +314,21 @@ app.innerHTML = `
           <div class="dashboard-gate" data-dashboard-gate>
             <div class="dashboard-login-card">
               <div class="dashboard-login-mark"><span>${icon('pin')}</span></div>
-              <p class="eyebrow">Demo access</p>
-              <h3>Open your CareSpace dashboard.</h3>
-              <p class="dashboard-login-intro">Choose the view that fits you. This POC records organization accounts in CareSpace D1 and keeps passwords hashed.</p>
-              <div class="dashboard-role-switch" role="group" aria-label="Choose your dashboard role">
-                <button type="button" class="dashboard-role is-active" data-demo-role="need">I need food</button>
-                <button type="button" class="dashboard-role" data-demo-role="food-bank">I run a food bank</button>
-                <button type="button" class="dashboard-role" data-demo-role="food-supplier">I supply food</button>
+              <p class="eyebrow">POC demo · no login required</p>
+              <h3>Choose a CareSpace view.</h3>
+              <p class="dashboard-login-intro">Open a role-specific dashboard with one click. Each view uses the same San Diego County network, shaped for the person or organization using it.</p>
+              <div class="dashboard-role-switch" role="group" aria-label="Open a demo dashboard">
+                <button type="button" class="dashboard-role is-active" data-demo-role="need">Person in need ${icon('arrow')}</button>
+                <button type="button" class="dashboard-role" data-demo-role="food-bank">Food bank operator ${icon('arrow')}</button>
+                <button type="button" class="dashboard-role" data-demo-role="food-supplier">Food supplier ${icon('arrow')}</button>
               </div>
-              <form class="dashboard-login-form" data-dashboard-login>
-                <label class="dashboard-email-field"><span>Email for demo access</span><input type="email" name="email" placeholder="you@example.org" autocomplete="email" required /></label>
-                <label class="dashboard-password-field"><span>Password</span><input type="password" name="password" placeholder="12+ characters" autocomplete="current-password" minlength="12" required /></label>
-                <div class="dashboard-register-fields" data-dashboard-register-fields hidden>
-                  <label class="dashboard-profile-field"><span>Your name</span><input type="text" name="displayName" placeholder="Your name" autocomplete="name" maxlength="120" /></label>
-                  <label class="dashboard-profile-field"><span>Organization</span><input type="text" name="organizationName" placeholder="Organization name" autocomplete="organization" maxlength="160" /></label>
-                </div>
-                <button class="button button-dark" type="submit" data-dashboard-submit>Sign in as a person in need ${icon('arrow')}</button>
-                <button class="dashboard-auth-toggle" type="button" data-dashboard-auth-mode>New here? Create an account</button>
-              </form>
-              <p class="dashboard-auth-status" data-dashboard-auth-status role="status" aria-live="polite"></p>
-              <p class="dashboard-login-footnote">Demo accounts and new registrations are stored in D1 · organization-level data only</p>
+              <p class="dashboard-login-footnote">Demo data only · no credentials or personal information are required to explore these views.</p>
             </div>
             <div class="dashboard-login-aside"><span class="dashboard-aside-number">01</span><p><strong>For people in need</strong><br />See food banks, pantry hours, access notes, and available inventory near you.</p><p><strong>For food banks</strong><br />See your inventory alongside nearby handoff partners and community demand.</p><p><strong>For food suppliers</strong><br />Record a restaurant, market, farm, or kitchen account that can offer food.</p></div>
           </div>
 
           <div class="dashboard-app" data-dashboard-app hidden>
-            <div class="dashboard-appbar"><div><span class="dashboard-pill" data-dashboard-role-pill>Person in need</span><h3 data-dashboard-title>Find food near you</h3><p data-dashboard-subtitle>Live food access across San Diego County.</p></div><button class="dashboard-signout" type="button" data-dashboard-logout>Sign out ${icon('arrow')}</button></div>
+            <div class="dashboard-appbar"><div><span class="dashboard-pill" data-dashboard-role-pill>Person in need</span><h3 data-dashboard-title>Find food near you</h3><p data-dashboard-subtitle>Live food access across San Diego County.</p></div><button class="dashboard-signout" type="button" data-dashboard-logout>Change demo role ${icon('arrow')}</button></div>
             <div class="dashboard-layout">
               <section class="dashboard-map-card" aria-label="Nearby food access">
                 <div class="dashboard-card-heading"><div><p class="panel-kicker">Nearby food access</p><h4>What can land near you?</h4></div><span class="dashboard-live-label"><i class="live-dot"></i> Live feed</span></div>
@@ -1167,6 +1156,46 @@ function setDashboardRole(role) {
   if (organization) organization.required = dashboardAuthMode === 'register' && dashboardRole !== 'need';
 }
 
+const demoDashboardProfiles = {
+  need: {
+    id: 'demo-person-in-need',
+    displayName: 'Demo neighbor',
+    organizationName: 'San Diego community',
+    status: 'demo',
+  },
+  'food-bank': {
+    id: 'user-demo-food-bank',
+    displayName: 'Avery Martinez',
+    organizationName: 'Central Care Food Bank',
+    status: 'demo',
+  },
+  'food-supplier': {
+    id: 'user-demo-food-supplier',
+    displayName: 'Jordan Rivera',
+    organizationName: 'Northside Market',
+    status: 'demo',
+  },
+};
+
+async function openDemoDashboard(role) {
+  const selectedRole = ['food-bank', 'food-supplier'].includes(role) ? role : 'need';
+  const profile = demoDashboardProfiles[selectedRole];
+  const buttons = $$('[data-demo-role]');
+  buttons.forEach((button) => { button.disabled = true; });
+  dashboardUser = { ...profile, role: selectedRole };
+  setDashboardRole(selectedRole);
+  try {
+    await openDashboard();
+  } catch (error) {
+    dashboardUser = null;
+    $('[data-dashboard-app]').hidden = true;
+    $('[data-dashboard-gate]').hidden = false;
+    announce(error instanceof Error ? error.message : 'The demo dashboard could not open.');
+  } finally {
+    buttons.forEach((button) => { button.disabled = false; });
+  }
+}
+
 function setDashboardAuthMode(mode) {
   dashboardAuthMode = mode === 'register' ? 'register' : 'login';
   const fields = $('[data-dashboard-register-fields]');
@@ -1267,9 +1296,10 @@ async function signOutDashboard() {
     dashboardRuntime.map.remove();
     dashboardRuntime = null;
   }
-  $('[data-dashboard-login]').reset();
-  setDashboardAuthMode('login');
-  announce('You have been signed out of the demo dashboard.');
+  const loginForm = $('[data-dashboard-login]');
+  if (loginForm) loginForm.reset();
+  setDashboardRole('need');
+  announce('Choose another demo role to open a dashboard.');
 }
 
 $$('[data-report]').forEach((element) => {
@@ -1317,9 +1347,12 @@ $('[data-signal-list]').addEventListener('click', (event) => {
   }
 });
 
-$$('[data-demo-role]').forEach((button) => button.addEventListener('click', () => setDashboardRole(button.dataset.demoRole)));
-$('[data-dashboard-auth-mode]').addEventListener('click', () => setDashboardAuthMode(dashboardAuthMode === 'register' ? 'login' : 'register'));
-$('[data-dashboard-login]').addEventListener('submit', (event) => {
+$$('[data-demo-role]').forEach((button) => button.addEventListener('click', () => void openDemoDashboard(button.dataset.demoRole)));
+
+const dashboardAuthModeToggle = $('[data-dashboard-auth-mode]');
+if (dashboardAuthModeToggle) dashboardAuthModeToggle.addEventListener('click', () => setDashboardAuthMode(dashboardAuthMode === 'register' ? 'login' : 'register'));
+const dashboardLoginForm = $('[data-dashboard-login]');
+if (dashboardLoginForm) dashboardLoginForm.addEventListener('submit', (event) => {
   event.preventDefault();
   void enterDashboard();
 });
@@ -1429,7 +1462,6 @@ $$('[data-reveal]').forEach((element) => {
 });
 
 void initializeLiveMap();
-void restoreDashboardSession();
 
 setInterval(() => {
   $$('.topline-time').forEach((element) => {

@@ -12,6 +12,8 @@ The source concept is documented in [`docs/CareForce-Product-Requirements-Docume
 
 Open the dashboard at **https://carespace.pages.dev/#dashboard** and use one of these intentionally public demo accounts:
 
+For the interactive POC, no credentials are required: choose **Person in need**, **Food bank operator**, or **Food supplier** to open that role's dashboard. The credentials below remain available for direct API/authentication testing.
+
 | Role | Email | Password | Organization |
 | --- | --- | --- | --- |
 | Food bank | `demo.foodbank@carespace.dev` | `CareSpace-FoodBank-2026!` | Central Care Food Bank |

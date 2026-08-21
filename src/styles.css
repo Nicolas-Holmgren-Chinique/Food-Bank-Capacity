@@ -215,8 +215,10 @@ h1 em, h2 em { color: var(--coral); font-style: normal; }
 .dashboard-login-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(32px, 4vw, 49px); font-weight: 500; letter-spacing: -0.08em; line-height: 0.98; margin-bottom: 17px; max-width: 480px; }
 .dashboard-login-intro { color: var(--ink-soft); font-size: 13px; line-height: 1.6; margin-bottom: 25px; max-width: 480px; }
 .dashboard-role-switch { background: var(--paper-deep); border: 1px solid var(--line); border-radius: 11px; display: flex; gap: 4px; margin-bottom: 18px; max-width: 480px; padding: 4px; }
-.dashboard-role { background: transparent; border: 0; border-radius: 8px; color: var(--ink-soft); flex: 1; font-size: 10px; padding: 10px 11px; transition: background 160ms ease, color 160ms ease; }
+.dashboard-role { align-items: center; background: transparent; border: 0; border-radius: 8px; color: var(--ink-soft); display: inline-flex; flex: 1; font-size: 10px; gap: 8px; justify-content: space-between; padding: 10px 11px; text-align: left; transition: background 160ms ease, color 160ms ease; }
 .dashboard-role.is-active { background: var(--ink); color: var(--paper); }
+.dashboard-role:disabled { cursor: wait; opacity: 0.62; }
+.dashboard-role svg { flex-shrink: 0; height: 13px; width: 13px; }
 .dashboard-login-form { display: flex; flex-wrap: wrap; gap: 9px; max-width: 480px; }
 .dashboard-email-field { display: grid; flex: 1 1 190px; gap: 7px; }.dashboard-email-field span { font-size: 10px; font-weight: 700; }.dashboard-email-field input { background: #fffdf8; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: 12px; min-height: 43px; outline: 0; padding: 0 12px; width: 100%; }.dashboard-email-field input:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255, 114, 92, 0.14); }
 .dashboard-login-form .button { align-self: end; border: 0; min-height: 43px; }.dashboard-login-footnote { color: rgba(16, 45, 50, 0.44); font-size: 9px; margin: 12px 0 0; }
