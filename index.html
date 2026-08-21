@@ -6,30 +6,41 @@
   <meta name="theme-color" content="#008080" />
   <meta name="description" content="CareSpace — AI-Powered Space Management & Inventory for Food Banks & Agencies" />
   <title>CareSpace — Intelligent Storage Optimization for Food Security</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
       --teal: #008080;
       --teal-light: #00a3a3;
       --dark: #1a1a1a;
       --white: #ffffff;
+      --cream: #f4f1ea;
       --gray: #555;
+      --gray-light: #999;
+      --purple: #8b5cf6;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --green: #22c55e;
+      --pink: #ec4899;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--white);
       color: var(--dark);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
     /* ── Navigation ── */
     nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
       background: var(--white);
-      padding: 1.25rem 4rem;
+      padding: 1.1rem 4rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -45,11 +56,7 @@
     }
     .logo span { color: var(--teal); }
 
-    .nav-links {
-      display: flex;
-      gap: 2.5rem;
-      align-items: center;
-    }
+    .nav-links { display: flex; gap: 2.5rem; align-items: center; }
     .nav-links a {
       text-decoration: none;
       color: var(--dark);
@@ -66,20 +73,29 @@
       gap: 5px;
       padding: 5px;
     }
-    .menu-icon span {
-      width: 22px;
-      height: 2px;
-      background: var(--dark);
-      border-radius: 1px;
+    .menu-icon span { width: 22px; height: 2px; background: var(--dark); border-radius: 1px; }
+
+    /* ── Section helpers ── */
+    .section { padding: 5rem 4rem; }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+    .section-label .num {
+      display: inline-block;
+      margin-right: 0.5rem;
+      opacity: 0.6;
     }
 
     /* ── Hero ── */
-    main {
-      flex: 1;
+    .hero-section {
       display: flex;
       justify-content: center;
-      align-items: center;
-      padding: 2rem;
+      padding: 2.5rem 2rem;
     }
 
     .hero {
@@ -102,7 +118,6 @@
       position: relative;
     }
 
-    /* Subtle beige accent block behind text */
     .hero-left::before {
       content: '';
       position: absolute;
@@ -110,14 +125,14 @@
       left: -2rem;
       right: 10%;
       height: 48%;
-      background: #f4f1ea;
+      background: var(--cream);
       z-index: 0;
       border-radius: 4px;
     }
 
     .hero-content { position: relative; z-index: 1; }
 
-    h1 {
+    .hero-content h1 {
       color: var(--teal);
       font-size: 3rem;
       line-height: 1.15;
@@ -126,14 +141,13 @@
       letter-spacing: -1px;
     }
 
-    .subtitle {
+    .hero-content .subtitle {
       font-size: 1.05rem;
       color: var(--dark);
       font-weight: 500;
       line-height: 1.5;
     }
 
-    /* ── Right column: circular diagram ── */
     .hero-right {
       flex: 1;
       display: flex;
@@ -149,7 +163,6 @@
       aspect-ratio: 1 / 1;
     }
 
-    /* Arrow ring */
     .arrows {
       position: absolute;
       inset: 0;
@@ -157,7 +170,6 @@
       height: 100%;
     }
 
-    /* Three nodes positioned around the ring */
     .node {
       position: absolute;
       width: 38%;
@@ -172,44 +184,320 @@
     .node-bl  { bottom: 4%; left: 2%; }
     .node-br  { bottom: 4%; right: 2%; }
 
+    /* ── Network / Map Section ── */
+    .network-section { background: var(--cream); }
+
+    .network-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 2.5rem;
+      gap: 2rem;
+    }
+
+    .network-heading h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--dark);
+      line-height: 1.2;
+    }
+    .network-heading h2 span { color: var(--gray-light); }
+
+    .heading-aside { max-width: 380px; }
+    .heading-aside p { font-size: 0.95rem; color: var(--gray); line-height: 1.6; margin-bottom: 0.75rem; }
+    .heading-aside a {
+      color: var(--teal);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .heading-aside a:hover { text-decoration: underline; }
+
+    .map-card {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .map-card-header {
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .map-location {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .map-location .pin { color: var(--green); font-size: 1.2rem; }
+    .map-location strong { font-size: 0.95rem; display: block; }
+    .map-location small { font-size: 0.8rem; color: var(--gray); }
+
+    .map-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .map-filter {
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      border: 1.5px solid #e0e0e0;
+      background: var(--white);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .map-filter:hover { border-color: var(--teal); }
+    .map-filter.active {
+      background: var(--dark);
+      color: var(--white);
+      border-color: var(--dark);
+    }
+    .filter-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-food { background: var(--red); }
+    .dot-need { background: var(--yellow); }
+    .dot-capacity { background: var(--green); }
+    .dot-banks { background: var(--purple); }
+
+    .map-explore {
+      color: var(--teal);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .map-explore:hover { text-decoration: underline; }
+
+    .map-body { display: flex; }
+
+    .map-container {
+      flex: 1;
+      min-height: 480px;
+      position: relative;
+    }
+
+    #liveMap { width: 100%; height: 100%; min-height: 480px; }
+
+    .map-status-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.95);
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: var(--gray);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 400;
+      white-space: nowrap;
+    }
+    .map-status-bar .dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.4rem;
+    }
+
+    /* Signal panel */
+    .signal-panel {
+      width: 320px;
+      padding: 1.5rem;
+      border-left: 1px solid #f0f0f0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .signal-panel-header { margin-bottom: 1.5rem; }
+    .signal-panel-header .kicker {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.3rem;
+    }
+    .signal-panel-header h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .signal-panel-header .count {
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: #ddd;
+      line-height: 1;
+    }
+
+    .signal-list { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .signal-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .signal-item:hover { background: #f8f8f8; }
+
+    .signal-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .signal-icon.supply { background: #fce4ec; color: var(--pink); }
+    .signal-icon.capacity { background: #e8f5e9; color: var(--green); }
+    .signal-icon.demand { background: #fff8e1; color: var(--yellow); }
+
+    .signal-text { flex: 1; }
+    .signal-text strong { font-size: 0.88rem; display: block; }
+    .signal-text small { font-size: 0.78rem; color: var(--gray); }
+
+    .signal-panel-footer {
+      padding-top: 1rem;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--gray);
+    }
+
+    .avatar-stack { display: flex; }
+    .avatar-stack span {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: -6px;
+      border: 2px solid white;
+    }
+    .avatar-stack span:first-child { margin-left: 0; }
+    .avatar-stack span:last-child { background: var(--gray-light); }
+
+    /* ── How It Works ── */
+    .how-section { background: var(--white); text-align: center; }
+
+    .how-section h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    .how-section h2 em { color: var(--teal); font-style: normal; }
+
+    .how-subtitle {
+      font-size: 1rem;
+      color: var(--gray);
+      margin-bottom: 3.5rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step-icon {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 1.5rem;
+    }
+    .step-icon svg { width: 100%; height: 100%; }
+
+    .step h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 0.6rem;
+    }
+
+    .step p {
+      font-size: 0.92rem;
+      color: var(--gray);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+
     /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .section { padding: 3.5rem 2rem; }
+      .nav { padding: 1rem 2rem; }
+      .signal-panel { width: 260px; }
+    }
+
     @media (max-width: 960px) {
       .hero { flex-direction: column; }
       .hero-left { padding: 3.5rem 2rem; }
       .hero-left::before { display: none; }
-      h1 { font-size: 2.4rem; }
+      .hero-content h1 { font-size: 2.4rem; }
       .hero-right { padding: 1.5rem; }
       .diagram { max-width: 420px; }
+      .network-heading { flex-direction: column; align-items: flex-start; }
+      .map-body { flex-direction: column; }
+      .signal-panel { width: 100%; border-left: none; border-top: 1px solid #f0f0f0; }
+      .steps-grid { grid-template-columns: 1fr; gap: 2.5rem; }
     }
 
     @media (max-width: 640px) {
       nav { padding: 1rem 1.5rem; }
       .nav-links { display: none; }
       .menu-icon { display: flex; }
-      main { padding: 1rem; }
-      .hero { min-height: auto; }
-      h1 { font-size: 2rem; }
+      .hero { min-height: auto; border-radius: 0; }
+      .hero-content h1 { font-size: 2rem; }
+      .section { padding: 2.5rem 1.25rem; }
+      .map-card-header { padding: 0.75rem 1rem; }
     }
   </style>
 </head>
 <body>
 
+<!-- ═══════════════ NAVIGATION ═══════════════ -->
 <nav>
-  <a href="#" class="logo">Care<span>Space</span></a>
+  <a href="#top" class="logo">Care<span>Space</span></a>
   <div class="nav-links">
     <a href="#vision">Vision</a>
     <a href="#features">Features</a>
     <a href="#how-it-works">How it Works</a>
-    <div class="menu-icon" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </div>
+  </div>
+  <div class="menu-icon" aria-label="Menu">
+    <span></span><span></span><span></span>
   </div>
 </nav>
 
-<main>
+<!-- ═══════════════ HERO ═══════════════ -->
+<section id="top" class="hero-section">
   <div class="hero">
-
-    <!-- LEFT: headline -->
     <div class="hero-left">
       <div class="hero-content">
         <h1>Intelligent Storage<br>Optimization for<br>Food Security</h1>
@@ -217,27 +505,21 @@
       </div>
     </div>
 
-    <!-- RIGHT: circular workflow diagram -->
     <div class="hero-right">
       <div class="diagram">
-
-        <!-- Clockwise connecting arrows -->
+        <!-- Clockwise arrows -->
         <svg class="arrows" viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Top → Bottom-Right -->
           <path d="M 340 105 Q 480 160 455 340" stroke="#1a1a1a" stroke-width="2.2" fill="none"/>
           <polygon points="455,340 448,322 462,328" fill="#1a1a1a"/>
-          <!-- Bottom-Right → Bottom-Left -->
           <path d="M 400 455 Q 260 530 120 455" stroke="#1a1a1a" stroke-width="2.2" fill="none"/>
           <polygon points="120,455 138,448 132,462" fill="#1a1a1a"/>
-          <!-- Bottom-Left → Top -->
           <path d="M 65 340 Q 40 160 180 105" stroke="#1a1a1a" stroke-width="2.2" fill="none"/>
           <polygon points="180,105 162,112 168,98" fill="#1a1a1a"/>
         </svg>
 
-        <!-- NODE 1 (top): phone scanning -->
+        <!-- Node 1: Phone scanning -->
         <div class="node node-top">
           <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Faint shelf background -->
             <g opacity="0.3" stroke="#008080" stroke-width="1.2">
               <rect x="8" y="25" width="22" height="50" rx="2"/>
               <line x1="8" y1="42" x2="30" y2="42"/>
@@ -245,44 +527,29 @@
               <rect x="88" y="35" width="14" height="30" rx="2"/>
               <line x1="95" y1="30" x2="95" y2="35"/>
             </g>
-            <!-- Phone body -->
             <rect x="42" y="18" width="34" height="68" rx="5" fill="#fff" stroke="#008080" stroke-width="2"/>
-            <!-- Phone screen -->
             <rect x="47" y="26" width="24" height="40" rx="2" fill="#fff" stroke="#008080" stroke-width="1.2"/>
-            <!-- Scan square -->
             <rect x="52" y="33" width="14" height="14" rx="1" fill="#008080" opacity="0.85"/>
-            <!-- Home button -->
             <circle cx="59" cy="76" r="3" fill="none" stroke="#008080" stroke-width="1.2"/>
-            <!-- Hand holding phone -->
             <path d="M 38 88 Q 48 70 52 62 L 52 92 Z" fill="#fff" stroke="#008080" stroke-width="1.5"/>
             <path d="M 80 88 Q 70 70 66 62 L 66 92 Z" fill="#fff" stroke="#008080" stroke-width="1.5"/>
-            <!-- Wrist -->
             <path d="M 38 92 Q 36 108 44 112 L 74 112 Q 82 108 80 92" fill="#fff" stroke="#008080" stroke-width="1.5"/>
           </svg>
         </div>
 
-        <!-- NODE 2 (bottom-left): food bank + van -->
+        <!-- Node 2: Food bank + van -->
         <div class="node node-bl">
           <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Warehouse building -->
             <path d="M 8 98 L 8 52 L 32 38 L 56 52 L 56 98 Z" fill="#fff" stroke="#008080" stroke-width="2"/>
-            <!-- Door -->
             <rect x="20" y="65" width="22" height="33" rx="1" fill="#fff" stroke="#008080" stroke-width="1.5"/>
-            <!-- Door lines -->
             <line x1="31" y1="65" x2="31" y2="98" stroke="#008080" stroke-width="1"/>
-            <!-- FOOD BANK sign -->
             <rect x="12" y="42" width="38" height="16" rx="2" fill="#008080"/>
             <text x="31" y="53" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="sans-serif">FOOD BANK</text>
-            <!-- Roof line -->
             <line x1="8" y1="52" x2="56" y2="52" stroke="#008080" stroke-width="1.5"/>
-            <!-- Delivery van -->
             <path d="M 64 98 L 64 62 L 98 62 L 108 76 L 108 98 Z" fill="#fff" stroke="#008080" stroke-width="2"/>
-            <!-- Van window -->
             <rect x="92" y="66" width="10" height="12" rx="1" fill="#fff" stroke="#008080" stroke-width="1.2"/>
-            <!-- Wheels -->
             <circle cx="74" cy="98" r="6" fill="#fff" stroke="#008080" stroke-width="2"/>
             <circle cx="100" cy="98" r="6" fill="#fff" stroke="#008080" stroke-width="2"/>
-            <!-- Fork & spoon logo on van -->
             <circle cx="80" cy="78" r="9" fill="#008080"/>
             <line x1="77" y1="73" x2="77" y2="83" stroke="#fff" stroke-width="1.2"/>
             <line x1="77" y1="73" x2="75" y2="73" stroke="#fff" stroke-width="1"/>
@@ -292,51 +559,340 @@
           </svg>
         </div>
 
-        <!-- NODE 3 (bottom-right): analytics + inventory -->
+        <!-- Node 3: Analytics + inventory -->
         <div class="node node-br">
           <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Line graph -->
             <rect x="8" y="12" width="44" height="34" rx="3" fill="#fff" stroke="#008080" stroke-width="1.5"/>
             <polyline points="14,40 22,30 30,34 38,22 46,26" fill="none" stroke="#008080" stroke-width="2"/>
-            <!-- Pie chart -->
             <circle cx="82" cy="28" r="16" fill="#fff" stroke="#008080" stroke-width="1.5"/>
             <path d="M 82 28 L 82 12 A 16 16 0 0 1 96 28 Z" fill="#008080"/>
             <path d="M 82 28 L 96 28 A 16 16 0 0 1 88 42 Z" fill="#008080" opacity="0.5"/>
-            <!-- Bar chart -->
             <rect x="12" y="58" width="8" height="22" rx="1" fill="#008080"/>
             <rect x="24" y="48" width="8" height="32" rx="1" fill="#008080"/>
             <rect x="36" y="55" width="8" height="25" rx="1" fill="#008080" opacity="0.7"/>
             <rect x="48" y="38" width="8" height="42" rx="1" fill="#008080"/>
-            <!-- Inventory table -->
             <g transform="translate(62,52)">
               <rect x="0" y="0" width="52" height="56" rx="3" fill="#fff" stroke="#008080" stroke-width="1.5"/>
-              <!-- Header -->
               <rect x="0" y="0" width="52" height="14" rx="3" fill="#008080"/>
               <rect x="0" y="8" width="52" height="6" fill="#008080"/>
               <text x="26" y="10" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="sans-serif">INVENTORY</text>
-              <!-- Column divider -->
               <line x1="34" y1="14" x2="34" y2="56" stroke="#008080" stroke-width="0.8"/>
-              <!-- Row dividers -->
               <line x1="0" y1="27" x2="52" y2="27" stroke="#008080" stroke-width="0.5"/>
               <line x1="0" y1="40" x2="52" y2="40" stroke="#008080" stroke-width="0.5"/>
-              <!-- Row 1 -->
               <text x="4" y="23" font-size="6.5" fill="#008080" font-family="sans-serif">APPLES</text>
               <text x="38" y="23" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">25</text>
-              <!-- Row 2 -->
               <text x="4" y="36" font-size="6.5" fill="#008080" font-family="sans-serif">BREAD</text>
               <text x="38" y="36" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">10</text>
-              <!-- Row 3 -->
               <text x="4" y="49" font-size="6.5" fill="#008080" font-family="sans-serif">MILK</text>
               <text x="38" y="49" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">30</text>
             </g>
           </svg>
         </div>
-
       </div>
     </div>
-
   </div>
-</main>
+</section>
+
+<!-- ═══════════════ NETWORK / MAP ═══════════════ -->
+<section id="vision" class="section network-section">
+  <div class="network-heading">
+    <div>
+      <p class="section-label"><span class="num">01</span> The Network</p>
+      <h2>See what exists.<br /><span>See what can move.</span></h2>
+    </div>
+    <div class="heading-aside">
+      <p>Community resources are always changing. CareSpace makes the changing picture visible — and gives each signal somewhere to go.</p>
+      <a href="#how-it-works">Learn the rhythm →</a>
+    </div>
+  </div>
+
+  <div class="map-card">
+    <div class="map-card-header">
+      <div class="map-location">
+        <span class="pin">📍</span>
+        <div>
+          <strong>San Diego County, California</strong>
+          <small>6 signals · 153 food banks · PUMA ready</small>
+        </div>
+      </div>
+      <div class="map-filters">
+        <button class="map-filter active" data-filter="all">All signals</button>
+        <button class="map-filter" data-filter="supply"><span class="filter-dot dot-food"></span>Food</button>
+        <button class="map-filter" data-filter="demand"><span class="filter-dot dot-need"></span>Need</button>
+        <button class="map-filter" data-filter="capacity"><span class="filter-dot dot-capacity"></span>Capacity</button>
+        <button class="map-filter" data-filter="banks"><span class="filter-dot dot-banks"></span>Food banks</button>
+      </div>
+      <a class="map-explore" href="#">Explore →</a>
+    </div>
+
+    <div class="map-body">
+      <div class="map-container">
+        <div id="liveMap"></div>
+        <div class="map-status-bar"><span class="dot"></span>Showing 159 live locations · 153 food banks</div>
+      </div>
+
+      <aside class="signal-panel">
+        <div class="signal-panel-header">
+          <p class="kicker">Live Signals</p>
+          <h3>Where help can land</h3>
+          <p class="count">159</p>
+        </div>
+
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-icon supply">♥</div>
+            <div class="signal-text">
+              <strong>Northside Market</strong>
+              <small>84 meal equivalents</small>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon capacity">✚</div>
+            <div class="signal-text">
+              <strong>Oak Street Kitchen</strong>
+              <small>Open until 9:00 pm</small>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon demand">🍽</div>
+            <div class="signal-text">
+              <strong>Harbor House</strong>
+              <small>Needs 120 dinners</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="signal-panel-footer">
+          <div class="avatar-stack">
+            <span>AM</span><span>JR</span><span>SK</span><span>+</span>
+          </div>
+          <span>+ 156 more locations are active</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+<section id="how-it-works" class="section how-section">
+  <h2>How <em>CareSpace</em> Works</h2>
+  <p class="how-subtitle">Three simple steps to transform your food security operations.</p>
+
+  <div class="steps-grid">
+    <!-- Step 1: Scan -->
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g opacity="0.35" stroke="#008080" stroke-width="1.2">
+            <rect x="8" y="25" width="22" height="50" rx="2"/>
+            <line x1="8" y1="42" x2="30" y2="42"/>
+            <line x1="8" y1="58" x2="30" y2="58"/>
+            <rect x="88" y="35" width="14" height="30" rx="2"/>
+            <line x1="95" y1="30" x2="95" y2="35"/>
+          </g>
+          <rect x="42" y="18" width="34" height="68" rx="5" fill="#fff" stroke="#008080" stroke-width="2"/>
+          <rect x="47" y="26" width="24" height="40" rx="2" fill="#fff" stroke="#008080" stroke-width="1.2"/>
+          <rect x="52" y="33" width="14" height="14" rx="1" fill="#008080" opacity="0.85"/>
+          <circle cx="59" cy="76" r="3" fill="none" stroke="#008080" stroke-width="1.2"/>
+          <path d="M 38 88 Q 48 70 52 62 L 52 92 Z" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+          <path d="M 80 88 Q 70 70 66 62 L 66 92 Z" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+          <path d="M 38 92 Q 36 108 44 112 L 74 112 Q 82 108 80 92" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <h3>Scan</h3>
+      <p>Computer vision maps every storage space and item in real time.</p>
+    </div>
+
+    <!-- Step 2: Analyze -->
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="12" width="44" height="34" rx="3" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+          <polyline points="14,40 22,30 30,34 38,22 46,26" fill="none" stroke="#008080" stroke-width="2"/>
+          <circle cx="82" cy="28" r="16" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+          <path d="M 82 28 L 82 12 A 16 16 0 0 1 96 28 Z" fill="#008080"/>
+          <path d="M 82 28 L 96 28 A 16 16 0 0 1 88 42 Z" fill="#008080" opacity="0.5"/>
+          <rect x="12" y="58" width="8" height="22" rx="1" fill="#008080"/>
+          <rect x="24" y="48" width="8" height="32" rx="1" fill="#008080"/>
+          <rect x="36" y="55" width="8" height="25" rx="1" fill="#008080" opacity="0.7"/>
+          <rect x="48" y="38" width="8" height="42" rx="1" fill="#008080"/>
+          <g transform="translate(62,52)">
+            <rect x="0" y="0" width="52" height="56" rx="3" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+            <rect x="0" y="0" width="52" height="14" rx="3" fill="#008080"/>
+            <rect x="0" y="8" width="52" height="6" fill="#008080"/>
+            <text x="26" y="10" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="sans-serif">INVENTORY</text>
+            <line x1="34" y1="14" x2="34" y2="56" stroke="#008080" stroke-width="0.8"/>
+            <line x1="0" y1="27" x2="52" y2="27" stroke="#008080" stroke-width="0.5"/>
+            <line x1="0" y1="40" x2="52" y2="40" stroke="#008080" stroke-width="0.5"/>
+            <text x="4" y="23" font-size="6.5" fill="#008080" font-family="sans-serif">APPLES</text>
+            <text x="38" y="23" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">25</text>
+            <text x="4" y="36" font-size="6.5" fill="#008080" font-family="sans-serif">BREAD</text>
+            <text x="38" y="36" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">10</text>
+            <text x="4" y="49" font-size="6.5" fill="#008080" font-family="sans-serif">MILK</text>
+            <text x="38" y="49" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">30</text>
+          </g>
+        </svg>
+      </div>
+      <h3>Analyze</h3>
+      <p>AI identifies mismatches between capacity, supply, agency, and pantry demand.</p>
+    </div>
+
+    <!-- Step 3: Allocate -->
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 8 98 L 8 52 L 32 38 L 56 52 L 56 98 Z" fill="#fff" stroke="#008080" stroke-width="2"/>
+          <rect x="20" y="65" width="22" height="33" rx="1" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+          <line x1="31" y1="65" x2="31" y2="98" stroke="#008080" stroke-width="1"/>
+          <rect x="12" y="42" width="38" height="16" rx="2" fill="#008080"/>
+          <text x="31" y="53" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="sans-serif">FOOD BANK</text>
+          <line x1="8" y1="52" x2="56" y2="52" stroke="#008080" stroke-width="1.5"/>
+          <path d="M 64 98 L 64 62 L 98 62 L 108 76 L 108 98 Z" fill="#fff" stroke="#008080" stroke-width="2"/>
+          <rect x="92" y="66" width="10" height="12" rx="1" fill="#fff" stroke="#008080" stroke-width="1.2"/>
+          <circle cx="74" cy="98" r="6" fill="#fff" stroke="#008080" stroke-width="2"/>
+          <circle cx="100" cy="98" r="6" fill="#fff" stroke="#008080" stroke-width="2"/>
+          <circle cx="80" cy="78" r="9" fill="#008080"/>
+          <line x1="77" y1="73" x2="77" y2="83" stroke="#fff" stroke-width="1.2"/>
+          <line x1="77" y1="73" x2="75" y2="73" stroke="#fff" stroke-width="1"/>
+          <line x1="77" y1="73" x2="79" y2="73" stroke="#fff" stroke-width="1"/>
+          <line x1="83" y1="73" x2="83" y2="80" stroke="#fff" stroke-width="1.2"/>
+          <ellipse cx="83" cy="82" rx="2.5" ry="3" fill="#fff"/>
+        </svg>
+      </div>
+      <h3>Allocate</h3>
+      <p>Optimized allocations ensure food reaches the right place at the right time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ MAP SCRIPT ═══════════════ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+  // San Diego County food bank data (sample subset for demo)
+  const foodBanks = [
+    { name: "Northside Market", lat: 33.1192, lng: -117.0864, type: "supply", meta: "84 meal equivalents" },
+    { name: "Oak Street Kitchen", lat: 32.7157, lng: -117.1611, type: "capacity", meta: "Open until 9:00 pm" },
+    { name: "Harbor House", lat: 32.6401, lng: -117.0842, type: "demand", meta: "Needs 120 dinners" },
+    { name: "Eastside Volunteers", lat: 32.7948, lng: -116.9625, type: "logistics", meta: "2 vans available" },
+    { name: "Cedar Grove Shelter", lat: 33.1959, lng: -117.3795, type: "demand", meta: "18 beds open" },
+    { name: "Common Table", lat: 32.6781, lng: -117.0992, type: "supply", meta: "Meals ready at 6:15 pm" },
+    { name: "North County Food Hub", lat: 33.2007, lng: -117.2425, type: "bank", meta: "Food bank" },
+    { name: "Central Care Food Bank", lat: 32.7481, lng: -117.1014, type: "bank", meta: "Food bank" },
+    { name: "South Bay Community Pantry", lat: 32.6781, lng: -117.0992, type: "bank", meta: "Community pantry" },
+    { name: "East County Community Table", lat: 32.7948, lng: -116.9625, type: "bank", meta: "Distribution site" },
+    // Additional food bank locations spread across the county
+    { name: "Chula Vista Pantry", lat: 32.6401, lng: -117.0842, type: "bank", meta: "Food bank" },
+    { name: "Oceanside Community Kitchen", lat: 33.2214, lng: -117.3925, type: "bank", meta: "Food bank" },
+    { name: "Escondido Food Share", lat: 33.1322, lng: -117.0375, type: "bank", meta: "Food bank" },
+    { name: "Carlsbad Pantry", lat: 33.1581, lng: -117.3488, type: "bank", meta: "Food bank" },
+    { name: "Encinitas Community Table", lat: 32.9400, lng: -117.2344, type: "bank", meta: "Food bank" },
+    { name: "Vista Food Bank", lat: 33.1960, lng: -117.2410, type: "bank", meta: "Food bank" },
+    { name: "San Marcos Pantry", lat: 33.1406, lng: -117.1627, type: "bank", meta: "Food bank" },
+    { name: "National City Kitchen", lat: 32.6370, lng: -117.0970, type: "bank", meta: "Food bank" },
+    { name: "El Cajon Food Share", lat: 32.8243, lng: -116.9582, type: "bank", meta: "Food bank" },
+    { name: "La Mesa Community Table", lat: 32.7920, lng: -117.0250, type: "bank", meta: "Food bank" },
+    { name: "Santee Food Bank", lat: 32.8320, lng: -117.0130, type: "bank", meta: "Food bank" },
+    { name: "Poway Pantry", lat: 32.9620, lng: -117.0750, type: "bank", meta: "Food bank" },
+    { name: "Coronado Community Kitchen", lat: 32.9160, lng: -117.2680, type: "bank", meta: "Food bank" },
+    { name: "Imperial Beach Food Share", lat: 32.5690, lng: -117.1150, type: "bank", meta: "Food bank" },
+    { name: "Lemon Grove Pantry", lat: 32.7510, lng: -116.9720, type: "bank", meta: "Food bank" },
+    { name: "Spring Valley Kitchen", lat: 32.7880, lng: -116.9850, type: "bank", meta: "Food bank" },
+    { name: "Fallbrook Community Table", lat: 33.3790, lng: -117.2460, type: "bank", meta: "Food bank" },
+  ];
+
+  // Generate additional random food bank positions to reach ~153
+  for (let i = 0; i < 126; i++) {
+    foodBanks.push({
+      name: "Food Bank #" + (i + 28),
+      lat: 32.55 + Math.random() * 0.8,
+      lng: -117.55 + Math.random() * 1.4,
+      type: "bank",
+      meta: "Food bank"
+    });
+  }
+
+  const map = L.map('liveMap', {
+    center: [32.95, -117.12],
+    zoom: 9,
+    zoomControl: true,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+    maxZoom: 18,
+  }).addTo(map);
+
+  // Custom purple diamond icon for food banks
+  const bankIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:14px;height:14px;background:#8b5cf6;transform:rotate(45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+
+  // Colored circle icons for signals
+  const signalIcons = {
+    supply: L.divIcon({
+      className: '',
+      html: '<div style="width:12px;height:12px;background:#ec4899;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>',
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+    }),
+    demand: L.divIcon({
+      className: '',
+      html: '<div style="width:12px;height:12px;background:#f59e0b;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>',
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+    }),
+    capacity: L.divIcon({
+      className: '',
+      html: '<div style="width:12px;height:12px;background:#22c55e;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>',
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+    }),
+    logistics: L.divIcon({
+      className: '',
+      html: '<div style="width:12px;height:12px;background:#22c55e;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.2);"></div>',
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+    }),
+  };
+
+  let markers = [];
+
+  function renderMarkers(filter) {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+
+    foodBanks.forEach(bank => {
+      const isBank = bank.type === 'bank';
+      const matches = filter === 'all' ||
+        (filter === 'banks' && isBank) ||
+        (!isBank && bank.type === filter);
+
+      if (!matches) return;
+
+      const icon = isBank ? bankIcon : (signalIcons[bank.type] || bankIcon);
+      const marker = L.marker([bank.lat, bank.lng], { icon })
+        .addTo(map)
+        .bindPopup('<strong>' + bank.name + '</strong><br>' + bank.meta);
+      markers.push(marker);
+    });
+  }
+
+  renderMarkers('all');
+
+  // Filter button behavior
+  document.querySelectorAll('.map-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.map-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderMarkers(btn.dataset.filter);
+    });
+  });
+})();
+</script>
 
 </body>
 </html>
