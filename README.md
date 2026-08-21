@@ -38,7 +38,7 @@ The existing `heurchain` Pages project is intentionally not referenced by the wo
 ## Product surface
 
 - Live-signal network map with supply, demand, capacity, and logistics filters
-- Role-aware dashboard prototype for people in need and food-bank operators
+- D1-backed dashboard registration and session login for people in need, food-bank operators, and food suppliers
 - Report-food, report-need, and report-capacity entry points
 - Match flow: report → match → move → confirm
 - Privacy/trust framing for community-level signals
@@ -53,8 +53,15 @@ To point the static site at a live JSON feed, set `VITE_NETWORK_DATA_URL` during
 
 The main map reads food-bank locations from the D1-backed `/api/v1/food-banks` Pages Function. The endpoint returns the same normalized shape as [`public/food-bank-locations.json`](public/food-bank-locations.json), which is generated from [`san-diego-food-bank-locations.md`](san-diego-food-bank-locations.md) during `npm run dev` and `npm run build` by [`scripts/normalize-food-bank-data.mjs`](scripts/normalize-food-bank-data.mjs). The static feed remains a browser fallback while the API is unavailable. Food-bank locations have their own `food-bank` type, filter, marker shape, popup provenance, and source fields so they remain distinct from live food, need, capacity, and logistics signals. Set `VITE_FOOD_BANK_DATA_URL` to replace the API with another compatible JSON source.
 
-The POC D1 schema and seed migration are in [`migrations/0001_food_bank_locations.sql`](migrations/0001_food_bank_locations.sql), generated with `npm run prepare:migration`. The Pages Function uses the `CARES_DB` binding configured in [`wrangler.toml`](wrangler.toml) and returns only active records inside the San Diego County envelope.
+The POC D1 food-bank schema and seed migration are in [`migrations/0001_food_bank_locations.sql`](migrations/0001_food_bank_locations.sql), generated with `npm run prepare:migration`; dashboard accounts and sessions are in [`migrations/0002_dashboard_users.sql`](migrations/0002_dashboard_users.sql). The Pages Functions use the `CARES_DB` binding configured in [`wrangler.toml`](wrangler.toml) and return only active records inside the San Diego County envelope.
 
-The dashboard loads [`public/dashboard-data.json`](public/dashboard-data.json) and can be pointed at a live feed with `VITE_DASHBOARD_DATA_URL`. The current sign-in is a non-transmitting demo gate; connect the dashboard form to the selected production identity provider before accepting real credentials or user-specific data.
+Dashboard auth endpoints are `/api/v1/dashboard/register`, `/api/v1/dashboard/login`, and `/api/v1/dashboard/session`. The seeded demo accounts are intentionally public POC credentials, not production identities:
+
+- Food bank: `demo.foodbank@carespace.dev` / `CareSpace-FoodBank-2026!` — Central Care Food Bank
+- Food supplier: `demo.supplier@carespace.dev` / `CareSpace-Supplier-2026!` — Northside Market
+
+New registrations are stored in the same D1 database. Passwords are stored as PBKDF2-SHA-256 hashes and sessions use expiring HTTP-only cookies; replace this POC auth with the approved identity provider before production use.
+
+The dashboard loads [`public/dashboard-data.json`](public/dashboard-data.json) and can be pointed at a live feed with `VITE_DASHBOARD_DATA_URL`. The dashboard auth in this revision is a D1-backed POC; connect it to the selected production identity provider before accepting real credentials or user-specific data.
 
 Google Maps can be used as a provider-specific follow-up by supplying a Google Maps JavaScript API key and map ID; the default map does not require a key or billing account.

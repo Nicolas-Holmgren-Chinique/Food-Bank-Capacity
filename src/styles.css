@@ -230,6 +230,15 @@ h1 em, h2 em { color: var(--coral); font-style: normal; }
 
 .dot-food-bank { background: #8177cb; }
 .icon-food-bank { background: #e4e1f7; color: #665bb3; }
+.dashboard-password-field, .dashboard-profile-field { display: grid; gap: 7px; }
+.dashboard-password-field { flex: 1 1 190px; }
+.dashboard-password-field span, .dashboard-profile-field span { font-size: 10px; font-weight: 700; }
+.dashboard-password-field input, .dashboard-profile-field input { background: #fffdf8; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: 12px; min-height: 43px; outline: 0; padding: 0 12px; width: 100%; }
+.dashboard-password-field input:focus, .dashboard-profile-field input:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255, 114, 92, 0.14); }
+.dashboard-register-fields { display: grid; flex-basis: 100%; gap: 9px; grid-template-columns: repeat(2, 1fr); }
+.dashboard-auth-toggle { background: none; border: 0; color: var(--ink-soft); flex-basis: 100%; font-size: 10px; padding: 3px 0; text-align: left; }
+.dashboard-auth-toggle:hover { color: var(--coral-dark); }
+.dashboard-auth-status { color: var(--coral-dark); font-size: 10px; line-height: 1.4; margin: 11px 0 0; min-height: 14px; }
 
 @media (max-width: 860px) {
   .dashboard-gate { grid-template-columns: 1fr; }.dashboard-login-aside { display: grid; gap: 25px; grid-template-columns: 0.35fr 1fr 1fr; }.dashboard-layout { grid-template-columns: 1fr; }.dashboard-map-card { border-bottom: 1px solid var(--line); border-right: 0; }.dashboard-results-card { min-height: 300px; }.dashboard-inventory-list { grid-template-columns: 1fr; }

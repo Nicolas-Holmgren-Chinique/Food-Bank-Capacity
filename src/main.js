@@ -151,6 +151,7 @@ const fallbackDashboardData = {
 const dashboardDataUrl = import.meta.env.VITE_DASHBOARD_DATA_URL || '/dashboard-data.json';
 const foodBankDataUrl = import.meta.env.VITE_FOOD_BANK_DATA_URL || '/api/v1/food-banks';
 const foodBankStaticDataUrl = '/food-bank-locations.json';
+const dashboardAuthBaseUrl = import.meta.env.VITE_DASHBOARD_AUTH_URL || '/api/v1/dashboard';
 const fallbackFoodBankData = {
   version: '1.0',
   schema: 'carespace.food-bank-locations',
@@ -171,6 +172,8 @@ const fallbackFoodBankData = {
 };
 let dashboardData = fallbackDashboardData;
 let dashboardRole = 'need';
+let dashboardAuthMode = 'login';
+let dashboardUser = null;
 let selectedFoodBankId = fallbackDashboardData.foodBanks[0].id;
 let dashboardRuntime = null;
 let allocationSupply = null;
@@ -313,18 +316,26 @@ app.innerHTML = `
               <div class="dashboard-login-mark"><span>${icon('pin')}</span></div>
               <p class="eyebrow">Demo access</p>
               <h3>Open your CareSpace dashboard.</h3>
-              <p class="dashboard-login-intro">Choose the view that fits you. This prototype does not transmit or store credentials; production sign-in will connect here to the approved auth provider.</p>
+              <p class="dashboard-login-intro">Choose the view that fits you. This POC records organization accounts in CareSpace D1 and keeps passwords hashed.</p>
               <div class="dashboard-role-switch" role="group" aria-label="Choose your dashboard role">
                 <button type="button" class="dashboard-role is-active" data-demo-role="need">I need food</button>
                 <button type="button" class="dashboard-role" data-demo-role="food-bank">I run a food bank</button>
+                <button type="button" class="dashboard-role" data-demo-role="food-supplier">I supply food</button>
               </div>
               <form class="dashboard-login-form" data-dashboard-login>
                 <label class="dashboard-email-field"><span>Email for demo access</span><input type="email" name="email" placeholder="you@example.org" autocomplete="email" required /></label>
-                <button class="button button-dark" type="submit" data-dashboard-submit>Enter as a person in need ${icon('arrow')}</button>
+                <label class="dashboard-password-field"><span>Password</span><input type="password" name="password" placeholder="12+ characters" autocomplete="current-password" minlength="12" required /></label>
+                <div class="dashboard-register-fields" data-dashboard-register-fields hidden>
+                  <label class="dashboard-profile-field"><span>Your name</span><input type="text" name="displayName" placeholder="Your name" autocomplete="name" maxlength="120" /></label>
+                  <label class="dashboard-profile-field"><span>Organization</span><input type="text" name="organizationName" placeholder="Organization name" autocomplete="organization" maxlength="160" /></label>
+                </div>
+                <button class="button button-dark" type="submit" data-dashboard-submit>Sign in as a person in need ${icon('arrow')}</button>
+                <button class="dashboard-auth-toggle" type="button" data-dashboard-auth-mode>New here? Create an account</button>
               </form>
-              <p class="dashboard-login-footnote">No account required for this demo · organization-level data only</p>
+              <p class="dashboard-auth-status" data-dashboard-auth-status role="status" aria-live="polite"></p>
+              <p class="dashboard-login-footnote">Demo accounts and new registrations are stored in D1 · organization-level data only</p>
             </div>
-            <div class="dashboard-login-aside"><span class="dashboard-aside-number">01</span><p><strong>For people in need</strong><br />See food banks, pantry hours, access notes, and available inventory near you.</p><p><strong>For food banks</strong><br />See your inventory alongside nearby handoff partners and community demand.</p></div>
+            <div class="dashboard-login-aside"><span class="dashboard-aside-number">01</span><p><strong>For people in need</strong><br />See food banks, pantry hours, access notes, and available inventory near you.</p><p><strong>For food banks</strong><br />See your inventory alongside nearby handoff partners and community demand.</p><p><strong>For food suppliers</strong><br />Record a restaurant, market, farm, or kitchen account that can offer food.</p></div>
           </div>
 
           <div class="dashboard-app" data-dashboard-app hidden>
@@ -867,6 +878,20 @@ function renderDashboardResults() {
 function renderDashboardInventory() {
   const container = $('[data-dashboard-inventory]');
   if (!container) return;
+
+  if (dashboardRole === 'food-supplier') {
+    const supplierName = dashboardUser?.organizationName || 'Food supplier workspace';
+    const supplierRows = [
+      ['Organization account', supplierName, 'Registered in the CareSpace D1 dashboard'],
+      ['Availability status', 'Ready to share', 'Add a pickup window and quantity next'],
+      ['Handoff partner', 'San Diego County network', 'Food banks can discover your supply'],
+    ];
+    container.innerHTML = `
+      <div class="dashboard-inventory-heading"><div><p class="panel-kicker">Supplier view</p><h4>${escapeHtml(supplierName)}</h4><p>Keep your available food and pickup windows visible to nearby food banks.</p></div><button class="text-button" type="button" data-dashboard-report>Share available food ${icon('arrow')}</button></div>
+      <div class="dashboard-inventory-list">${supplierRows.map(([category, amount, note]) => `<div class="dashboard-inventory-row"><span class="inventory-spark">${icon('heart')}</span><span><strong>${escapeHtml(category)}</strong><small>${escapeHtml(note)}</small></span><b>${escapeHtml(amount)}</b></div>`).join('')}</div>`;
+    return;
+  }
+
   const foodBanks = foodBanksInScope();
   const selected = dashboardRole === 'food-bank'
     ? foodBanks.find((foodBank) => foodBank.isDemoUserFoodBank) ?? foodBanks[0]
@@ -1090,12 +1115,26 @@ function initializeDashboardMap() {
 }
 
 function renderDashboard() {
-  const isFoodBank = dashboardRole === 'food-bank';
-  $('[data-dashboard-role-pill]').textContent = isFoodBank ? 'Food bank operator' : 'Person in need';
-  $('[data-dashboard-title]').textContent = isFoodBank ? 'Keep your inventory visible' : 'Find food near you';
-  $('[data-dashboard-subtitle]').textContent = isFoodBank
-    ? 'See your inventory and nearby partners across San Diego County.'
-    : 'See open food banks, access notes, and available inventory across San Diego County.';
+  const roleCopy = {
+    need: {
+      label: 'Person in need',
+      title: 'Find food near you',
+      subtitle: 'See open food banks, access notes, and available inventory across San Diego County.',
+    },
+    'food-bank': {
+      label: 'Food bank operator',
+      title: 'Keep your inventory visible',
+      subtitle: 'See your inventory and nearby partners across San Diego County.',
+    },
+    'food-supplier': {
+      label: 'Food supplier',
+      title: 'Offer food with confidence',
+      subtitle: 'Keep restaurant, market, farm, and kitchen supply visible to food banks.',
+    },
+  }[dashboardRole];
+  $('[data-dashboard-role-pill]').textContent = roleCopy.label;
+  $('[data-dashboard-title]').textContent = roleCopy.title;
+  $('[data-dashboard-subtitle]').textContent = roleCopy.subtitle;
   $('[data-dashboard-map-status]').textContent = `${foodBanksInScope().length} food locations in San Diego County`;
   renderDashboardResults();
   renderDashboardInventory();
@@ -1112,16 +1151,61 @@ async function loadDashboardData() {
 }
 
 function setDashboardRole(role) {
-  dashboardRole = role === 'food-bank' ? 'food-bank' : 'need';
+  dashboardRole = ['food-bank', 'food-supplier'].includes(role) ? role : 'need';
   selectedFoodBankId = dashboardRole === 'food-bank'
     ? (dashboardData.foodBanks.find((foodBank) => foodBank.isDemoUserFoodBank)?.id ?? dashboardData.foodBanks[0]?.id)
     : dashboardData.foodBanks[0]?.id;
   $$('[data-demo-role]').forEach((button) => button.classList.toggle('is-active', button.dataset.demoRole === dashboardRole));
+  const roleLabel = {
+    need: 'a person in need',
+    'food-bank': 'a food bank',
+    'food-supplier': 'a food supplier',
+  }[dashboardRole];
   const submit = $('[data-dashboard-submit]');
-  if (submit) submit.innerHTML = `${dashboardRole === 'food-bank' ? 'Enter as a food bank' : 'Enter as a person in need'} ${icon('arrow')}`;
+  if (submit) submit.innerHTML = `${dashboardAuthMode === 'register' ? `Create an account as ${roleLabel}` : `Sign in as ${roleLabel}`} ${icon('arrow')}`;
+  const organization = $('[data-dashboard-login] [name="organizationName"]');
+  if (organization) organization.required = dashboardAuthMode === 'register' && dashboardRole !== 'need';
 }
 
-async function enterDashboard() {
+function setDashboardAuthMode(mode) {
+  dashboardAuthMode = mode === 'register' ? 'register' : 'login';
+  const fields = $('[data-dashboard-register-fields]');
+  if (fields) fields.hidden = dashboardAuthMode !== 'register';
+  const displayName = $('[data-dashboard-login] [name="displayName"]');
+  if (displayName) displayName.required = dashboardAuthMode === 'register';
+  const organization = $('[data-dashboard-login] [name="organizationName"]');
+  if (organization) organization.required = dashboardAuthMode === 'register' && dashboardRole !== 'need';
+  const password = $('[data-dashboard-login] [name="password"]');
+  if (password) password.autocomplete = dashboardAuthMode === 'register' ? 'new-password' : 'current-password';
+  const toggle = $('[data-dashboard-auth-mode]');
+  if (toggle) toggle.textContent = dashboardAuthMode === 'register' ? 'Already registered? Sign in' : 'New here? Create an account';
+  const status = $('[data-dashboard-auth-status]');
+  if (status) status.textContent = '';
+  setDashboardRole(dashboardRole);
+}
+
+async function authenticateDashboard() {
+  const form = $('[data-dashboard-login]');
+  const formData = new FormData(form);
+  const endpoint = dashboardAuthMode === 'register' ? 'register' : 'login';
+  const response = await fetch(`${dashboardAuthBaseUrl}/${endpoint}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({
+      email: formData.get('email'),
+      password: formData.get('password'),
+      role: dashboardRole,
+      displayName: formData.get('displayName'),
+      organizationName: formData.get('organizationName'),
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.detail || 'The dashboard could not authenticate you.');
+  return payload.user;
+}
+
+async function openDashboard() {
   const gate = $('[data-dashboard-gate]');
   const dashboardApp = $('[data-dashboard-app]');
   gate.hidden = true;
@@ -1133,12 +1217,59 @@ async function enterDashboard() {
     dashboardData = fallbackDashboardData;
     console.warn('CareSpace dashboard feed unavailable; showing demo inventory.', error);
   }
-  setDashboardRole(dashboardRole);
+  setDashboardRole(dashboardUser?.role ?? dashboardRole);
   initializeDashboardMap();
   renderDashboard();
   dashboardApp.classList.remove('is-loading');
-  announce(`${dashboardRole === 'food-bank' ? 'Food bank' : 'Person in need'} dashboard opened.`);
+  announce(`${dashboardUser?.displayName ? `${dashboardUser.displayName} · ` : ''}${dashboardRole === 'food-bank' ? 'Food bank' : dashboardRole === 'food-supplier' ? 'Food supplier' : 'Person in need'} dashboard opened.`);
   requestAnimationFrame(() => dashboardRuntime?.map.invalidateSize());
+}
+
+async function enterDashboard() {
+  const status = $('[data-dashboard-auth-status]');
+  const submit = $('[data-dashboard-submit]');
+  if (submit) submit.disabled = true;
+  if (status) status.textContent = dashboardAuthMode === 'register' ? 'Creating your D1-backed account…' : 'Signing you in…';
+  try {
+    dashboardUser = await authenticateDashboard();
+    if (status) status.textContent = '';
+    await openDashboard();
+  } catch (error) {
+    if (status) status.textContent = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
+  } finally {
+    if (submit) submit.disabled = false;
+  }
+}
+
+async function restoreDashboardSession() {
+  try {
+    const response = await fetch(`${dashboardAuthBaseUrl}/session`, { headers: { accept: 'application/json' }, credentials: 'same-origin' });
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (!payload.user) return;
+    dashboardUser = payload.user;
+    await openDashboard();
+  } catch {
+    // The public landing page remains usable when the dashboard API is unavailable.
+  }
+}
+
+async function signOutDashboard() {
+  try {
+    await fetch(`${dashboardAuthBaseUrl}/session`, { method: 'DELETE', credentials: 'same-origin' });
+  } catch {
+    // Clear the local view even if the network is unavailable.
+  }
+  dashboardUser = null;
+  dashboardApp.hidden = true;
+  $('[data-dashboard-gate]').hidden = false;
+  if (dashboardRuntime) {
+    dashboardRuntime.map.remove();
+    dashboardRuntime = null;
+  }
+  $('[data-dashboard-login]').reset();
+  setDashboardAuthMode('login');
+  announce('You have been signed out of the demo dashboard.');
 }
 
 $$('[data-report]').forEach((element) => {
@@ -1187,6 +1318,7 @@ $('[data-signal-list]').addEventListener('click', (event) => {
 });
 
 $$('[data-demo-role]').forEach((button) => button.addEventListener('click', () => setDashboardRole(button.dataset.demoRole)));
+$('[data-dashboard-auth-mode]').addEventListener('click', () => setDashboardAuthMode(dashboardAuthMode === 'register' ? 'login' : 'register'));
 $('[data-dashboard-login]').addEventListener('submit', (event) => {
   event.preventDefault();
   void enterDashboard();
@@ -1250,15 +1382,7 @@ $('[data-use-location]').addEventListener('click', () => {
   );
 });
 
-$('[data-dashboard-logout]').addEventListener('click', () => {
-  dashboardApp.hidden = true;
-  $('[data-dashboard-gate]').hidden = false;
-  if (dashboardRuntime) {
-    dashboardRuntime.map.remove();
-    dashboardRuntime = null;
-  }
-  announce('You have been signed out of the demo dashboard.');
-});
+$('[data-dashboard-logout]').addEventListener('click', () => void signOutDashboard());
 
 const menuButton = $('[data-menu]');
 const desktopNav = $('.desktop-nav');
@@ -1305,6 +1429,7 @@ $$('[data-reveal]').forEach((element) => {
 });
 
 void initializeLiveMap();
+void restoreDashboardSession();
 
 setInterval(() => {
   $$('.topline-time').forEach((element) => {
