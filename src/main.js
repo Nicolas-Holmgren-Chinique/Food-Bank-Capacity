@@ -1101,11 +1101,17 @@ const ANALYSIS_OPTIONS = [
   { id: 'data_gaps', label: 'Data gaps' },
 ];
 
-async function runAllocationAnalysis(analysisId) {
+async function runAllocationAnalysis(analysisId, analysisParams = {}) {
   const input = allocationInputs();
   if (!input) return;
 
-  allocationAnalysis = { status: 'running', id: analysisId, data: null, error: null };
+  allocationAnalysis = {
+    status: 'running',
+    id: analysisId,
+    question: analysisParams.question ?? null,
+    data: null,
+    error: null,
+  };
   renderAllocationAnalysis();
 
   try {
@@ -1117,6 +1123,7 @@ async function runAllocationAnalysis(analysisId) {
         dimensions: input.dimensions,
         sites: input.sites,
         analysis: analysisId,
+        params: analysisParams,
         provenance: {
           demoData: Boolean(dashboardData.allocation?.note),
           droppedRecords: input.dropped,
@@ -1128,11 +1135,18 @@ async function runAllocationAnalysis(analysisId) {
     if (!response.ok) throw new Error(`The analysis service returned ${response.status}.`);
     const payload = await response.json();
     if (payload.analysisError) throw new Error(payload.analysisError.message);
-    allocationAnalysis = { status: 'done', id: analysisId, data: payload.analysis, error: null };
+    allocationAnalysis = {
+      status: 'done',
+      id: analysisId,
+      question: analysisParams.question ?? null,
+      data: payload.analysis,
+      error: null,
+    };
   } catch (error) {
     allocationAnalysis = {
       status: 'error',
       id: analysisId,
+      question: analysisParams.question ?? null,
       data: null,
       error: error instanceof Error ? error.message : 'The analysis could not be completed.',
     };
@@ -1144,7 +1158,7 @@ async function runAllocationAnalysis(analysisId) {
 function analysisFindingsMarkup(findings) {
   if (!findings || typeof findings !== 'object') return '';
   const parts = [];
-  const lead = findings.headline ?? findings.recommendation ?? null;
+  const lead = findings.headline ?? findings.recommendation ?? findings.answer ?? null;
   if (lead) parts.push(`<p class="analysis-lead">${escapeHtml(lead)}</p>`);
   if (findings.rationale) parts.push(`<p class="analysis-body">${escapeHtml(findings.rationale)}</p>`);
   if (findings.effect) parts.push(`<p class="analysis-body">${escapeHtml(findings.effect)}</p>`);
@@ -1195,6 +1209,18 @@ function analysisFindingsMarkup(findings) {
       `<ul class="analysis-caveats">${findings.caveats.map((c) => `<li>${escapeHtml(String(c))}</li>`).join('')}</ul>`,
     );
   }
+  if (Array.isArray(findings.figuresUsed) && findings.figuresUsed.length) {
+    parts.push(
+      `<p class="analysis-figures">${findings.figuresUsed
+        .map((f) => `<code>${escapeHtml(String(f))}</code>`)
+        .join('')}</p>`,
+    );
+  }
+  if (findings.answerable && String(findings.answerable).toLowerCase() !== 'yes') {
+    parts.push(
+      `<p class="analysis-tag is-blocked"><b>Answerable: ${escapeHtml(String(findings.answerable))}</b>${findings.missing ? ` <span>${escapeHtml(String(findings.missing))}</span>` : ''}</p>`,
+    );
+  }
   if (findings.strongestConclusion) {
     parts.push(`<p class="analysis-body"><strong>What the data does support:</strong> ${escapeHtml(String(findings.strongestConclusion))}</p>`);
   }
@@ -1235,6 +1261,13 @@ function renderAllocationAnalysis() {
       <div><p class="panel-kicker">Analysis</p><h4>Ask about this wave</h4></div>
       <div class="analysis-buttons">${buttons}</div>
     </div>
+    <form class="analysis-ask" data-analysis-ask>
+      <input type="text" name="question" maxlength="1000" autocomplete="off"
+        placeholder="Ask anything about this wave — e.g. which site should we visit first?"
+        value="${escapeHtml(allocationAnalysis.id === 'ask' ? allocationAnalysis.question ?? '' : '')}"
+        aria-label="Ask a question about this wave"${allocationAnalysis.status === 'running' ? ' disabled' : ''} />
+      <button type="submit" class="analysis-send"${allocationAnalysis.status === 'running' ? ' disabled' : ''}>Ask ${icon('arrow')}</button>
+    </form>
     ${body}`;
 }
 
@@ -1612,6 +1645,14 @@ dashboardApp.addEventListener('click', (event) => {
   const trigger = event.target.closest('[data-run-analysis]');
   if (!trigger) return;
   void runAllocationAnalysis(trigger.dataset.runAnalysis);
+});
+
+dashboardApp.addEventListener('submit', (event) => {
+  if (!event.target.matches('[data-analysis-ask]')) return;
+  event.preventDefault();
+  const question = new FormData(event.target).get('question')?.toString().trim();
+  if (!question) return;
+  void runAllocationAnalysis('ask', { question });
 });
 
 $('[data-use-location]').addEventListener('click', () => {

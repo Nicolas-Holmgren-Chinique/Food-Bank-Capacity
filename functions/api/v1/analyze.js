@@ -89,6 +89,15 @@ export const onRequestPost = async ({ request, env }) => {
   if (!ANALYSES[analysis]) {
     return fail(400, 'unknown_analysis', `Known analyses: ${Object.keys(ANALYSES).join(', ')}.`);
   }
+  if (analysis === 'ask') {
+    const question = String(params.question ?? '').trim();
+    if (!question) {
+      return fail(400, 'missing_question', 'The `ask` analysis needs a `params.question` string.');
+    }
+    if (question.length > 1000) {
+      return fail(400, 'question_too_long', 'Questions are limited to 1000 characters.');
+    }
+  }
   if (!Array.isArray(sites) || sites.length === 0) {
     return fail(400, 'missing_sites', 'Provide a non-empty `sites` array: {id, people, boxesOnHand, space}.');
   }

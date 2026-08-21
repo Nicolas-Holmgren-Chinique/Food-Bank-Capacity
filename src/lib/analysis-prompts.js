@@ -112,6 +112,44 @@ const round = (n) => (Number.isFinite(n) ? Number(n.toFixed(4)) : n);
  * solver summary, and pins the JSON shape the dashboard renders.
  */
 export const ANALYSES = {
+  ask: {
+    id: 'ask',
+    label: 'Ask a question',
+    description: 'A free-text question, answered strictly from the solver output.',
+    parameters: {
+      question: { type: 'string', default: '', description: "The operator's question" },
+    },
+    build: (summary, p, provenance) => ({
+      user: [
+        'An operator has asked a question about this wave. Answer it using only the',
+        'solver output below.',
+        '',
+        'Do not calculate anything — no sums, differences, percentages, or',
+        'per-person figures. Quote figures from the input verbatim. If the question',
+        'cannot be answered from this data, say so plainly and say what would be',
+        'needed; do not guess, and do not answer a different question than the one',
+        'asked. If the question is unrelated to food distribution capacity, say it',
+        'is out of scope.',
+        '',
+        'Answer in two or three sentences. No preamble.',
+        '',
+        'OPERATOR QUESTION:',
+        String(p.question ?? '').slice(0, 1000),
+        '',
+        provenanceNote(provenance),
+        '',
+        'SOLVER OUTPUT (ground truth):',
+        JSON.stringify(summary, null, 2),
+      ].join('\n'),
+      schema: {
+        answer: 'two or three sentences answering the question',
+        figuresUsed: ['each figure you quoted, exactly as it appears in the input'],
+        answerable: 'yes | partially | no',
+        missing: 'if not fully answerable, what data would be needed — otherwise null',
+      },
+    }),
+  },
+
   unmet_requirements: {
     id: 'unmet_requirements',
     label: 'Unmet requirements',
