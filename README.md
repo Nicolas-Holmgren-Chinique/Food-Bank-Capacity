@@ -8,6 +8,17 @@ The public brand and demo deployment target are:
 
 The source concept is documented in [`docs/CareForce-Product-Requirements-Document-Revision-0.1.md`](docs/CareForce-Product-Requirements-Document-Revision-0.1.md). The public experience intentionally uses the CareSpace name while preserving the original PRD as an archived product reference.
 
+## Demo dashboard access (POC)
+
+Open the dashboard at **https://carespace.pages.dev/#dashboard** and use one of these intentionally public demo accounts:
+
+| Role | Email | Password | Organization |
+| --- | --- | --- | --- |
+| Food bank | `demo.foodbank@carespace.dev` | `CareSpace-FoodBank-2026!` | Central Care Food Bank |
+| Food supplier | `demo.supplier@carespace.dev` | `CareSpace-Supplier-2026!` | Northside Market |
+
+These credentials are for the demo only and must be replaced before production use.
+
 ## Run locally
 
 ```bash
@@ -55,12 +66,7 @@ The main map reads food-bank locations from the D1-backed `/api/v1/food-banks` P
 
 The POC D1 food-bank schema and seed migration are in [`migrations/0001_food_bank_locations.sql`](migrations/0001_food_bank_locations.sql), generated with `npm run prepare:migration`; dashboard accounts and sessions are in [`migrations/0002_dashboard_users.sql`](migrations/0002_dashboard_users.sql). The Pages Functions use the `CARES_DB` binding configured in [`wrangler.toml`](wrangler.toml) and return only active records inside the San Diego County envelope.
 
-Dashboard auth endpoints are `/api/v1/dashboard/register`, `/api/v1/dashboard/login`, and `/api/v1/dashboard/session`. The seeded demo accounts are intentionally public POC credentials, not production identities:
-
-- Food bank: `demo.foodbank@carespace.dev` / `CareSpace-FoodBank-2026!` — Central Care Food Bank
-- Food supplier: `demo.supplier@carespace.dev` / `CareSpace-Supplier-2026!` — Northside Market
-
-New registrations are stored in the same D1 database. Passwords are stored as PBKDF2-SHA-256 hashes and sessions use expiring HTTP-only cookies; replace this POC auth with the approved identity provider before production use.
+Dashboard auth endpoints are `/api/v1/dashboard/register`, `/api/v1/dashboard/login`, and `/api/v1/dashboard/session`. New registrations are stored in the same D1 database. Passwords are stored as PBKDF2-SHA-256 hashes and sessions use expiring HTTP-only cookies; replace this POC auth with the approved identity provider before production use.
 
 The dashboard loads [`public/dashboard-data.json`](public/dashboard-data.json) and can be pointed at a live feed with `VITE_DASHBOARD_DATA_URL`. The dashboard auth in this revision is a D1-backed POC; connect it to the selected production identity provider before accepting real credentials or user-specific data.
 
