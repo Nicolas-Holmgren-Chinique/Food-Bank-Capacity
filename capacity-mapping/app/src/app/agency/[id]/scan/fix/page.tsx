@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getAgency } from "@/lib/data";
+import { agencies, getAgency } from "@/lib/data";
 import { FixEditor } from "./FixEditor";
 
 export default async function FixPage({
@@ -10,4 +10,8 @@ export default async function FixPage({
   const { id } = await params;
   if (!getAgency(id)) notFound();
   return <FixEditor agencyId={id} />;
+}
+
+export function generateStaticParams() {
+  return agencies.map((a) => ({ id: a.id }));
 }

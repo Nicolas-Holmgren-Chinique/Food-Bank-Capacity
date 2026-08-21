@@ -1,0 +1,13 @@
+/node_modules
+/.next
+/out
+
+# Regenerated from ../data on prebuild by scripts/sync-demo-data.mjs.
+/public/demo-data
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Secrets. Never commit.
+.env*.local
+.env
+*.rtf

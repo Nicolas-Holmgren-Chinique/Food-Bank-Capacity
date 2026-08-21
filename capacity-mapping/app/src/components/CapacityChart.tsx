@@ -13,8 +13,13 @@ export function CapacityChart({ agency }: { agency: Agency }) {
   const holds = agency.boxes_today;
   const linePct = (holds / max) * 100;
 
+  // Once a scan lands, one zone can dwarf the other badly enough that the
+  // binding line sits a few percent from the left. Its label needs a row of
+  // its own up top, or it lands on the first zone's name.
+  const flip = linePct > 65;
+
   return (
-    <div className="relative">
+    <div className="relative pt-5">
       <div className="space-y-3.5">
         {agency.zones.map((z) => {
           const style = ZONE_STYLE[z.zone_id];
@@ -71,10 +76,16 @@ export function CapacityChart({ agency }: { agency: Agency }) {
       {/* The binding line, drawn across every bar. */}
       {holds > 0 && (
         <div
-          className="absolute top-0 bottom-0 border-l-2 border-dashed border-[var(--warn)]/70 pointer-events-none"
+          className="absolute top-5 bottom-0 border-l-2 border-dashed border-[var(--warn)]/70 pointer-events-none"
           style={{ left: `${linePct}%` }}
         >
-          <span className="absolute -top-0.5 left-1.5 text-[10px] font-semibold text-[var(--warn)] whitespace-nowrap bg-surface px-1 rounded">
+          {/* Sits in the reserved strip above the bars, and swaps sides near
+              the right edge so it never runs off. */}
+          <span
+            className={`absolute -top-5 text-[10px] font-semibold text-[var(--warn)] whitespace-nowrap px-1 ${
+              flip ? "right-1.5" : "left-1.5"
+            }`}
+          >
             {toPeople(holds).toLocaleString()} people
           </span>
         </div>

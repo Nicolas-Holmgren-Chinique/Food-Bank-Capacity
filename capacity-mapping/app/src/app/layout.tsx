@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SessionProvider } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "CareSpace",
@@ -19,7 +20,7 @@ export default function RootLayout({
             holding a phone. On desktop it sits in a device frame for demos. */}
         <div className="min-h-dvh flex justify-center sm:py-8">
           <div className="w-full sm:max-w-[420px] bg-surface sm:rounded-[28px] sm:shadow-xl sm:border sm:border-line overflow-hidden flex flex-col min-h-dvh sm:min-h-[860px]">
-            {children}
+            <SessionProvider>{children}</SessionProvider>
           </div>
         </div>
       </body>

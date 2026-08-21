@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { agencies } from "@/lib/data";
+import { useAgencyList } from "@/lib/session";
+import { useSession } from "@/lib/session";
 
 /**
  * Map Capacity.
@@ -17,12 +18,14 @@ export default function MapCapacity() {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const agencies = useAgencyList();
+  const { editedIds, resetAll } = useSession();
   const selected = agencies.find((a) => a.id === selectedId) ?? null;
 
   // Demo sites sort to the top so they are easy to find when presenting.
   const ordered = useMemo(
     () => [...agencies].sort((a, b) => b.is_demo - a.is_demo),
-    []
+    [agencies]
   );
 
   const matches = useMemo(() => {
@@ -154,8 +157,18 @@ export default function MapCapacity() {
       </button>
 
       <div className="mt-auto pt-10">
+        {editedIds.length > 0 && (
+          <button
+            onClick={resetAll}
+            className="text-[12px] text-accent font-medium mb-3"
+          >
+            Reset demo data ({editedIds.length}{" "}
+            {editedIds.length === 1 ? "site" : "sites"} edited)
+          </button>
+        )}
         <p className="text-[11px] text-muted leading-relaxed">
-          Prototype. Every site and measurement is synthetic.
+          Prototype. Every site and measurement is synthetic. Edits stay in this
+          browser tab and clear when you close it.
         </p>
       </div>
     </main>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getAgency } from "@/lib/data";
+import { agencies, getAgency } from "@/lib/data";
 import { InventoryEditor } from "./InventoryEditor";
 
 export default async function InventoryPage({
@@ -10,4 +10,8 @@ export default async function InventoryPage({
   const { id } = await params;
   if (!getAgency(id)) notFound();
   return <InventoryEditor agencyId={id} />;
+}
+
+export function generateStaticParams() {
+  return agencies.map((a) => ({ id: a.id }));
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   getAgency,
   usableCuft,
@@ -9,6 +10,8 @@ import {
   ZONE_STYLE,
   type InventoryRow,
 } from "@/lib/data";
+import { useSession } from "@/lib/session";
+import { useAgencyWithScan } from "@/lib/scanSession";
 import { TopBar, SectionLabel } from "@/components/Chrome";
 
 /**
@@ -18,17 +21,28 @@ import { TopBar, SectionLabel } from "@/components/Chrome";
  * capacity, not from what happens to be on the shelf today. What it does
  * change is whether the records and the room agree.
  *
- * Nothing is written. The save panel says what it would write instead.
+ * There is no database. Saving keeps the counts in sessionStorage for the rest
+ * of this tab, and the panel still names the rows a real backend would write.
  */
 export function InventoryEditor({ agencyId }: { agencyId: string }) {
-  const agency = getAgency(agencyId)!;
+  const { agency: merged } = useAgencyWithScan(agencyId);
+  // Capacity here has to match the scan screens, or the reconciliation bar
+  // would compare today's food against yesterday's space.
+  const agency = merged ?? getAgency(agencyId)!;
+
+  const router = useRouter();
+  const { overrides, ready, saveInventory, resetAgency } = useSession();
 
   const original = useMemo(() => agency.inventory, [agency]);
-  const [rows, setRows] = useState<InventoryRow[]>(original);
+  const [rows, setRows] = useState<InventoryRow[] | null>(null);
+
+  useEffect(() => {
+    if (ready) setRows(overrides[agencyId]?.inventory ?? original);
+  }, [ready, agencyId, overrides, original]);
 
   function patch(name: string, qty: number) {
     setRows((rs) =>
-      rs.map((r) =>
+      (rs ?? []).map((r) =>
         r.name === name
           ? {
               ...r,
@@ -41,8 +55,9 @@ export function InventoryEditor({ agencyId }: { agencyId: string }) {
     );
   }
 
+  const live = rows ?? original;
   const perZone = zones.map((z) => {
-    const zoneRows = rows.filter((r) => r.zone_id === z.id);
+    const zoneRows = live.filter((r) => r.zone_id === z.id);
     const onHand = zoneRows.reduce((s, r) => s + r.qty_units * r.unit_volume_cuft, 0);
     const capacity = agency.storage_units
       .filter((u) => u.zone_id === z.id)
@@ -59,11 +74,18 @@ export function InventoryEditor({ agencyId }: { agencyId: string }) {
     };
   });
 
-  const changed = rows.filter((r) => {
+  const changed = live.filter((r) => {
     const o = original.find((x) => x.name === r.name);
     return o && o.qty_units !== r.qty_units;
   });
   const stillOver = perZone.filter((p) => p.over);
+
+  if (!rows) return null;
+
+  function save() {
+    saveInventory(agencyId, live);
+    router.push(`/agency/${agencyId}/scan/complete`);
+  }
 
   return (
     <main className="flex-1 flex flex-col">
@@ -188,6 +210,7 @@ export function InventoryEditor({ agencyId }: { agencyId: string }) {
           </p>
         )}
         <button
+          onClick={save}
           disabled={changed.length === 0}
           className="block w-full text-center rounded-xl py-3.5 text-[15px] font-medium transition-opacity
                      bg-accent text-white hover:opacity-90
@@ -197,7 +220,10 @@ export function InventoryEditor({ agencyId }: { agencyId: string }) {
         </button>
         <div className="flex items-center justify-between mt-3">
           <button
-            onClick={() => setRows(original)}
+            onClick={() => {
+              setRows(original);
+              resetAgency(agencyId);
+            }}
             className="text-[12.5px] text-muted"
           >
             Reset
@@ -210,7 +236,7 @@ export function InventoryEditor({ agencyId }: { agencyId: string }) {
           </Link>
         </div>
         <p className="text-[10.5px] text-muted mt-2.5 leading-relaxed">
-          Nothing is written. This prototype is read-only.
+          Saved in this browser tab only. Closing it clears everything.
         </p>
       </div>
     </main>

@@ -11,11 +11,14 @@ root, and it is not wired into the site yet.
 ```bash
 cd capacity-mapping/app
 npm install
+echo "ANTHROPIC_API_KEY=sk-ant-..." > .env.local
 npm run dev
 ```
 
 Then open http://localhost:3000. Phone shaped, so it looks best in a narrow
 window or with device emulation on.
+
+The key is only needed for the scan. Everything else runs without it.
 
 **Start with "Demo Agency."** It is pinned to the top of the picker with a Demo
 badge and exists purely to walk someone through a scan end to end.
@@ -102,11 +105,12 @@ then summed, so every column adds up to the total above it.
 | Route | What it is |
 |---|---|
 | `/` | Map Capacity. Pick an agency, start. Demo Agency is pinned. |
-| `/agency/[id]/scan` | Camera handoff. **Not built.** This is where the vision model goes. |
+| `/agency/[id]/scan` | Upload photos of a room, or run the built-in demo set. Calls Claude. |
 | `/agency/[id]/scan/complete` | Assumes the scan ran. Usable space, a check against inventory, then people. |
 | `/agency/[id]/scan/fix` | The rep overrides the scan: size, fit factor, or "that is not there". Recounts live. |
 | `/agency/[id]/inventory` | The rep corrects the item counts. |
 | `/agency/[id]` | The reveal: people, last distribution, per-zone bars, what one more unit unlocks. |
+| `/data` | The synthetic dataset, downloadable. |
 
 Auth is out of scope. The agency picker stands in for it.
 
@@ -136,14 +140,39 @@ See [`data/README.md`](data/README.md) for the schema tour and
 [`docs/build/architecture.md`](docs/build/architecture.md) for the design
 decisions.
 
+## The scan
+
+`/api/detect` sends the photos to Claude in **one call**, because deduplicating
+a burst of frames is only possible side by side: the same pair of fridges shows
+up in five of the eight demo photos and has to come back as two fridges. The
+response is forced through a tool schema, so nothing is parsed defensively.
+
+Photos can be dragged in, or you can run the built-in set in
+`public/demo-scan/`. Those are real photos of a real office break room, taken in
+one pass the way a rep would: two wide shots, a burst around one pair of
+fridges, a wall cabinet, and one frame of tables and chairs that should yield
+nothing. The input is fixed; the result is not canned.
+
+Needs `ANTHROPIC_API_KEY`. This is the only part of the app that needs a server.
+
+## No database, anywhere
+
+Capacity, inventory and scan results all live in **sessionStorage**, keyed per
+agency. Edits survive moving between screens and vanish when the tab closes,
+which is the right lifetime for a demo: it sticks while you present and the
+next person gets a clean slate. `data/seed.py` bakes `carespace.db` into
+`app/src/lib/fixture.json` at author time, and the app reads the fixture.
+
+`app/src/lib/session.tsx` recomputes every derived number from edited units
+using the same round-then-sum the seed does, so the on-screen columns keep
+adding up after a correction.
+
 ## What is deliberately not built
 
-- **The scan.** `scan_session` and `scan_detection` are seeded empty and
-  waiting. `/scan/complete` assumes it already ran.
 - **The allocator.** The Miramar warehouse is not even in the data. It is the
   mother kitchen and belongs to the allocation problem.
-- **Any write path.** The fix and inventory screens recompute live in React
-  state and spell out what they would write, but nothing persists.
+- **A backend.** The fix and inventory screens name the exact rows a real
+  database would write, then write to sessionStorage instead.
 - **Auth.**
 
 ## Known soft spots

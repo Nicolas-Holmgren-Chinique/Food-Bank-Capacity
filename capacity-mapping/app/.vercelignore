@@ -1,0 +1,7 @@
+# Belt and braces. .gitignore already covers these, but a CLI deploy from a
+# directory that is not a git repo does not read it.
+.env
+.env*.local
+*.rtf
+node_modules
+.next

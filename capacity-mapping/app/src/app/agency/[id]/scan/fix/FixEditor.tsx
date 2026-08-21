@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   getAgency,
   peopleFromUnits,
@@ -13,6 +14,8 @@ import {
   type EditableUnit,
   type ZoneId,
 } from "@/lib/data";
+import { useSession, toEditable } from "@/lib/session";
+import { useAgencyWithScan } from "@/lib/scanSession";
 import { TopBar, SectionLabel } from "@/components/Chrome";
 
 /**
@@ -22,46 +25,46 @@ import { TopBar, SectionLabel } from "@/components/Chrome";
  * unit is, how much of it can actually be stacked into, and whether it exists
  * at all. Plus anything the scan walked past.
  *
- * Nothing is written. This prototype is read-only, so the save panel spells
- * out what it would write instead of pretending to write it.
+ * There is no database. Saving keeps the correction in sessionStorage for the
+ * rest of this tab, and the panel below still spells out the rows a real
+ * backend would write.
  */
 export function FixEditor({ agencyId }: { agencyId: string }) {
-  const agency = getAgency(agencyId)!;
+  const { agency: merged } = useAgencyWithScan(agencyId);
+  // Corrections apply to whatever the rep is actually looking at, which is the
+  // fixture plus this tab's scan.
+  const agency = merged ?? getAgency(agencyId)!;
+  const router = useRouter();
+  const { overrides, ready, saveUnits, resetAgency } = useSession();
 
-  const original = useMemo<EditableUnit[]>(
-    () =>
-      agency.storage_units.map((u) => ({
-        id: u.id,
-        zone_id: u.zone_id,
-        kind_id: u.kind_id,
-        kind_label: u.kind_label,
-        label: u.label,
-        gross_cuft: u.gross_cuft,
-        usable_pct: u.usable_pct,
-        confidence: u.confidence,
-        present: true,
-        added: false,
-      })),
-    [agency]
-  );
+  // The fixture is always the baseline, so Reset restores the real original
+  // rather than whatever was last saved in this session.
+  const original = useMemo<EditableUnit[]>(() => toEditable(agency), [agency]);
 
-  const [units, setUnits] = useState<EditableUnit[]>(original);
+  const [units, setUnits] = useState<EditableUnit[] | null>(null);
   const [addingZone, setAddingZone] = useState<ZoneId | null>(null);
 
+  // sessionStorage is only readable after mount, so pick up any saved edits then.
+  useEffect(() => {
+    if (ready) setUnits(overrides[agencyId]?.units ?? original);
+  }, [ready, agencyId, overrides, original]);
+
   const before = agency.people_fed_today;
-  const { people, perZone } = peopleFromUnits(units);
+  const { people, perZone } = peopleFromUnits(units ?? original);
   const delta = people - before;
 
   function patch(id: string, next: Partial<EditableUnit>) {
-    setUnits((us) => us.map((u) => (u.id === id ? { ...u, ...next } : u)));
+    setUnits((us) =>
+      (us ?? []).map((u) => (u.id === id ? { ...u, ...next } : u))
+    );
   }
 
   function addUnit(kindId: string) {
     const k = storageUnitKinds.find((x) => x.id === kindId)!;
     setUnits((us) => [
-      ...us,
+      ...(us ?? []),
       {
-        id: `new_${us.length}_${kindId}`,
+        id: `new_${(us ?? []).length}_${kindId}`,
         zone_id: k.zone_id,
         kind_id: k.id,
         kind_label: k.label,
@@ -76,17 +79,24 @@ export function FixEditor({ agencyId }: { agencyId: string }) {
     setAddingZone(null);
   }
 
-  // What a save would actually write.
-  const resized = units.filter((u) => {
+  const rows = units ?? original;
+  const resized = rows.filter((u) => {
     const o = original.find((x) => x.id === u.id);
     return o && u.present && (o.gross_cuft !== u.gross_cuft || o.usable_pct !== u.usable_pct);
   });
-  const removed = units.filter((u) => !u.present && !u.added);
-  const added = units.filter((u) => u.added && u.present);
+  const removed = rows.filter((u) => !u.present && !u.added);
+  const added = rows.filter((u) => u.added && u.present);
   const touchedZones = new Set(
     [...resized, ...removed, ...added].map((u) => u.zone_id)
   );
   const dirty = touchedZones.size > 0;
+
+  if (!units) return null;
+
+  function save() {
+    saveUnits(agencyId, rows);
+    router.push(`/agency/${agencyId}`);
+  }
 
   return (
     <main className="flex-1 flex flex-col">
@@ -332,6 +342,7 @@ export function FixEditor({ agencyId }: { agencyId: string }) {
         </div>
 
         <button
+          onClick={save}
           disabled={!dirty}
           className="block w-full text-center rounded-xl py-3.5 text-[15px] font-medium transition-opacity
                      bg-accent text-white hover:opacity-90
@@ -341,7 +352,10 @@ export function FixEditor({ agencyId }: { agencyId: string }) {
         </button>
         <div className="flex items-center justify-between mt-3">
           <button
-            onClick={() => setUnits(original)}
+            onClick={() => {
+              setUnits(original);
+              resetAgency(agencyId);
+            }}
             className="text-[12.5px] text-muted"
           >
             Reset
@@ -354,7 +368,7 @@ export function FixEditor({ agencyId }: { agencyId: string }) {
           </Link>
         </div>
         <p className="text-[10.5px] text-muted mt-2.5 leading-relaxed">
-          Nothing is written. This prototype is read-only.
+          Saved in this browser tab only. Closing it clears everything.
         </p>
       </div>
     </main>
