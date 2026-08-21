@@ -2,6 +2,14 @@
   "version": "1.0",
   "schema": "carespace.dashboard",
   "source": "CareSpace demo food access network",
+  "allocation": {
+    "note": "Demo capacity and demand values. Replace with reported figures; shape follows PRD section 7 Capacity.",
+    "supplyBoxes": 2600,
+    "rationBox": [
+      { "key": "dry_storage", "label": "Dry storage", "volumePerBox": 0.03, "unit": "m3" },
+      { "key": "frozen_storage", "label": "Frozen storage", "volumePerBox": 0.005, "unit": "m3" }
+    ]
+  },
   "scope": {
     "type": "COUNTY",
     "geoid": "0500000US06073",
@@ -26,6 +34,12 @@
         { "category": "Fresh produce", "amount": "320 portions", "note": "Available today" },
         { "category": "Pantry staples", "amount": "86 family boxes", "note": "Restock at 2:00 pm" },
         { "category": "Prepared meals", "amount": "42 meals", "note": "Pickup by 5:30 pm" }
+      ],
+      "peopleServed": 4200,
+      "boxesOnHand": 320,
+      "capacity": [
+        { "capacity_type": "dry_storage", "available_capacity": 240, "maximum_capacity": 432, "unit": "m3" },
+        { "capacity_type": "frozen_storage", "available_capacity": 9, "maximum_capacity": 19.8, "unit": "m3" }
       ]
     },
     {
@@ -43,6 +57,12 @@
         { "category": "Grocery boxes", "amount": "124 boxes", "note": "Available today" },
         { "category": "Fresh produce", "amount": "210 portions", "note": "Best before tomorrow" },
         { "category": "Baby essentials", "amount": "18 kits", "note": "Ask at intake" }
+      ],
+      "peopleServed": 5600,
+      "boxesOnHand": 0,
+      "capacity": [
+        { "capacity_type": "dry_storage", "available_capacity": 180, "maximum_capacity": 324, "unit": "m3" },
+        { "capacity_type": "frozen_storage", "available_capacity": 4.5, "maximum_capacity": 9.9, "unit": "m3" }
       ]
     },
     {
@@ -59,6 +79,13 @@
         { "category": "Pantry staples", "amount": "64 family boxes", "note": "Limited supply" },
         { "category": "Culturally specific foods", "amount": "38 boxes", "note": "Available tomorrow" },
         { "category": "Prepared meals", "amount": "76 meals", "note": "Pickup after 4:00 pm" }
+      ],
+      "peopleServed": 3100,
+      "boxesOnHand": 210,
+      "capacity": [
+        { "capacity_type": "dry_storage", "available_capacity": 36, "maximum_capacity": 64.8, "unit": "m3" },
+        { "capacity_type": "frozen_storage", "available_capacity": 11, "maximum_capacity": 24.2, "unit": "m3" },
+        { "capacity_type": "refrigerated_storage", "available_capacity": 6, "maximum_capacity": 12, "unit": "m3", "valid_until": "2026-01-01T00:00:00Z" }
       ]
     },
     {
@@ -75,6 +102,12 @@
         { "category": "Grocery boxes", "amount": "92 boxes", "note": "Available today" },
         { "category": "Fresh produce", "amount": "140 portions", "note": "Available today" },
         { "category": "Cold storage items", "amount": "24 crates", "note": "Pickup by 4:30 pm" }
+      ],
+      "peopleServed": 2400,
+      "boxesOnHand": 90,
+      "capacity": [
+        { "capacity_type": "dry_storage", "available_capacity": 90, "maximum_capacity": 162, "unit": "m3" },
+        { "capacity_type": "frozen_storage", "available_capacity": 1.6, "maximum_capacity": 3.5, "unit": "m3" }
       ]
     }
   ]

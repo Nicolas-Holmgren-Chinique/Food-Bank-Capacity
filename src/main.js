@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './styles.css';
+import { allocate, spaceFromCapacityRecords } from './lib/allocation.js';
 
 const fallbackNetworkData = {
   version: '1.0',
@@ -151,6 +152,7 @@ let dashboardData = fallbackDashboardData;
 let dashboardRole = 'need';
 let selectedFoodBankId = fallbackDashboardData.foodBanks[0].id;
 let dashboardRuntime = null;
+let allocationSupply = null;
 
 const icon = (name) => {
   const paths = {
@@ -315,6 +317,7 @@ app.innerHTML = `
               <aside class="dashboard-results-card" aria-label="Nearby food locations"><div class="dashboard-card-heading"><div><p class="panel-kicker">Available nearby</p><h4>Food locations</h4></div><span class="panel-count" data-dashboard-result-count>04</span></div><div class="dashboard-results" data-dashboard-results></div></aside>
             </div>
             <section class="dashboard-inventory-card" data-dashboard-inventory aria-label="Food inventory overview"></section>
+            <section class="dashboard-allocation-card" data-dashboard-allocation aria-label="Wave allocation"></section>
             <div class="dashboard-privacy-note">${icon('check')} Location stays at the county and service-area level in this demo. No individual need or case details are shown.</div>
           </div>
         </div>
@@ -783,6 +786,165 @@ function renderDashboardInventory() {
     <div class="dashboard-inventory-list">${(selected.inventory ?? []).map((item) => `<div class="dashboard-inventory-row"><span class="inventory-spark">${icon('spark')}</span><span><strong>${escapeHtml(item.category)}</strong><small>${escapeHtml(item.note)}</small></span><b>${escapeHtml(item.amount)}</b></div>`).join('')}</div>`;
 }
 
+/* ---------------------------------------------------------------------------
+ * Wave allocation — operator view.
+ *
+ * Splits a fixed number of indivisible ration boxes across facilities so the
+ * worst-served facility does as well as possible, then reports which
+ * facilities are blocked by storage rather than by supply. Same engine the
+ * agent API runs (src/lib/allocation.js).
+ * ------------------------------------------------------------------------ */
+
+const allocationPercent = (value) => `${(value * 100).toFixed(1)}%`;
+const allocationCount = (value) => Number(value).toLocaleString();
+
+/** Collect solver input from reported capacity, skipping facilities that have not reported. */
+function allocationInputs() {
+  const dimensions = dashboardData.allocation?.rationBox;
+  if (!Array.isArray(dimensions) || dimensions.length === 0) return null;
+
+  const sites = [];
+  let dropped = 0;
+  let unverified = 0;
+  let missing = 0;
+
+  for (const foodBank of dashboardData.foodBanks ?? []) {
+    if (!Array.isArray(foodBank.capacity) || !Number.isFinite(Number(foodBank.peopleServed))) {
+      missing += 1;
+      continue;
+    }
+    const { space, stale, warnings } = spaceFromCapacityRecords(foodBank.capacity);
+    dropped += stale.length;
+    unverified += warnings.filter((w) => w.includes('last_verified')).length;
+    sites.push({
+      id: foodBank.id,
+      name: foodBank.name,
+      people: Number(foodBank.peopleServed),
+      boxesOnHand: Number(foodBank.boxesOnHand) || 0,
+      space,
+    });
+  }
+
+  if (sites.length === 0) return null;
+  return { dimensions, sites, dropped, unverified, missing };
+}
+
+const ALLOCATION_EMPTY = `
+  <p class="dashboard-empty">Allocation needs two things no facility has reported yet: <strong>available capacity</strong> by storage type, and the number of <strong>people served</strong>. Both are already defined in the product requirements. Once they arrive, this panel plans the wave automatically.</p>`;
+
+/** Recompute and repaint only the body, so the wave-size field keeps focus. */
+function renderAllocationBody() {
+  const body = $('[data-allocation-body]');
+  if (!body) return;
+
+  const input = allocationInputs();
+  if (!input) {
+    body.innerHTML = ALLOCATION_EMPTY;
+    return;
+  }
+
+  let result;
+  try {
+    result = allocate({ supply: allocationSupply ?? 0, dimensions: input.dimensions, sites: input.sites });
+  } catch (error) {
+    console.warn('CareSpace allocation failed.', error);
+    body.innerHTML = ALLOCATION_EMPTY;
+    return;
+  }
+
+  const rows = result.sites
+    .map((site) => {
+      const blocked = site.status === 'capacity_bound';
+      const label = blocked
+        ? 'Storage full'
+        : site.status === 'met'
+          ? 'Covered'
+          : site.status === 'stocked'
+            ? 'Stocked'
+            : 'Room for more';
+      const dimension = input.dimensions.find((d) => d.key === site.bindingDimension);
+      const limitedBy = site.bindingDimension
+        ? ` · limited by ${escapeHtml(String(dimension?.label ?? site.bindingDimension))}`
+        : '';
+      return `
+        <tr class="${blocked ? 'is-blocked' : ''}">
+          <th scope="row"><strong>${escapeHtml(site.name)}</strong><small>${allocationCount(site.residualNeed)} boxes needed${limitedBy}</small></th>
+          <td>${allocationCount(site.boxCapacity)}</td>
+          <td><b>${allocationCount(site.boxes)}</b></td>
+          <td><span class="allocation-bar"><i style="width:${Math.min(100, site.coverage * 100).toFixed(1)}%"></i></span><small>${allocationPercent(site.coverage)}</small></td>
+          <td><span class="allocation-pill ${blocked ? 'pill-blocked' : 'pill-open'}">${label}</span></td>
+        </tr>`;
+    })
+    .join('');
+
+  const top = result.recommendations[0];
+  const recommendation = top
+    ? `<div class="allocation-recommendation">
+         <span class="allocation-rec-icon">${icon('spark')}</span>
+         <div>
+           <strong>Add storage at ${escapeHtml(top.name)}, not food.</strong>
+           <p>${top.additions
+             .map((a) => `${allocationCount(a.addUnits)} ${escapeHtml(String(a.unit))} more ${escapeHtml(String(a.label).toLowerCase())}`)
+             .join(' and ')} lets it take ${allocationCount(top.boxesAtWaterline)} boxes instead of ${allocationCount(top.boxesToday)} — lifting the worst-served facility in the network from ${allocationPercent(top.floorCoverageBefore)} to ${allocationPercent(top.floorCoverageAfter)}.</p>
+         </div>
+       </div>`
+    : '';
+
+  const provenance = [
+    input.missing ? `${input.missing} facility${input.missing === 1 ? '' : 'ies'} without reported capacity` : '',
+    input.dropped ? `${input.dropped} expired record excluded` : '',
+    input.unverified ? `${input.unverified} records carry no verification timestamp` : '',
+  ].filter(Boolean);
+
+  body.innerHTML = `
+    <p class="allocation-verdict ${result.regime === 'capacity_bound' ? 'is-blocked' : ''}">${escapeHtml(result.verdict)}</p>
+
+    <div class="allocation-metrics">
+      <div><strong>${allocationCount(result.totals.shipped)}</strong><span>boxes placed<br />of ${allocationCount(result.totals.supply)} available</span></div>
+      <div><strong>${allocationPercent(result.totals.coverage)}</strong><span>of residual need<br />met this wave</span></div>
+      <div><strong>${allocationPercent(result.totals.floorCoverage)}</strong><span>at the worst-served<br />facility</span></div>
+      <div><strong>${allocationCount(result.totals.atomicityLoss)}</strong><span>boxes of capacity<br />stranded by mismatch</span></div>
+    </div>
+
+    <div class="allocation-table-wrap">
+      <table class="allocation-table">
+        <thead><tr><th scope="col">Facility</th><th scope="col">Can hold</th><th scope="col">Send</th><th scope="col">Coverage</th><th scope="col">Limited by</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+
+    ${recommendation}
+
+    <p class="allocation-footnote">${icon('check')} Planned against free space reported now, never nameplate capacity.${provenance.length ? ` ${escapeHtml(provenance.join(' · '))}.` : ''}</p>`;
+}
+
+/** Build the panel shell once per dashboard render, then fill the body. */
+function renderDashboardAllocation() {
+  const container = $('[data-dashboard-allocation]');
+  if (!container) return;
+
+  // Operator-facing only — a person looking for food does not plan the wave.
+  if (dashboardRole !== 'food-bank') {
+    container.hidden = true;
+    container.innerHTML = '';
+    return;
+  }
+  container.hidden = false;
+
+  if (allocationSupply === null) {
+    allocationSupply = Math.max(0, Math.floor(Number(dashboardData.allocation?.supplyBoxes) || 0));
+  }
+
+  container.innerHTML = `
+    <div class="dashboard-card-heading">
+      <div><p class="panel-kicker">Wave allocation</p><h4>Where the next boxes should go</h4></div>
+      <label class="allocation-supply"><span>Boxes this wave</span><input type="number" min="0" step="10" value="${allocationSupply}" data-allocation-supply aria-label="Boxes available this wave" /></label>
+    </div>
+    <div data-allocation-body></div>`;
+
+  renderAllocationBody();
+}
+
 function focusDashboardFoodBank(id) {
   const foodBank = foodBanksInScope().find((candidate) => candidate.id === id);
   if (!foodBank) return;
@@ -835,6 +997,7 @@ function renderDashboard() {
   $('[data-dashboard-map-status]').textContent = `${foodBanksInScope().length} food locations in San Diego County`;
   renderDashboardResults();
   renderDashboardInventory();
+  renderDashboardAllocation();
   renderDashboardMarkers();
 }
 
@@ -945,6 +1108,14 @@ dashboardApp.addEventListener('click', (event) => {
 $('[data-dashboard-location]').addEventListener('input', () => {
   renderDashboardResults();
   renderDashboardMarkers();
+});
+
+dashboardApp.addEventListener('input', (event) => {
+  if (!event.target.matches('[data-allocation-supply]')) return;
+  const next = Math.max(0, Math.floor(Number(event.target.value) || 0));
+  if (next === allocationSupply) return;
+  allocationSupply = next;
+  renderAllocationBody();
 });
 
 $('[data-use-location]').addEventListener('click', () => {
