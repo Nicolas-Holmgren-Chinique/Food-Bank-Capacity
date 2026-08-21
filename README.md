@@ -68,6 +68,8 @@ The main map reads food-bank locations from the D1-backed `/api/v1/food-banks` P
 
 The POC D1 food-bank schema and seed migration are in [`migrations/0001_food_bank_locations.sql`](migrations/0001_food_bank_locations.sql), generated with `npm run prepare:migration`; dashboard accounts and sessions are in [`migrations/0002_dashboard_users.sql`](migrations/0002_dashboard_users.sql). The Pages Functions use the `CARES_DB` binding configured in [`wrangler.toml`](wrangler.toml) and return only active records inside the San Diego County envelope.
 
+Cloudflare D1 is a managed serverless SQLite database: this POC uses relational SQL tables for food-bank locations, dashboard users, and dashboard sessions. The dashboard map also includes fixed POC envelopes for common San Diego County cities; replace them with authoritative city boundaries when city-level GIS data is connected.
+
 Dashboard auth endpoints are `/api/v1/dashboard/register`, `/api/v1/dashboard/login`, and `/api/v1/dashboard/session`. New registrations are stored in the same D1 database. Passwords are stored as PBKDF2-SHA-256 hashes and sessions use expiring HTTP-only cookies; replace this POC auth with the approved identity provider before production use.
 
 The dashboard loads [`public/dashboard-data.json`](public/dashboard-data.json) and can be pointed at a live feed with `VITE_DASHBOARD_DATA_URL`. The dashboard auth in this revision is a D1-backed POC; connect it to the selected production identity provider before accepting real credentials or user-specific data.

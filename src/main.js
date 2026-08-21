@@ -195,6 +195,30 @@ const icon = (name) => {
   return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name] ?? paths.spark}</svg>`;
 };
 
+// Fixed POC envelopes for common San Diego County cities. Replace these with
+// authoritative city boundaries when the dashboard moves beyond the demo.
+const dashboardCityScopes = [
+  { id: 'county', name: 'San Diego County', aliases: [], center: { latitude: 32.95, longitude: -117.12, zoom: 9 }, bounds: [[32.53, -117.60], [33.39, -116.08]] },
+  { id: 'san-diego', name: 'San Diego', aliases: ['san diego', 'city heights'], center: { latitude: 32.7157, longitude: -117.1611, zoom: 11 }, bounds: [[32.53, -117.30], [32.93, -116.90]] },
+  { id: 'chula-vista', name: 'Chula Vista', aliases: ['chula vista'], center: { latitude: 32.6401, longitude: -117.0842, zoom: 12 }, bounds: [[32.57, -117.18], [32.72, -116.95]] },
+  { id: 'oceanside', name: 'Oceanside', aliases: ['oceanside'], center: { latitude: 33.1959, longitude: -117.3795, zoom: 12 }, bounds: [[33.12, -117.45], [33.30, -117.20]] },
+  { id: 'escondido', name: 'Escondido', aliases: ['escondido'], center: { latitude: 33.1192, longitude: -117.0864, zoom: 12 }, bounds: [[33.04, -117.22], [33.24, -116.94]] },
+  { id: 'carlsbad', name: 'Carlsbad', aliases: ['carlsbad'], center: { latitude: 33.1581, longitude: -117.3506, zoom: 12 }, bounds: [[33.08, -117.43], [33.23, -117.24]] },
+  { id: 'encinitas', name: 'Encinitas', aliases: ['encinitas'], center: { latitude: 33.0370, longitude: -117.2920, zoom: 12 }, bounds: [[32.98, -117.36], [33.10, -117.22]] },
+  { id: 'vista', name: 'Vista', aliases: ['vista'], center: { latitude: 33.2007, longitude: -117.2425, zoom: 12 }, bounds: [[33.13, -117.34], [33.29, -117.13]] },
+  { id: 'san-marcos', name: 'San Marcos', aliases: ['san marcos'], center: { latitude: 33.1434, longitude: -117.1661, zoom: 12 }, bounds: [[33.07, -117.28], [33.23, -117.05]] },
+  { id: 'national-city', name: 'National City', aliases: ['national city'], center: { latitude: 32.6781, longitude: -117.0992, zoom: 12 }, bounds: [[32.61, -117.16], [32.73, -117.03]] },
+  { id: 'el-cajon', name: 'El Cajon', aliases: ['el cajon'], center: { latitude: 32.7948, longitude: -116.9625, zoom: 12 }, bounds: [[32.71, -117.07], [32.91, -116.82]] },
+  { id: 'la-mesa', name: 'La Mesa', aliases: ['la mesa'], center: { latitude: 32.7678, longitude: -117.0231, zoom: 12 }, bounds: [[32.70, -117.12], [32.84, -116.93]] },
+  { id: 'santee', name: 'Santee', aliases: ['santee'], center: { latitude: 32.8384, longitude: -116.9739, zoom: 12 }, bounds: [[32.79, -117.09], [32.91, -116.85]] },
+  { id: 'poway', name: 'Poway', aliases: ['poway'], center: { latitude: 32.9628, longitude: -117.0359, zoom: 12 }, bounds: [[32.88, -117.22], [33.08, -116.90]] },
+  { id: 'coronado', name: 'Coronado', aliases: ['coronado'], center: { latitude: 32.6859, longitude: -117.1831, zoom: 12 }, bounds: [[32.62, -117.27], [32.73, -117.12]] },
+  { id: 'imperial-beach', name: 'Imperial Beach', aliases: ['imperial beach'], center: { latitude: 32.5839, longitude: -117.1131, zoom: 13 }, bounds: [[32.54, -117.20], [32.63, -117.05]] },
+  { id: 'lemon-grove', name: 'Lemon Grove', aliases: ['lemon grove'], center: { latitude: 32.7426, longitude: -117.0317, zoom: 13 }, bounds: [[32.69, -117.10], [32.80, -116.96]] },
+  { id: 'spring-valley', name: 'Spring Valley', aliases: ['spring valley'], center: { latitude: 32.7448, longitude: -116.9989, zoom: 12 }, bounds: [[32.66, -117.12], [32.85, -116.88]] },
+  { id: 'fallbrook', name: 'Fallbrook', aliases: ['fallbrook'], center: { latitude: 33.3764, longitude: -117.2511, zoom: 12 }, bounds: [[33.28, -117.40], [33.48, -117.05]] },
+];
+
 const app = document.querySelector('#app');
 
 app.innerHTML = `
@@ -332,7 +356,15 @@ app.innerHTML = `
             <div class="dashboard-layout">
               <section class="dashboard-map-card" aria-label="Nearby food access">
                 <div class="dashboard-card-heading"><div><p class="panel-kicker">Nearby food access</p><h4>What can land near you?</h4></div><span class="dashboard-live-label"><i class="live-dot"></i> Live feed</span></div>
-                <div class="dashboard-location-bar"><label for="dashboard-location">Search within</label><input id="dashboard-location" data-dashboard-location value="San Diego County" /><button type="button" class="location-button" data-use-location aria-label="Use my location">${icon('pin')}</button></div>
+                <div class="dashboard-location-bar">
+                  <label for="dashboard-city">Scope to</label>
+                  <select id="dashboard-city" data-dashboard-city aria-label="Scope dashboard map to a San Diego County city">
+                    ${dashboardCityScopes.map((city) => `<option value="${city.id}">${city.name}</option>`).join('')}
+                  </select>
+                  <label class="dashboard-search-label" for="dashboard-location">Filter</label>
+                  <input id="dashboard-location" data-dashboard-location placeholder="Food location or area" aria-label="Filter food locations" />
+                  <button type="button" class="location-button" data-use-location aria-label="Use my location">${icon('pin')}</button>
+                </div>
                 <div class="dashboard-map" id="dashboardMap" aria-label="Map of nearby food banks in San Diego County"><div class="dashboard-map-status" data-dashboard-map-status>Loading food access…</div></div>
                 <p class="dashboard-map-footnote"><span>${icon('pin')} County scope</span><span>Approximate locations protect privacy</span></p>
               </section>
@@ -794,14 +826,32 @@ function dashboardScopeBounds() {
   return [[south, west], [north, east]];
 }
 
+function selectedDashboardCity() {
+  const cityId = $('[data-dashboard-city]')?.value || 'county';
+  return dashboardCityScopes.find((city) => city.id === cityId) ?? dashboardCityScopes[0];
+}
+
+function pointWithinBounds(coordinates, bounds) {
+  if (!coordinates || !Array.isArray(bounds) || bounds.length !== 2) return false;
+  const [[south, west], [north, east]] = bounds;
+  const [latitude, longitude] = coordinates;
+  return latitude >= south && latitude <= north && longitude >= west && longitude <= east;
+}
+
+function foodBankMatchesCity(foodBank, city) {
+  if (city.id === 'county') return true;
+  const searchable = [foodBank.area, foodBank.address].filter(Boolean).join(' ').toLowerCase();
+  return city.aliases.some((alias) => searchable.includes(alias)) || pointWithinBounds(signalCoordinates(foodBank), city.bounds);
+}
+
 function foodBanksInScope() {
   const bounds = dashboardScopeBounds();
+  const city = selectedDashboardCity();
   return (dashboardData.foodBanks ?? []).filter((foodBank) => {
     const coordinates = signalCoordinates(foodBank);
-    if (!coordinates || !bounds) return Boolean(coordinates);
-    const [[south, west], [north, east]] = bounds;
-    const [latitude, longitude] = coordinates;
-    return latitude >= south && latitude <= north && longitude >= west && longitude <= east;
+    if (!coordinates) return false;
+    if (bounds && !pointWithinBounds(coordinates, bounds)) return false;
+    return foodBankMatchesCity(foodBank, city);
   });
 }
 
@@ -883,7 +933,7 @@ function renderDashboardInventory() {
 
   const foodBanks = foodBanksInScope();
   const selected = dashboardRole === 'food-bank'
-    ? foodBanks.find((foodBank) => foodBank.isDemoUserFoodBank) ?? foodBanks[0]
+    ? (dashboardData.foodBanks ?? []).find((foodBank) => foodBank.isDemoUserFoodBank)
     : foodBanks.find((foodBank) => foodBank.id === selectedFoodBankId) ?? foodBanks[0];
   if (!selected) {
     container.innerHTML = '<p class="dashboard-empty">Inventory will appear when food access data is available.</p>';
@@ -1103,6 +1153,15 @@ function initializeDashboardMap() {
   requestAnimationFrame(() => map.invalidateSize());
 }
 
+function zoomDashboardToCity() {
+  if (!dashboardRuntime?.map) return;
+  const city = selectedDashboardCity();
+  dashboardRuntime.map.flyTo([city.center.latitude, city.center.longitude], city.center.zoom, {
+    animate: true,
+    duration: 0.7,
+  });
+}
+
 function renderDashboard() {
   const roleCopy = {
     need: {
@@ -1121,10 +1180,11 @@ function renderDashboard() {
       subtitle: 'Keep restaurant, market, farm, and kitchen supply visible to food banks.',
     },
   }[dashboardRole];
+  const city = selectedDashboardCity();
   $('[data-dashboard-role-pill]').textContent = roleCopy.label;
   $('[data-dashboard-title]').textContent = roleCopy.title;
   $('[data-dashboard-subtitle]').textContent = roleCopy.subtitle;
-  $('[data-dashboard-map-status]').textContent = `${foodBanksInScope().length} food locations in San Diego County`;
+  $('[data-dashboard-map-status]').textContent = `${foodBanksInScope().length} food locations in ${city.name}`;
   renderDashboardResults();
   renderDashboardInventory();
   renderDashboardAllocation();
@@ -1370,6 +1430,12 @@ dashboardApp.addEventListener('click', (event) => {
   }
   const request = event.target.closest('[data-dashboard-request]');
   if (request) announce('A food request draft has been started for this location.');
+});
+
+$('[data-dashboard-city]').addEventListener('change', () => {
+  $('[data-dashboard-location]').value = '';
+  renderDashboard();
+  zoomDashboardToCity();
 });
 
 $('[data-dashboard-location]').addEventListener('input', () => {
