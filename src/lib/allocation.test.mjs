@@ -107,6 +107,51 @@ test('drops expired and unverified capacity rather than extrapolating', () => {
   assert.ok(warnings.some((w) => w.includes('last_verified')));
 });
 
+test('drops records whose timestamps are unreadable', () => {
+  // Date.parse('yesterday') is NaN, which is neither missing nor comparable.
+  // Left unhandled it slips past the expiry check, the staleness check, and
+  // the missing-timestamp warning — provenance-shaped data with no provenance.
+  const { space, stale, warnings } = spaceFromCapacityRecords([
+    { facility_id: 'f1', capacity_type: 'dry_storage', available_capacity: 900, last_verified: 'yesterday' },
+    { facility_id: 'f1', capacity_type: 'frozen_storage', available_capacity: 60, valid_until: 'soon' },
+    { facility_id: 'f1', capacity_type: 'dry_storage', available_capacity: 100, last_verified: new Date().toISOString() },
+  ]);
+  assert.deepEqual(space, { dry_storage: 100 });
+  assert.deepEqual(stale.map((s) => s.reason), ['invalid_timestamp', 'invalid_timestamp']);
+  assert.ok(warnings.some((w) => w.includes('unreadable last_verified')));
+  assert.ok(warnings.some((w) => w.includes('unreadable valid_until')));
+});
+
+test('bounds recommendation solves regardless of network size', () => {
+  // One full extra solve per recommendation, so an uncapped network of N
+  // capacity-bound facilities costs N solves — reachable from one API request.
+  const sites = Array.from({ length: 200 }, (_, i) => ({
+    id: `s${i}`,
+    people: 9000,
+    boxesOnHand: 0,
+    space: { dry_storage: 5, frozen_storage: 0.2 },
+  }));
+  const r = allocate({ supply: 1_000_000, dimensions: DIMENSIONS, sites });
+
+  assert.equal(r.sites.filter((s) => s.status === 'capacity_bound').length, 200);
+  assert.ok(r.recommendations.length <= 5, 'defaults to at most 5 recommendations');
+  assert.equal(r.recommendationsTruncated, 200 - r.recommendations.length);
+
+  const capped = allocate({ supply: 1_000_000, dimensions: DIMENSIONS, sites, maxRecommendations: 2 });
+  assert.equal(capped.recommendations.length, 2);
+
+  const none = allocate({ supply: 1_000_000, dimensions: DIMENSIONS, sites, maxRecommendations: 0 });
+  assert.equal(none.recommendations.length, 0);
+});
+
+test('recommends the worst-covered facilities first', () => {
+  const r = allocate({ supply: 30000, dimensions: DIMENSIONS, sites: SITES, maxRecommendations: 1 });
+  // D sits at 21.4% coverage, B at 32.0% — D is the one storage helps most.
+  assert.equal(r.recommendations.length, 1);
+  assert.equal(r.recommendations[0].siteId, 'D');
+  assert.equal(r.recommendationsTruncated, 1);
+});
+
 test('rejects malformed input loudly', () => {
   assert.throws(() => allocate({ supply: 1, dimensions: DIMENSIONS, sites: [{ people: 5 }] }), /non-empty string/);
   assert.throws(
