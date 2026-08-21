@@ -2,9 +2,9 @@
 
 CareSpace is a first-revision static website for a real-time coordination layer connecting food, community need, capacity, and logistics.
 
-The public brand and deployment target are:
+The public brand and demo deployment target are:
 
-**https://carespace.heurchain.com**
+**https://carespace.pages.dev**
 
 The source concept is documented in [`docs/CareForce-Product-Requirements-Document-Revision-0.1.md`](docs/CareForce-Product-Requirements-Document-Revision-0.1.md). The public experience intentionally uses the CareSpace name while preserving the original PRD as an archived product reference.
 
@@ -43,3 +43,11 @@ The existing `heurchain` Pages project is intentionally not referenced by the wo
 - Privacy/trust framing for community-level signals
 - Public machine-readable declarations at `/capabilities.json` and `/.well-known/capabilities.json`
 - Static build with no authoritative personal or case data
+
+## Live map data
+
+The network card loads [`public/network-data.json`](public/network-data.json) at runtime and renders latitude/longitude signals on a live Leaflet map using OpenStreetMap/CARTO tiles. The data shape includes `location`, freshness fields, provenance, and a PUMA-compatible `geography` object. PUMAs are Census geographic areas, so replace the demo `puma_geoid` and optional boundary data with an authoritative source before using production data.
+
+To point the static site at a live JSON feed, set `VITE_NETWORK_DATA_URL` during the build. The demo intentionally uses fictional organization names and approximate locations.
+
+Google Maps can be used as a provider-specific follow-up by supplying a Google Maps JavaScript API key and map ID; the default map does not require a key or billing account.

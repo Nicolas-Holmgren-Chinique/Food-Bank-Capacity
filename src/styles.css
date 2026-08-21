@@ -158,3 +158,45 @@ h1 em, h2 em { color: var(--coral); font-style: normal; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
   [data-reveal] { opacity: 1; transform: none; }
 }
+
+/* Live network map */
+.live-map-shell { background: #dceae1; isolation: isolate; }
+.live-map { height: 100%; min-height: 490px; width: 100%; }
+.live-map.leaflet-container { background: #dceae1; color: var(--ink); font-family: inherit; }
+.live-map .leaflet-tile { filter: saturate(0.62) sepia(0.08) hue-rotate(125deg) brightness(1.05); }
+.live-map .leaflet-control-zoom { border: 1px solid rgba(16, 45, 50, 0.14); border-radius: 8px; box-shadow: 0 4px 14px rgba(16, 45, 50, 0.12); overflow: hidden; }
+.live-map .leaflet-control-zoom a { background: rgba(247, 244, 237, 0.9); border: 0; color: var(--ink); height: 27px; line-height: 27px; width: 27px; }
+.live-map .leaflet-control-zoom a:hover { background: var(--mint); color: var(--ink); }
+.live-map .leaflet-control-scale-line { background: rgba(247, 244, 237, 0.82); border-color: rgba(16, 45, 50, 0.58); color: rgba(16, 45, 50, 0.68); font-size: 8px; line-height: 1.15; padding: 2px 4px 1px; }
+.live-map .leaflet-control-attribution { background: rgba(247, 244, 237, 0.72); color: rgba(16, 45, 50, 0.55); font-size: 8px; }
+.live-map .leaflet-control-attribution a { color: var(--ink); }
+.carespace-marker { background: transparent !important; border: 0 !important; }
+.carespace-marker-pulse, .carespace-marker-core { border-radius: 50%; display: block; left: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%); }
+.carespace-marker-pulse { border: 1px solid currentColor; height: 25px; opacity: 0.42; width: 25px; }
+.carespace-marker-core { border: 3px solid var(--paper); box-shadow: 0 3px 9px rgba(16, 45, 50, 0.28); height: 15px; width: 15px; }
+.marker-supply { color: var(--coral-dark); }.marker-supply .carespace-marker-core { background: var(--coral); }
+.marker-demand { color: #b78d22; }.marker-demand .carespace-marker-core { background: var(--yellow); }
+.marker-capacity { color: var(--mint-deep); }.marker-capacity .carespace-marker-core { background: var(--mint-deep); }
+.marker-logistics { color: #4c9fa1; }.marker-logistics .carespace-marker-core { background: var(--sky); }
+.carespace-marker:hover .carespace-marker-pulse { animation: marker-pulse 1.2s ease-out infinite; }
+@keyframes marker-pulse { 0% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.8); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); } }
+.map-compass, .map-provider-badge, .map-status { z-index: 450; }
+.map-compass { pointer-events: none; }
+.map-provider-badge { background: rgba(247, 244, 237, 0.86); border: 1px solid rgba(16, 45, 50, 0.12); border-radius: 999px; color: rgba(16, 45, 50, 0.62); font-size: 8px; left: 18px; padding: 7px 10px; position: absolute; top: 17px; }
+.map-status { bottom: 17px; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--ink); color: var(--paper); }
+.leaflet-popup-content-wrapper { border-radius: 9px; box-shadow: 0 8px 24px rgba(16, 45, 50, 0.25); }
+.leaflet-popup-content { margin: 11px 13px; }
+.map-popup { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.map-popup strong { font-size: 11px; }
+.map-popup span, .map-popup small { color: rgba(247, 244, 237, 0.68); font-size: 9px; }
+.map-popup small { color: var(--mint); margin-top: 3px; }
+.map-error { align-items: center; color: var(--ink-soft); display: flex; font-size: 12px; height: 100%; justify-content: center; min-height: 490px; padding: 30px; text-align: center; }
+.map-error a { color: var(--coral-dark); font-weight: 700; margin-left: 4px; }
+.signal-empty { border-top: 1px solid var(--line); color: rgba(16, 45, 50, 0.5); font-size: 10px; line-height: 1.5; padding: 16px 0; }
+
+@media (max-width: 580px) {
+  .live-map { min-height: 380px; }
+  .map-error { min-height: 380px; }
+  .map-provider-badge { left: 12px; top: 12px; }
+}

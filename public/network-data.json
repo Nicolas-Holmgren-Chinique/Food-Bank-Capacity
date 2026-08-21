@@ -1,0 +1,110 @@
+{
+  "version": "1.0",
+  "schema": "carespace.network",
+  "source": "CareSpace demo network",
+  "updatedAt": "2026-08-20T12:00:00Z",
+  "geography": {
+    "type": "PUMA",
+    "vintage": "demo",
+    "puma_geoid": "DEMO-PUMA-0001",
+    "name": "Central neighborhood demo area",
+    "boundary": null
+  },
+  "focus": {
+    "latitude": 40.7217,
+    "longitude": -74.0066,
+    "zoom": 13
+  },
+  "signals": [
+    {
+      "id": "north",
+      "type": "supply",
+      "label": "Northside Market",
+      "meta": "84 meal equivalents",
+      "quantity": 84,
+      "unit": "meal equivalents",
+      "location": {
+        "latitude": 40.7257,
+        "longitude": -74.0022
+      },
+      "reportedAt": "2026-08-20T11:45:00Z",
+      "expiresAt": "2026-08-20T18:30:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "oak",
+      "type": "capacity",
+      "label": "Oak Street Kitchen",
+      "meta": "Open until 9:00 pm",
+      "quantity": 2400,
+      "unit": "square feet available",
+      "location": {
+        "latitude": 40.7169,
+        "longitude": -74.0122
+      },
+      "reportedAt": "2026-08-20T11:30:00Z",
+      "expiresAt": "2026-08-20T21:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "harbor",
+      "type": "demand",
+      "label": "Harbor House",
+      "meta": "Needs 120 dinners",
+      "quantity": 120,
+      "unit": "dinners",
+      "location": {
+        "latitude": 40.7115,
+        "longitude": -73.9978
+      },
+      "reportedAt": "2026-08-20T11:15:00Z",
+      "expiresAt": "2026-08-20T19:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "east",
+      "type": "logistics",
+      "label": "Eastside volunteers",
+      "meta": "2 vans available",
+      "quantity": 2,
+      "unit": "vans",
+      "location": {
+        "latitude": 40.7192,
+        "longitude": -73.9918
+      },
+      "reportedAt": "2026-08-20T11:00:00Z",
+      "expiresAt": "2026-08-20T20:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "cedar",
+      "type": "demand",
+      "label": "Cedar Grove Shelter",
+      "meta": "18 beds open",
+      "quantity": 18,
+      "unit": "beds",
+      "location": {
+        "latitude": 40.7057,
+        "longitude": -74.0096
+      },
+      "reportedAt": "2026-08-20T10:50:00Z",
+      "expiresAt": "2026-08-20T23:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "common",
+      "type": "supply",
+      "label": "Common Table",
+      "meta": "Meals ready at 6:15 pm",
+      "quantity": 46,
+      "unit": "meals",
+      "location": {
+        "latitude": 40.7282,
+        "longitude": -74.0149
+      },
+      "reportedAt": "2026-08-20T10:40:00Z",
+      "expiresAt": "2026-08-20T18:15:00Z",
+      "source": "demo"
+    }
+  ]
+}

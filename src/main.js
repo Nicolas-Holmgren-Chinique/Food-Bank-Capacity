@@ -1,24 +1,67 @@
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import './styles.css';
 
-const networkNodes = [
-  { id: 'north', type: 'supply', label: 'Northside Market', meta: '84 meal equivalents', x: 17, y: 30 },
-  { id: 'oak', type: 'capacity', label: 'Oak Street Kitchen', meta: 'Open until 9:00 pm', x: 44, y: 19 },
-  { id: 'harbor', type: 'demand', label: 'Harbor House', meta: 'Needs 120 dinners', x: 70, y: 38 },
-  { id: 'east', type: 'logistics', label: 'Eastside volunteers', meta: '2 vans available', x: 32, y: 65 },
-  { id: 'cedar', type: 'demand', label: 'Cedar Grove Shelter', meta: '18 beds open', x: 79, y: 72 },
-  { id: 'common', type: 'supply', label: 'Common Table', meta: 'Meals ready at 6:15 pm', x: 57, y: 78 },
-];
+const fallbackNetworkData = {
+  version: '1.0',
+  schema: 'carespace.network',
+  source: 'CareSpace demo network',
+  geography: {
+    type: 'PUMA',
+    vintage: 'demo',
+    puma_geoid: 'DEMO-PUMA-0001',
+    name: 'Central neighborhood demo area',
+  },
+  focus: { latitude: 40.7217, longitude: -74.0066, zoom: 13 },
+  signals: [
+    {
+      id: 'north',
+      type: 'supply',
+      label: 'Northside Market',
+      meta: '84 meal equivalents',
+      location: { latitude: 40.7257, longitude: -74.0022 },
+    },
+    {
+      id: 'oak',
+      type: 'capacity',
+      label: 'Oak Street Kitchen',
+      meta: 'Open until 9:00 pm',
+      location: { latitude: 40.7169, longitude: -74.0122 },
+    },
+    {
+      id: 'harbor',
+      type: 'demand',
+      label: 'Harbor House',
+      meta: 'Needs 120 dinners',
+      location: { latitude: 40.7115, longitude: -73.9978 },
+    },
+    {
+      id: 'east',
+      type: 'logistics',
+      label: 'Eastside volunteers',
+      meta: '2 vans available',
+      location: { latitude: 40.7192, longitude: -73.9918 },
+    },
+    {
+      id: 'cedar',
+      type: 'demand',
+      label: 'Cedar Grove Shelter',
+      meta: '18 beds open',
+      location: { latitude: 40.7057, longitude: -74.0096 },
+    },
+    {
+      id: 'common',
+      type: 'supply',
+      label: 'Common Table',
+      meta: 'Meals ready at 6:15 pm',
+      location: { latitude: 40.7282, longitude: -74.0149 },
+    },
+  ],
+};
 
-const markerMarkup = networkNodes
-  .map(
-    (node) => `
-      <button class="map-node node-${node.type}" style="--node-x:${node.x}%;--node-y:${node.y}%" data-type="${node.type}" aria-label="${node.label}: ${node.meta}">
-        <span class="node-pulse"></span>
-        <span class="node-core"></span>
-        <span class="node-tooltip"><strong>${node.label}</strong><small>${node.meta}</small></span>
-      </button>`,
-  )
-  .join('');
+const networkDataUrl = import.meta.env.VITE_NETWORK_DATA_URL || '/network-data.json';
+let networkData = fallbackNetworkData;
+let mapRuntime = null;
 
 const icon = (name) => {
   const paths = {
@@ -119,7 +162,7 @@ app.innerHTML = `
 
         <div class="network-workspace" data-reveal data-delay="100">
           <div class="workspace-toolbar">
-            <div class="toolbar-title"><span class="toolbar-icon">${icon('pin')}</span><div><strong>Central neighborhood</strong><small>Within 5 miles · 48 signals</small></div></div>
+            <div class="toolbar-title"><span class="toolbar-icon">${icon('pin')}</span><div><strong id="networkFocusName">Central neighborhood</strong><small id="networkFocusMeta">Loading live signals…</small></div></div>
             <div class="map-filters" role="group" aria-label="Filter network signals">
               <button class="map-filter is-active" type="button" data-filter="all">All signals</button>
               <button class="map-filter" type="button" data-filter="supply"><span class="filter-dot dot-supply"></span>Food</button>
@@ -129,23 +172,16 @@ app.innerHTML = `
             <button class="map-expand" type="button" data-report="resource" aria-label="Explore the network">Explore ${icon('arrow')}</button>
           </div>
           <div class="workspace-body">
-            <div class="network-map" aria-label="Illustrated map of local CareSpace signals">
-              <div class="map-water"></div><div class="map-road road-a"></div><div class="map-road road-b"></div><div class="map-road road-c"></div><div class="map-road road-d"></div>
-              <div class="map-block block-a"></div><div class="map-block block-b"></div><div class="map-block block-c"></div><div class="map-block block-d"></div><div class="map-block block-e"></div><div class="map-block block-f"></div>
-              <svg class="map-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M17 30 C27 22 33 23 44 19 S60 30 70 38"/><path d="M32 65 C40 54 50 62 57 78 S70 80 79 72"/><path d="M44 19 C49 38 46 56 57 78"/></svg>
-              ${markerMarkup}
+            <div class="network-map live-map-shell" aria-label="Interactive map of local CareSpace signals">
+              <div class="live-map" id="liveMap"></div>
               <div class="map-compass">N <span>↑</span></div>
-              <div class="map-scale"><span></span><small>1 mile</small></div>
-              <div class="map-status" id="mapStatus"><i class="live-dot"></i> Showing all 48 live signals</div>
+              <div class="map-provider-badge" id="mapProviderBadge">Live map · loading</div>
+              <div class="map-status" id="mapStatus"><i class="live-dot"></i> Loading live signals…</div>
             </div>
             <aside class="signal-panel" aria-label="Live network signals">
-              <div class="panel-heading"><div><p class="panel-kicker">Live signals</p><h3>Where help can land</h3></div><span class="panel-count">06</span></div>
-              <div class="signal-list">
-                <button class="signal-card" type="button" data-focus="supply"><span class="signal-card-icon icon-supply">${icon('heart')}</span><span><strong>Meals ready</strong><small>Northside Market · 84 portions</small></span><span class="signal-card-arrow">${icon('arrow')}</span></button>
-                <button class="signal-card" type="button" data-focus="demand"><span class="signal-card-icon icon-demand">${icon('users')}</span><span><strong>Dinner needed</strong><small>Harbor House · today by 7 pm</small></span><span class="signal-card-arrow">${icon('arrow')}</span></button>
-                <button class="signal-card" type="button" data-focus="capacity"><span class="signal-card-icon icon-capacity">${icon('spark')}</span><span><strong>Kitchen open</strong><small>Oak Street · 2,400 sq ft free</small></span><span class="signal-card-arrow">${icon('arrow')}</span></button>
-              </div>
-              <div class="panel-footer"><span class="mini-avatar-stack"><i>AM</i><i>JR</i><i>SK</i></span><span>+ 9 more organizations are active</span></div>
+              <div class="panel-heading"><div><p class="panel-kicker">Live signals</p><h3>Where help can land</h3></div><span class="panel-count" data-panel-count>06</span></div>
+              <div class="signal-list" data-signal-list></div>
+              <div class="panel-footer"><span class="mini-avatar-stack"><i>AM</i><i>JR</i><i>SK</i></span><span data-panel-footer>+ 3 more organizations are active</span></div>
             </aside>
           </div>
         </div>
@@ -279,15 +315,196 @@ function announce(message) {
   }, 4000);
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function signalCoordinates(signal) {
+  const latitude = Number(signal.location?.latitude);
+  const longitude = Number(signal.location?.longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return [latitude, longitude];
+}
+
+function signalMatchesFilter(signal, filter) {
+  return filter === 'all' || signal.type === filter || (filter === 'capacity' && signal.type === 'logistics');
+}
+
+function visibleSignals(filter) {
+  return (networkData.signals ?? []).filter((signal) => signalMatchesFilter(signal, filter));
+}
+
+function signalIconName(type) {
+  if (type === 'supply') return 'heart';
+  if (type === 'demand') return 'users';
+  return 'spark';
+}
+
+function signalIconClass(type) {
+  if (type === 'supply') return 'icon-supply';
+  if (type === 'demand') return 'icon-demand';
+  return 'icon-capacity';
+}
+
+function renderSignalPanel(filter) {
+  const list = $('[data-signal-list]');
+  if (!list) return;
+
+  const signals = visibleSignals(filter);
+  const cards = signals.slice(0, 3);
+  list.innerHTML = cards.length
+    ? cards.map((signal) => `
+      <button class="signal-card" type="button" data-focus="${escapeHtml(signal.id)}">
+        <span class="signal-card-icon ${signalIconClass(signal.type)}">${icon(signalIconName(signal.type))}</span>
+        <span><strong>${escapeHtml(signal.label)}</strong><small>${escapeHtml(signal.meta)}</small></span>
+        <span class="signal-card-arrow">${icon('arrow')}</span>
+      </button>`).join('')
+    : '<p class="signal-empty">No signals match this filter yet.</p>';
+
+  const count = $('[data-panel-count]');
+  if (count) count.textContent = String(signals.length).padStart(2, '0');
+
+  const footer = $('[data-panel-footer]');
+  if (footer) {
+    const remaining = Math.max(signals.length - cards.length, 0);
+    footer.textContent = remaining ? `+ ${remaining} more signals are active` : 'Select a signal to inspect its location';
+  }
+}
+
+function createSignalMarker(signal) {
+  const coordinates = signalCoordinates(signal);
+  if (!coordinates) return null;
+
+  const marker = L.marker(coordinates, {
+    icon: L.divIcon({
+      className: `carespace-marker marker-${signal.type}`,
+      html: '<span class="carespace-marker-pulse"></span><span class="carespace-marker-core"></span>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -15],
+    }),
+    title: `${signal.label}: ${signal.meta}`,
+  });
+
+  const puma = signal.puma ?? networkData.geography;
+  const pumaLabel = puma?.name ? `<small>PUMA area · ${escapeHtml(puma.name)}</small>` : '';
+  marker.bindPopup(`
+    <div class="map-popup">
+      <strong>${escapeHtml(signal.label)}</strong>
+      <span>${escapeHtml(signal.meta)}</span>
+      ${pumaLabel}
+    </div>`, { closeButton: false });
+  return marker;
+}
+
+function createPumaBoundaryLayer(map) {
+  const boundary = networkData.geography?.boundary;
+  if (!boundary) return null;
+  return L.geoJSON(boundary, {
+    interactive: false,
+    style: {
+      color: '#4c9fa1',
+      fillColor: '#b4e4bc',
+      fillOpacity: 0.12,
+      weight: 1.5,
+      dashArray: '5 5',
+    },
+  }).addTo(map);
+}
+
 function setMapFilter(filter) {
   $$('.map-filter').forEach((button) => button.classList.toggle('is-active', button.dataset.filter === filter));
-  $$('.map-node').forEach((node) => {
-    const isVisible = filter === 'all' || node.dataset.type === filter || (filter === 'capacity' && node.dataset.type === 'logistics');
-    node.classList.toggle('is-muted', !isVisible);
-  });
-  const copy = filter === 'all' ? 'Showing all 48 live signals' : `Showing ${filter === 'supply' ? 'food available' : filter === 'demand' ? 'community need' : 'capacity and logistics'} signals`;
-  $('#mapStatus').innerHTML = `<i class="live-dot"></i> ${copy}`;
+  const signals = visibleSignals(filter);
+  if (mapRuntime) {
+    mapRuntime.markerLayer.clearLayers();
+    mapRuntime.markers.clear();
+    signals.forEach((signal) => {
+      const marker = createSignalMarker(signal);
+      if (!marker) return;
+      mapRuntime.markers.set(signal.id, marker);
+      marker.addTo(mapRuntime.markerLayer);
+    });
+  }
+
+  renderSignalPanel(filter);
+  const copy = filter === 'all'
+    ? `Showing all ${signals.length} live signals`
+    : `Showing ${signals.length} ${filter === 'supply' ? 'food available' : filter === 'demand' ? 'community need' : 'capacity and logistics'} signals`;
+  const sourceNote = mapRuntime?.isFallback ? ' · demo feed' : '';
+  $('#mapStatus').innerHTML = `<i class="live-dot"></i> ${copy}${sourceNote}`;
   announce(copy);
+}
+
+async function loadNetworkData() {
+  const response = await fetch(networkDataUrl, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`Network feed returned ${response.status}`);
+  const payload = await response.json();
+  if (!Array.isArray(payload.signals)) throw new Error('Network feed has no signals array');
+  return { ...fallbackNetworkData, ...payload, signals: payload.signals };
+}
+
+async function initializeLiveMap() {
+  const mapElement = $('#liveMap');
+  if (!mapElement) return;
+
+  let isFallback = false;
+  try {
+    networkData = await loadNetworkData();
+  } catch (error) {
+    isFallback = true;
+    networkData = fallbackNetworkData;
+    console.warn('CareSpace network feed unavailable; showing demo signals.', error);
+  }
+
+  const focus = networkData.focus ?? fallbackNetworkData.focus;
+  const latitude = Number(focus.latitude) || fallbackNetworkData.focus.latitude;
+  const longitude = Number(focus.longitude) || fallbackNetworkData.focus.longitude;
+  const zoom = Number(focus.zoom) || fallbackNetworkData.focus.zoom;
+
+  try {
+    const map = L.map(mapElement, {
+      center: [latitude, longitude],
+      zoom,
+      minZoom: 10,
+      zoomControl: true,
+      scrollWheelZoom: false,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 20,
+      detectRetina: true,
+    }).addTo(map);
+    L.control.scale({ imperial: true, metric: false, position: 'bottomleft' }).addTo(map);
+    const boundaryLayer = createPumaBoundaryLayer(map);
+
+    mapRuntime = {
+      map,
+      isFallback,
+      boundaryLayer,
+      markerLayer: L.layerGroup().addTo(map),
+      markers: new Map(),
+    };
+
+    const name = networkData.geography?.name || 'Central neighborhood';
+    const type = networkData.geography?.type || 'local';
+    $('#networkFocusName').textContent = name;
+    $('#networkFocusMeta').textContent = `${networkData.signals.length} signals · ${type} ready`;
+    $('#mapProviderBadge').textContent = `Live map · OpenStreetMap / ${type}-ready`;
+    setMapFilter('all');
+    requestAnimationFrame(() => map.invalidateSize());
+  } catch (error) {
+    console.error('CareSpace map could not initialize.', error);
+    mapElement.innerHTML = '<div class="map-error">The live map is unavailable right now. The network feed is still available in <a href="/network-data.json" target="_blank" rel="noreferrer">JSON format</a>.</div>';
+    $('#mapStatus').innerHTML = '<i class="live-dot"></i> Network feed available';
+  }
 }
 
 $$('[data-report]').forEach((element) => {
@@ -318,11 +535,21 @@ modalLayer.addEventListener('submit', (event) => {
 });
 
 $$('[data-filter]').forEach((button) => button.addEventListener('click', () => setMapFilter(button.dataset.filter)));
-$$('[data-focus]').forEach((button) => {
-  button.addEventListener('click', () => {
-    setMapFilter(button.dataset.focus === 'capacity' ? 'capacity' : button.dataset.focus);
-    $('#network').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+$('[data-signal-list]').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-focus]');
+  if (!button) return;
+  const signal = networkData.signals.find((candidate) => candidate.id === button.dataset.focus);
+  if (!signal) return;
+
+  const filter = signal.type === 'logistics' ? 'capacity' : signal.type;
+  setMapFilter(filter);
+  $('#network').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const coordinates = signalCoordinates(signal);
+  const marker = mapRuntime?.markers.get(signal.id);
+  if (mapRuntime?.map && coordinates) {
+    mapRuntime.map.setView(coordinates, Math.max(mapRuntime.map.getZoom(), 14), { animate: true });
+    marker?.openPopup();
+  }
 });
 
 const menuButton = $('[data-menu]');
@@ -368,6 +595,8 @@ $$('[data-reveal]').forEach((element) => {
   if (revealObserver) revealObserver.observe(element);
   else element.classList.add('is-visible');
 });
+
+void initializeLiveMap();
 
 setInterval(() => {
   $$('.topline-time').forEach((element) => {
