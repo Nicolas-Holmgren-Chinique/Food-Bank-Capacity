@@ -3,17 +3,30 @@
   "schema": "carespace.network",
   "source": "CareSpace demo network",
   "updatedAt": "2026-08-20T12:00:00Z",
+  "scope": {
+    "type": "COUNTY",
+    "geoid": "0500000US06073",
+    "fips": "06073",
+    "name": "San Diego County, California",
+    "bounds": [[32.53, -117.60], [33.39, -116.08]],
+    "boundary": null,
+    "boundaryUrl": "https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/State_County/MapServer/11/query?where=GEOID%3D%2706073%27&outFields=GEOID%2CNAME&outSR=4326&returnGeometry=true&f=geojson"
+  },
   "geography": {
     "type": "PUMA",
     "vintage": "demo",
-    "puma_geoid": "DEMO-PUMA-0001",
-    "name": "Central neighborhood demo area",
-    "boundary": null
+    "puma_geoid": "DEMO-SD-PUMA-0001",
+    "name": "San Diego County PUMA-ready demo area",
+    "parent": {
+      "type": "COUNTY",
+      "geoid": "0500000US06073",
+      "name": "San Diego County, California"
+    }
   },
   "focus": {
-    "latitude": 40.7217,
-    "longitude": -74.0066,
-    "zoom": 13
+    "latitude": 32.95,
+    "longitude": -117.12,
+    "zoom": 9
   },
   "signals": [
     {
@@ -24,8 +37,8 @@
       "quantity": 84,
       "unit": "meal equivalents",
       "location": {
-        "latitude": 40.7257,
-        "longitude": -74.0022
+        "latitude": 33.1192,
+        "longitude": -117.0864
       },
       "reportedAt": "2026-08-20T11:45:00Z",
       "expiresAt": "2026-08-20T18:30:00Z",
@@ -39,8 +52,8 @@
       "quantity": 2400,
       "unit": "square feet available",
       "location": {
-        "latitude": 40.7169,
-        "longitude": -74.0122
+        "latitude": 32.7157,
+        "longitude": -117.1611
       },
       "reportedAt": "2026-08-20T11:30:00Z",
       "expiresAt": "2026-08-20T21:00:00Z",
@@ -54,8 +67,8 @@
       "quantity": 120,
       "unit": "dinners",
       "location": {
-        "latitude": 40.7115,
-        "longitude": -73.9978
+        "latitude": 32.6401,
+        "longitude": -117.0842
       },
       "reportedAt": "2026-08-20T11:15:00Z",
       "expiresAt": "2026-08-20T19:00:00Z",
@@ -69,8 +82,8 @@
       "quantity": 2,
       "unit": "vans",
       "location": {
-        "latitude": 40.7192,
-        "longitude": -73.9918
+        "latitude": 32.7948,
+        "longitude": -116.9625
       },
       "reportedAt": "2026-08-20T11:00:00Z",
       "expiresAt": "2026-08-20T20:00:00Z",
@@ -84,8 +97,8 @@
       "quantity": 18,
       "unit": "beds",
       "location": {
-        "latitude": 40.7057,
-        "longitude": -74.0096
+        "latitude": 33.1959,
+        "longitude": -117.3795
       },
       "reportedAt": "2026-08-20T10:50:00Z",
       "expiresAt": "2026-08-20T23:00:00Z",
@@ -99,8 +112,8 @@
       "quantity": 46,
       "unit": "meals",
       "location": {
-        "latitude": 40.7282,
-        "longitude": -74.0149
+        "latitude": 32.6781,
+        "longitude": -117.0992
       },
       "reportedAt": "2026-08-20T10:40:00Z",
       "expiresAt": "2026-08-20T18:15:00Z",

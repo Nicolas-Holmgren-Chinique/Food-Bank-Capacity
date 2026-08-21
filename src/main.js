@@ -6,55 +6,64 @@ const fallbackNetworkData = {
   version: '1.0',
   schema: 'carespace.network',
   source: 'CareSpace demo network',
+  scope: {
+    type: 'COUNTY',
+    geoid: '0500000US06073',
+    fips: '06073',
+    name: 'San Diego County, California',
+    bounds: [[32.53, -117.60], [33.39, -116.08]],
+    boundaryUrl: 'https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/State_County/MapServer/11/query?where=GEOID%3D%2706073%27&outFields=GEOID%2CNAME&outSR=4326&returnGeometry=true&f=geojson',
+  },
   geography: {
     type: 'PUMA',
     vintage: 'demo',
-    puma_geoid: 'DEMO-PUMA-0001',
-    name: 'Central neighborhood demo area',
+    puma_geoid: 'DEMO-SD-PUMA-0001',
+    name: 'San Diego County PUMA-ready demo area',
+    parent: { type: 'COUNTY', geoid: '0500000US06073', name: 'San Diego County, California' },
   },
-  focus: { latitude: 40.7217, longitude: -74.0066, zoom: 13 },
+  focus: { latitude: 32.95, longitude: -117.12, zoom: 9 },
   signals: [
     {
       id: 'north',
       type: 'supply',
       label: 'Northside Market',
       meta: '84 meal equivalents',
-      location: { latitude: 40.7257, longitude: -74.0022 },
+      location: { latitude: 33.1192, longitude: -117.0864 },
     },
     {
       id: 'oak',
       type: 'capacity',
       label: 'Oak Street Kitchen',
       meta: 'Open until 9:00 pm',
-      location: { latitude: 40.7169, longitude: -74.0122 },
+      location: { latitude: 32.7157, longitude: -117.1611 },
     },
     {
       id: 'harbor',
       type: 'demand',
       label: 'Harbor House',
       meta: 'Needs 120 dinners',
-      location: { latitude: 40.7115, longitude: -73.9978 },
+      location: { latitude: 32.6401, longitude: -117.0842 },
     },
     {
       id: 'east',
       type: 'logistics',
       label: 'Eastside volunteers',
       meta: '2 vans available',
-      location: { latitude: 40.7192, longitude: -73.9918 },
+      location: { latitude: 32.7948, longitude: -116.9625 },
     },
     {
       id: 'cedar',
       type: 'demand',
       label: 'Cedar Grove Shelter',
       meta: '18 beds open',
-      location: { latitude: 40.7057, longitude: -74.0096 },
+      location: { latitude: 33.1959, longitude: -117.3795 },
     },
     {
       id: 'common',
       type: 'supply',
       label: 'Common Table',
       meta: 'Meals ready at 6:15 pm',
-      location: { latitude: 40.7282, longitude: -74.0149 },
+      location: { latitude: 32.6781, longitude: -117.0992 },
     },
   ],
 };
@@ -162,7 +171,7 @@ app.innerHTML = `
 
         <div class="network-workspace" data-reveal data-delay="100">
           <div class="workspace-toolbar">
-            <div class="toolbar-title"><span class="toolbar-icon">${icon('pin')}</span><div><strong id="networkFocusName">Central neighborhood</strong><small id="networkFocusMeta">Loading live signals…</small></div></div>
+            <div class="toolbar-title"><span class="toolbar-icon">${icon('pin')}</span><div><strong id="networkFocusName">San Diego County</strong><small id="networkFocusMeta">Loading county signals…</small></div></div>
             <div class="map-filters" role="group" aria-label="Filter network signals">
               <button class="map-filter is-active" type="button" data-filter="all">All signals</button>
               <button class="map-filter" type="button" data-filter="supply"><span class="filter-dot dot-supply"></span>Food</button>
@@ -172,7 +181,7 @@ app.innerHTML = `
             <button class="map-expand" type="button" data-report="resource" aria-label="Explore the network">Explore ${icon('arrow')}</button>
           </div>
           <div class="workspace-body">
-            <div class="network-map live-map-shell" aria-label="Interactive map of local CareSpace signals">
+            <div class="network-map live-map-shell" aria-label="Interactive map of San Diego County CareSpace signals">
               <div class="live-map" id="liveMap"></div>
               <div class="map-compass">N <span>↑</span></div>
               <div class="map-provider-badge" id="mapProviderBadge">Live map · loading</div>
@@ -332,12 +341,31 @@ function signalCoordinates(signal) {
   return [latitude, longitude];
 }
 
+function serviceAreaBounds() {
+  const bounds = networkData.scope?.bounds;
+  if (!Array.isArray(bounds) || bounds.length !== 2) return null;
+  const [[south, west], [north, east]] = bounds.map((corner) => (Array.isArray(corner) ? corner.map(Number) : []));
+  if (![south, west, north, east].every(Number.isFinite)) return null;
+  if (south >= north || west >= east) return null;
+  return [[south, west], [north, east]];
+}
+
+function signalWithinScope(signal) {
+  const coordinates = signalCoordinates(signal);
+  if (!coordinates) return false;
+  const bounds = serviceAreaBounds();
+  if (!bounds) return true;
+  const [[south, west], [north, east]] = bounds;
+  const [latitude, longitude] = coordinates;
+  return latitude >= south && latitude <= north && longitude >= west && longitude <= east;
+}
+
 function signalMatchesFilter(signal, filter) {
   return filter === 'all' || signal.type === filter || (filter === 'capacity' && signal.type === 'logistics');
 }
 
 function visibleSignals(filter) {
-  return (networkData.signals ?? []).filter((signal) => signalMatchesFilter(signal, filter));
+  return (networkData.signals ?? []).filter((signal) => signalWithinScope(signal) && signalMatchesFilter(signal, filter));
 }
 
 function signalIconName(type) {
@@ -403,9 +431,7 @@ function createSignalMarker(signal) {
   return marker;
 }
 
-function createPumaBoundaryLayer(map) {
-  const boundary = networkData.geography?.boundary;
-  if (!boundary) return null;
+function createBoundaryLayer(map, boundary) {
   return L.geoJSON(boundary, {
     interactive: false,
     style: {
@@ -416,6 +442,23 @@ function createPumaBoundaryLayer(map) {
       dashArray: '5 5',
     },
   }).addTo(map);
+}
+
+async function loadServiceAreaBoundaryLayer(map) {
+  const boundary = networkData.scope?.boundary ?? networkData.geography?.boundary;
+  if (boundary) return createBoundaryLayer(map, boundary);
+
+  const boundaryUrl = networkData.scope?.boundaryUrl ?? networkData.geography?.boundaryUrl;
+  if (!boundaryUrl) return null;
+
+  try {
+    const response = await fetch(boundaryUrl, { headers: { Accept: 'application/geo+json, application/json' } });
+    if (!response.ok) throw new Error(`Boundary feed returned ${response.status}`);
+    return createBoundaryLayer(map, await response.json());
+  } catch (error) {
+    console.warn('CareSpace service-area boundary unavailable; using county bounds.', error);
+    return null;
+  }
 }
 
 function setMapFilter(filter) {
@@ -466,12 +509,15 @@ async function initializeLiveMap() {
   const latitude = Number(focus.latitude) || fallbackNetworkData.focus.latitude;
   const longitude = Number(focus.longitude) || fallbackNetworkData.focus.longitude;
   const zoom = Number(focus.zoom) || fallbackNetworkData.focus.zoom;
+  const bounds = serviceAreaBounds();
 
   try {
     const map = L.map(mapElement, {
       center: [latitude, longitude],
       zoom,
-      minZoom: 10,
+      minZoom: bounds ? 8 : 10,
+      maxBounds: bounds ? L.latLngBounds(bounds) : undefined,
+      maxBoundsViscosity: bounds ? 1 : undefined,
       zoomControl: true,
       scrollWheelZoom: false,
     });
@@ -483,22 +529,25 @@ async function initializeLiveMap() {
       detectRetina: true,
     }).addTo(map);
     L.control.scale({ imperial: true, metric: false, position: 'bottomleft' }).addTo(map);
-    const boundaryLayer = createPumaBoundaryLayer(map);
-
+    const markerLayer = L.layerGroup().addTo(map);
     mapRuntime = {
       map,
       isFallback,
-      boundaryLayer,
-      markerLayer: L.layerGroup().addTo(map),
+      scopeBounds: bounds,
+      boundaryLayer: null,
+      markerLayer,
       markers: new Map(),
     };
 
-    const name = networkData.geography?.name || 'Central neighborhood';
+    const name = networkData.scope?.name || networkData.geography?.name || 'Service area';
     const type = networkData.geography?.type || 'local';
     $('#networkFocusName').textContent = name;
-    $('#networkFocusMeta').textContent = `${networkData.signals.length} signals · ${type} ready`;
-    $('#mapProviderBadge').textContent = `Live map · OpenStreetMap / ${type}-ready`;
+    $('#networkFocusMeta').textContent = `${visibleSignals('all').length} signals · ${type} ready`;
+    $('#mapProviderBadge').textContent = `${name} · ${type}-ready`;
     setMapFilter('all');
+    void loadServiceAreaBoundaryLayer(map).then((boundaryLayer) => {
+      if (mapRuntime?.map === map) mapRuntime.boundaryLayer = boundaryLayer;
+    });
     requestAnimationFrame(() => map.invalidateSize());
   } catch (error) {
     console.error('CareSpace map could not initialize.', error);

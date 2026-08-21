@@ -46,7 +46,7 @@ The existing `heurchain` Pages project is intentionally not referenced by the wo
 
 ## Live map data
 
-The network card loads [`public/network-data.json`](public/network-data.json) at runtime and renders latitude/longitude signals on a live Leaflet map using OpenStreetMap/CARTO tiles. The data shape includes `location`, freshness fields, provenance, and a PUMA-compatible `geography` object. PUMAs are Census geographic areas, so replace the demo `puma_geoid` and optional boundary data with an authoritative source before using production data.
+The network card loads [`public/network-data.json`](public/network-data.json) at runtime and renders latitude/longitude signals on a live Leaflet map using OpenStreetMap/CARTO tiles. The demo is scoped to San Diego County, California (`geoid` `0500000US06073`, FIPS `06073`); the map is locked to the county envelope and ignores signals outside it. It also requests the official 2020 Census TIGERweb county boundary when available. The data shape includes `location`, freshness fields, provenance, and a PUMA-compatible `geography` object nested under the county scope. PUMAs are Census geographic areas, so replace the demo `puma_geoid`, county bounds, and optional boundary data with authoritative sources before using production data.
 
 To point the static site at a live JSON feed, set `VITE_NETWORK_DATA_URL` during the build. The demo intentionally uses fictional organization names and approximate locations.
 
