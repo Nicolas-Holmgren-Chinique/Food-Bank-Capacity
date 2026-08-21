@@ -1355,6 +1355,9 @@
     }
     liveMap.hidden = false;
     mapCharts.hidden = true;
+    const currentPoints = visiblePoints();
+    if (activeView === 'heatmap') renderHeatmap(currentPoints);
+    else renderMarkers(currentPoints);
     mapRenderFrame = window.requestAnimationFrame(() => {
       mapRenderFrame = null;
       if (activeView === 'charts') {
@@ -1362,19 +1365,13 @@
         return;
       }
       map.invalidateSize({ pan: false });
-      const currentPoints = visiblePoints();
-      if (activeView === 'heatmap') {
-        renderHeatmap(currentPoints);
-        if (heatLayer && typeof heatLayer.redraw === 'function') {
-          heatmapRedrawFrame = window.requestAnimationFrame(() => {
-            heatmapRedrawFrame = null;
-            if (activeView !== 'heatmap') return;
-            map.invalidateSize({ pan: false });
-            heatLayer.redraw();
-          });
-        }
-      } else {
-        renderMarkers(currentPoints);
+      if (activeView === 'heatmap' && heatLayer && typeof heatLayer.redraw === 'function') {
+        heatmapRedrawFrame = window.requestAnimationFrame(() => {
+          heatmapRedrawFrame = null;
+          if (activeView !== 'heatmap') return;
+          map.invalidateSize({ pan: false });
+          heatLayer.redraw();
+        });
       }
     });
   }
