@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "schema": "carespace.dashboard",
+  "source": "CareSpace demo food access network",
+  "scope": {
+    "type": "COUNTY",
+    "geoid": "0500000US06073",
+    "fips": "06073",
+    "name": "San Diego County, California",
+    "bounds": [[32.53, -117.60], [33.39, -116.08]],
+    "boundaryUrl": "https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/State_County/MapServer/11/query?where=GEOID%3D%2706073%27&outFields=GEOID%2CNAME&outSR=4326&returnGeometry=true&f=geojson",
+    "center": { "latitude": 32.95, "longitude": -117.12, "zoom": 9 }
+  },
+  "foodBanks": [
+    {
+      "id": "north-county-food-hub",
+      "name": "North County Food Hub",
+      "area": "Vista",
+      "kind": "Food bank",
+      "status": "Open today",
+      "hours": "Until 6:00 pm",
+      "distanceMiles": 4.8,
+      "location": { "latitude": 33.2007, "longitude": -117.2425 },
+      "access": "Walk-ins welcome · no referral required",
+      "inventory": [
+        { "category": "Fresh produce", "amount": "320 portions", "note": "Available today" },
+        { "category": "Pantry staples", "amount": "86 family boxes", "note": "Restock at 2:00 pm" },
+        { "category": "Prepared meals", "amount": "42 meals", "note": "Pickup by 5:30 pm" }
+      ]
+    },
+    {
+      "id": "central-care-food-bank",
+      "name": "Central Care Food Bank",
+      "area": "City Heights",
+      "kind": "Food bank",
+      "status": "Open today",
+      "hours": "Until 7:00 pm",
+      "distanceMiles": 7.2,
+      "location": { "latitude": 32.7481, "longitude": -117.1014 },
+      "access": "Walk-ins welcome · multilingual intake",
+      "isDemoUserFoodBank": true,
+      "inventory": [
+        { "category": "Grocery boxes", "amount": "124 boxes", "note": "Available today" },
+        { "category": "Fresh produce", "amount": "210 portions", "note": "Best before tomorrow" },
+        { "category": "Baby essentials", "amount": "18 kits", "note": "Ask at intake" }
+      ]
+    },
+    {
+      "id": "south-bay-pantry",
+      "name": "South Bay Community Pantry",
+      "area": "National City",
+      "kind": "Community pantry",
+      "status": "Open tomorrow",
+      "hours": "9:00 am – 4:00 pm",
+      "distanceMiles": 9.6,
+      "location": { "latitude": 32.6781, "longitude": -117.0992 },
+      "access": "Appointment preferred · same-day help available",
+      "inventory": [
+        { "category": "Pantry staples", "amount": "64 family boxes", "note": "Limited supply" },
+        { "category": "Culturally specific foods", "amount": "38 boxes", "note": "Available tomorrow" },
+        { "category": "Prepared meals", "amount": "76 meals", "note": "Pickup after 4:00 pm" }
+      ]
+    },
+    {
+      "id": "east-county-table",
+      "name": "East County Community Table",
+      "area": "El Cajon",
+      "kind": "Food distribution site",
+      "status": "Open today",
+      "hours": "Until 5:00 pm",
+      "distanceMiles": 12.4,
+      "location": { "latitude": 32.7948, "longitude": -116.9625 },
+      "access": "Drive-through and walk-up service",
+      "inventory": [
+        { "category": "Grocery boxes", "amount": "92 boxes", "note": "Available today" },
+        { "category": "Fresh produce", "amount": "140 portions", "note": "Available today" },
+        { "category": "Cold storage items", "amount": "24 crates", "note": "Pickup by 4:30 pm" }
+      ]
+    }
+  ]
+}

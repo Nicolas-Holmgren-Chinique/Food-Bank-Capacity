@@ -1,0 +1,123 @@
+{
+  "version": "1.0",
+  "schema": "carespace.network",
+  "source": "CareSpace demo network",
+  "updatedAt": "2026-08-20T12:00:00Z",
+  "scope": {
+    "type": "COUNTY",
+    "geoid": "0500000US06073",
+    "fips": "06073",
+    "name": "San Diego County, California",
+    "bounds": [[32.53, -117.60], [33.39, -116.08]],
+    "boundary": null,
+    "boundaryUrl": "https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/State_County/MapServer/11/query?where=GEOID%3D%2706073%27&outFields=GEOID%2CNAME&outSR=4326&returnGeometry=true&f=geojson"
+  },
+  "geography": {
+    "type": "PUMA",
+    "vintage": "demo",
+    "puma_geoid": "DEMO-SD-PUMA-0001",
+    "name": "San Diego County PUMA-ready demo area",
+    "parent": {
+      "type": "COUNTY",
+      "geoid": "0500000US06073",
+      "name": "San Diego County, California"
+    }
+  },
+  "focus": {
+    "latitude": 32.95,
+    "longitude": -117.12,
+    "zoom": 9
+  },
+  "signals": [
+    {
+      "id": "north",
+      "type": "supply",
+      "label": "Northside Market",
+      "meta": "84 meal equivalents",
+      "quantity": 84,
+      "unit": "meal equivalents",
+      "location": {
+        "latitude": 33.1192,
+        "longitude": -117.0864
+      },
+      "reportedAt": "2026-08-20T11:45:00Z",
+      "expiresAt": "2026-08-20T18:30:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "oak",
+      "type": "capacity",
+      "label": "Oak Street Kitchen",
+      "meta": "Open until 9:00 pm",
+      "quantity": 2400,
+      "unit": "square feet available",
+      "location": {
+        "latitude": 32.7157,
+        "longitude": -117.1611
+      },
+      "reportedAt": "2026-08-20T11:30:00Z",
+      "expiresAt": "2026-08-20T21:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "harbor",
+      "type": "demand",
+      "label": "Harbor House",
+      "meta": "Needs 120 dinners",
+      "quantity": 120,
+      "unit": "dinners",
+      "location": {
+        "latitude": 32.6401,
+        "longitude": -117.0842
+      },
+      "reportedAt": "2026-08-20T11:15:00Z",
+      "expiresAt": "2026-08-20T19:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "east",
+      "type": "logistics",
+      "label": "Eastside volunteers",
+      "meta": "2 vans available",
+      "quantity": 2,
+      "unit": "vans",
+      "location": {
+        "latitude": 32.7948,
+        "longitude": -116.9625
+      },
+      "reportedAt": "2026-08-20T11:00:00Z",
+      "expiresAt": "2026-08-20T20:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "cedar",
+      "type": "demand",
+      "label": "Cedar Grove Shelter",
+      "meta": "18 beds open",
+      "quantity": 18,
+      "unit": "beds",
+      "location": {
+        "latitude": 33.1959,
+        "longitude": -117.3795
+      },
+      "reportedAt": "2026-08-20T10:50:00Z",
+      "expiresAt": "2026-08-20T23:00:00Z",
+      "source": "demo"
+    },
+    {
+      "id": "common",
+      "type": "supply",
+      "label": "Common Table",
+      "meta": "Meals ready at 6:15 pm",
+      "quantity": 46,
+      "unit": "meals",
+      "location": {
+        "latitude": 32.6781,
+        "longitude": -117.0992
+      },
+      "reportedAt": "2026-08-20T10:40:00Z",
+      "expiresAt": "2026-08-20T18:15:00Z",
+      "source": "demo"
+    }
+  ]
+}
