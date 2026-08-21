@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <rect width="1600" height="1200" fill="#eeeae0"/>
+  <rect x="40" y="180" width="340" height="620" rx="10" fill="#c5e9e6" stroke="#102d32" stroke-width="4"/>
+  <text x="210" y="500" text-anchor="middle" font-family="sans-serif" font-size="34" fill="#102d32">Refrigerator</text>
+  <rect x="430" y="560" width="380" height="260" rx="10" fill="#d7d4ef" stroke="#102d32" stroke-width="4"/>
+  <text x="620" y="700" text-anchor="middle" font-family="sans-serif" font-size="30" fill="#102d32">Chest freezer</text>
+  <rect x="860" y="140" width="380" height="700" rx="10" fill="#b4e4bc" stroke="#102d32" stroke-width="4"/>
+  <text x="1050" y="500" text-anchor="middle" font-family="sans-serif" font-size="30" fill="#102d32">Shelving unit</text>
+  <rect x="1280" y="120" width="260" height="220" rx="10" fill="#f2d77e" stroke="#102d32" stroke-width="4"/>
+  <text x="1410" y="235" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#102d32">Wall cabinet</text>
+  <rect x="0" y="960" width="1600" height="240" fill="#eeeae0" stroke="#102d32" stroke-dasharray="12 10" stroke-width="3"/>
+  <text x="800" y="1100" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#365054">open floor space</text>
+  <text x="800" y="60" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#365054">Sample scan — walk-in + shelving (schematic placeholder)</text>
+</svg>

@@ -1,0 +1,10 @@
+{
+  "fixtures": [
+    { "class": "refrigerator", "confidence": 0.93, "bbox": { "x": 0.03, "y": 0.15, "width": 0.21, "height": 0.52 } },
+    { "class": "chest freezer", "confidence": 0.88, "bbox": { "x": 0.27, "y": 0.47, "width": 0.24, "height": 0.22 } },
+    { "class": "shelving unit", "confidence": 0.81, "bbox": { "x": 0.54, "y": 0.12, "width": 0.24, "height": 0.58 } },
+    { "class": "wall cabinet", "confidence": 0.77, "bbox": { "x": 0.8, "y": 0.1, "width": 0.16, "height": 0.18 } },
+    { "class": "base cabinet", "confidence": 0.74, "bbox": { "x": 0.8, "y": 0.52, "width": 0.16, "height": 0.17 } },
+    { "class": "sink", "confidence": 0.9, "bbox": { "x": 0.27, "y": 0.11, "width": 0.14, "height": 0.15 } }
+  ]
+}

@@ -10,12 +10,29 @@
     "dev": "vite",
     "prebuild": "npm run prepare:data",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node --env-file-if-exists=.env.local server/index.js",
+    "test": "vitest run",
+    "check:boundary": "node scripts/check-engine-boundary.js"
   },
   "devDependencies": {
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
-    "leaflet": "^1.9.4"
+    "@eyepop.ai/eyepop": "^3.18.0",
+    "@eyepop.ai/eyepop-render-2d": "^3.18.0",
+    "@google/genai": "^2.18.0",
+    "express": "^5.1.0",
+    "leaflet": "^1.9.4",
+    "multer": "^2.0.1"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   }
 }
