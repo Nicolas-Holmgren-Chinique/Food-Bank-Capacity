@@ -1,16 +1,342 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#102d32" />
-    <meta name="description" content="CareSpace connects available food, community need, capacity, and logistics in real time." />
-    <link rel="canonical" href="https://carespace.heurchain.com/" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23ff715b'/%3E%3Cpath d='M17 34c10-16 22-16 30 0-8 16-20 16-30 0Z' fill='none' stroke='%23102d32' stroke-width='5'/%3E%3Ccircle cx='32' cy='34' r='5' fill='%23102d32'/%3E%3C/svg%3E" />
-    <title>CareSpace — Food, need, and capacity in sync</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#008080" />
+  <meta name="description" content="CareSpace — AI-Powered Space Management & Inventory for Food Banks & Agencies" />
+  <title>CareSpace — Intelligent Storage Optimization for Food Security</title>
+  <style>
+    :root {
+      --teal: #008080;
+      --teal-light: #00a3a3;
+      --dark: #1a1a1a;
+      --white: #ffffff;
+      --gray: #555;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--white);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Navigation ── */
+    nav {
+      background: var(--white);
+      padding: 1.25rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .logo {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--dark);
+      text-decoration: none;
+    }
+    .logo span { color: var(--teal); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--dark);
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.25s;
+    }
+    .nav-links a:hover { color: var(--teal); }
+
+    .menu-icon {
+      cursor: pointer;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 5px;
+    }
+    .menu-icon span {
+      width: 22px;
+      height: 2px;
+      background: var(--dark);
+      border-radius: 1px;
+    }
+
+    /* ── Hero ── */
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .hero {
+      background: var(--white);
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.04);
+      min-height: 620px;
+    }
+
+    .hero-left {
+      flex: 1;
+      padding: 5rem 4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Subtle beige accent block behind text */
+    .hero-left::before {
+      content: '';
+      position: absolute;
+      top: 18%;
+      left: -2rem;
+      right: 10%;
+      height: 48%;
+      background: #f4f1ea;
+      z-index: 0;
+      border-radius: 4px;
+    }
+
+    .hero-content { position: relative; z-index: 1; }
+
+    h1 {
+      color: var(--teal);
+      font-size: 3rem;
+      line-height: 1.15;
+      font-weight: 800;
+      margin-bottom: 1.75rem;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--dark);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    /* ── Right column: circular diagram ── */
+    .hero-right {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2.5rem;
+    }
+
+    .diagram {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      aspect-ratio: 1 / 1;
+    }
+
+    /* Arrow ring */
+    .arrows {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Three nodes positioned around the ring */
+    .node {
+      position: absolute;
+      width: 38%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .node svg { width: 100%; height: 100%; }
+
+    .node-top { top: 2%; left: 50%; transform: translateX(-50%); }
+    .node-bl  { bottom: 4%; left: 2%; }
+    .node-br  { bottom: 4%; right: 2%; }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .hero { flex-direction: column; }
+      .hero-left { padding: 3.5rem 2rem; }
+      .hero-left::before { display: none; }
+      h1 { font-size: 2.4rem; }
+      .hero-right { padding: 1.5rem; }
+      .diagram { max-width: 420px; }
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .menu-icon { display: flex; }
+      main { padding: 1rem; }
+      .hero { min-height: auto; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">Care<span>Space</span></a>
+  <div class="nav-links">
+    <a href="#vision">Vision</a>
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it Works</a>
+    <div class="menu-icon" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+
+    <!-- LEFT: headline -->
+    <div class="hero-left">
+      <div class="hero-content">
+        <h1>Intelligent Storage<br>Optimization for<br>Food Security</h1>
+        <p class="subtitle">AI-Powered Space Management &amp; Inventory<br>for Food Banks &amp; Agencies</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: circular workflow diagram -->
+    <div class="hero-right">
+      <div class="diagram">
+
+        <!-- Clockwise connecting arrows -->
+        <svg class="arrows" viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Top → Bottom-Right -->
+          <path d="M 340 105 Q 480 160 455 340" stroke="#1a1a1a" stroke-width="2.2" fill="none"/>
+          <polygon points="455,340 448,322 462,328" fill="#1a1a1a"/>
+          <!-- Bottom-Right → Bottom-Left -->
+          <path d="M 400 455 Q 260 530 120 455" stroke="#1a1a1a" stroke-width="2.2" fill="none"/>
+          <polygon points="120,455 138,448 132,462" fill="#1a1a1a"/>
+          <!-- Bottom-Left → Top -->
+          <path d="M 65 340 Q 40 160 180 105" stroke="#1a1a1a" stroke-width="2.2" fill="none"/>
+          <polygon points="180,105 162,112 168,98" fill="#1a1a1a"/>
+        </svg>
+
+        <!-- NODE 1 (top): phone scanning -->
+        <div class="node node-top">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Faint shelf background -->
+            <g opacity="0.3" stroke="#008080" stroke-width="1.2">
+              <rect x="8" y="25" width="22" height="50" rx="2"/>
+              <line x1="8" y1="42" x2="30" y2="42"/>
+              <line x1="8" y1="58" x2="30" y2="58"/>
+              <rect x="88" y="35" width="14" height="30" rx="2"/>
+              <line x1="95" y1="30" x2="95" y2="35"/>
+            </g>
+            <!-- Phone body -->
+            <rect x="42" y="18" width="34" height="68" rx="5" fill="#fff" stroke="#008080" stroke-width="2"/>
+            <!-- Phone screen -->
+            <rect x="47" y="26" width="24" height="40" rx="2" fill="#fff" stroke="#008080" stroke-width="1.2"/>
+            <!-- Scan square -->
+            <rect x="52" y="33" width="14" height="14" rx="1" fill="#008080" opacity="0.85"/>
+            <!-- Home button -->
+            <circle cx="59" cy="76" r="3" fill="none" stroke="#008080" stroke-width="1.2"/>
+            <!-- Hand holding phone -->
+            <path d="M 38 88 Q 48 70 52 62 L 52 92 Z" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+            <path d="M 80 88 Q 70 70 66 62 L 66 92 Z" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+            <!-- Wrist -->
+            <path d="M 38 92 Q 36 108 44 112 L 74 112 Q 82 108 80 92" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+          </svg>
+        </div>
+
+        <!-- NODE 2 (bottom-left): food bank + van -->
+        <div class="node node-bl">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Warehouse building -->
+            <path d="M 8 98 L 8 52 L 32 38 L 56 52 L 56 98 Z" fill="#fff" stroke="#008080" stroke-width="2"/>
+            <!-- Door -->
+            <rect x="20" y="65" width="22" height="33" rx="1" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+            <!-- Door lines -->
+            <line x1="31" y1="65" x2="31" y2="98" stroke="#008080" stroke-width="1"/>
+            <!-- FOOD BANK sign -->
+            <rect x="12" y="42" width="38" height="16" rx="2" fill="#008080"/>
+            <text x="31" y="53" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="sans-serif">FOOD BANK</text>
+            <!-- Roof line -->
+            <line x1="8" y1="52" x2="56" y2="52" stroke="#008080" stroke-width="1.5"/>
+            <!-- Delivery van -->
+            <path d="M 64 98 L 64 62 L 98 62 L 108 76 L 108 98 Z" fill="#fff" stroke="#008080" stroke-width="2"/>
+            <!-- Van window -->
+            <rect x="92" y="66" width="10" height="12" rx="1" fill="#fff" stroke="#008080" stroke-width="1.2"/>
+            <!-- Wheels -->
+            <circle cx="74" cy="98" r="6" fill="#fff" stroke="#008080" stroke-width="2"/>
+            <circle cx="100" cy="98" r="6" fill="#fff" stroke="#008080" stroke-width="2"/>
+            <!-- Fork & spoon logo on van -->
+            <circle cx="80" cy="78" r="9" fill="#008080"/>
+            <line x1="77" y1="73" x2="77" y2="83" stroke="#fff" stroke-width="1.2"/>
+            <line x1="77" y1="73" x2="75" y2="73" stroke="#fff" stroke-width="1"/>
+            <line x1="77" y1="73" x2="79" y2="73" stroke="#fff" stroke-width="1"/>
+            <line x1="83" y1="73" x2="83" y2="80" stroke="#fff" stroke-width="1.2"/>
+            <ellipse cx="83" cy="82" rx="2.5" ry="3" fill="#fff"/>
+          </svg>
+        </div>
+
+        <!-- NODE 3 (bottom-right): analytics + inventory -->
+        <div class="node node-br">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Line graph -->
+            <rect x="8" y="12" width="44" height="34" rx="3" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+            <polyline points="14,40 22,30 30,34 38,22 46,26" fill="none" stroke="#008080" stroke-width="2"/>
+            <!-- Pie chart -->
+            <circle cx="82" cy="28" r="16" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+            <path d="M 82 28 L 82 12 A 16 16 0 0 1 96 28 Z" fill="#008080"/>
+            <path d="M 82 28 L 96 28 A 16 16 0 0 1 88 42 Z" fill="#008080" opacity="0.5"/>
+            <!-- Bar chart -->
+            <rect x="12" y="58" width="8" height="22" rx="1" fill="#008080"/>
+            <rect x="24" y="48" width="8" height="32" rx="1" fill="#008080"/>
+            <rect x="36" y="55" width="8" height="25" rx="1" fill="#008080" opacity="0.7"/>
+            <rect x="48" y="38" width="8" height="42" rx="1" fill="#008080"/>
+            <!-- Inventory table -->
+            <g transform="translate(62,52)">
+              <rect x="0" y="0" width="52" height="56" rx="3" fill="#fff" stroke="#008080" stroke-width="1.5"/>
+              <!-- Header -->
+              <rect x="0" y="0" width="52" height="14" rx="3" fill="#008080"/>
+              <rect x="0" y="8" width="52" height="6" fill="#008080"/>
+              <text x="26" y="10" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff" font-family="sans-serif">INVENTORY</text>
+              <!-- Column divider -->
+              <line x1="34" y1="14" x2="34" y2="56" stroke="#008080" stroke-width="0.8"/>
+              <!-- Row dividers -->
+              <line x1="0" y1="27" x2="52" y2="27" stroke="#008080" stroke-width="0.5"/>
+              <line x1="0" y1="40" x2="52" y2="40" stroke="#008080" stroke-width="0.5"/>
+              <!-- Row 1 -->
+              <text x="4" y="23" font-size="6.5" fill="#008080" font-family="sans-serif">APPLES</text>
+              <text x="38" y="23" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">25</text>
+              <!-- Row 2 -->
+              <text x="4" y="36" font-size="6.5" fill="#008080" font-family="sans-serif">BREAD</text>
+              <text x="38" y="36" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">10</text>
+              <!-- Row 3 -->
+              <text x="4" y="49" font-size="6.5" fill="#008080" font-family="sans-serif">MILK</text>
+              <text x="38" y="49" font-size="6.5" fill="#008080" font-family="sans-serif" text-anchor="middle">30</text>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
 </html>
