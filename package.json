@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare:data": "node scripts/normalize-food-bank-data.mjs",
+    "predev": "npm run prepare:data",
     "dev": "vite",
+    "prebuild": "npm run prepare:data",
     "build": "vite build",
     "preview": "vite preview"
   },

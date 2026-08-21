@@ -51,6 +51,8 @@ The network card loads [`public/network-data.json`](public/network-data.json) at
 
 To point the static site at a live JSON feed, set `VITE_NETWORK_DATA_URL` during the build. The demo intentionally uses fictional organization names and approximate locations.
 
+The main map separately loads [`public/food-bank-locations.json`](public/food-bank-locations.json). This feed is normalized from [`san-diego-food-bank-locations.md`](san-diego-food-bank-locations.md) during `npm run dev` and `npm run build` by [`scripts/normalize-food-bank-data.mjs`](scripts/normalize-food-bank-data.mjs). Food-bank locations have their own `food-bank` type, filter, marker shape, popup provenance, and source fields so they remain distinct from live food, need, capacity, and logistics signals. Set `VITE_FOOD_BANK_DATA_URL` to replace the generated feed with another compatible JSON source.
+
 The dashboard loads [`public/dashboard-data.json`](public/dashboard-data.json) and can be pointed at a live feed with `VITE_DASHBOARD_DATA_URL`. The current sign-in is a non-transmitting demo gate; connect the dashboard form to the selected production identity provider before accepting real credentials or user-specific data.
 
 Google Maps can be used as a provider-specific follow-up by supplying a Google Maps JavaScript API key and map ID; the default map does not require a key or billing account.

@@ -71,6 +71,7 @@ const fallbackNetworkData = {
 
 const networkDataUrl = import.meta.env.VITE_NETWORK_DATA_URL || '/network-data.json';
 let networkData = fallbackNetworkData;
+let foodBankData = { locations: [] };
 let mapRuntime = null;
 
 const fallbackDashboardData = {
@@ -148,6 +149,25 @@ const fallbackDashboardData = {
 };
 
 const dashboardDataUrl = import.meta.env.VITE_DASHBOARD_DATA_URL || '/dashboard-data.json';
+const foodBankDataUrl = import.meta.env.VITE_FOOD_BANK_DATA_URL || '/food-bank-locations.json';
+const fallbackFoodBankData = {
+  version: '1.0',
+  schema: 'carespace.food-bank-locations',
+  source: 'CareSpace demo food-bank locations',
+  scope: fallbackNetworkData.scope,
+  locations: fallbackDashboardData.foodBanks.map((foodBank) => ({
+    ...foodBank,
+    id: `food-bank-${foodBank.id}`,
+    sourceId: foodBank.id,
+    type: 'food-bank',
+    label: foodBank.name,
+    meta: `${foodBank.area} · ${foodBank.kind}`,
+    address: foodBank.area,
+    schedule: `${foodBank.status} · ${foodBank.hours}`,
+    access: foodBank.access,
+    source: 'CareSpace demo network',
+  })),
+};
 let dashboardData = fallbackDashboardData;
 let dashboardRole = 'need';
 let selectedFoodBankId = fallbackDashboardData.foodBanks[0].id;
@@ -260,6 +280,7 @@ app.innerHTML = `
               <button class="map-filter" type="button" data-filter="supply"><span class="filter-dot dot-supply"></span>Food</button>
               <button class="map-filter" type="button" data-filter="demand"><span class="filter-dot dot-demand"></span>Need</button>
               <button class="map-filter" type="button" data-filter="capacity"><span class="filter-dot dot-capacity"></span>Capacity</button>
+              <button class="map-filter" type="button" data-filter="food-bank"><span class="filter-dot dot-food-bank"></span>Food banks</button>
             </div>
             <button class="map-expand" type="button" data-report="resource" aria-label="Explore the network">Explore ${icon('arrow')}</button>
           </div>
@@ -495,15 +516,42 @@ function visibleSignals(filter) {
   return (networkData.signals ?? []).filter((signal) => signalWithinScope(signal) && signalMatchesFilter(signal, filter));
 }
 
+function visibleFoodBankLocations() {
+  return (foodBankData.locations ?? []).filter((location) => signalWithinScope(location));
+}
+
+function visibleMapPoints(filter) {
+  if (filter === 'food-bank') return visibleFoodBankLocations();
+  return [
+    ...visibleSignals(filter),
+    ...(filter === 'all' ? visibleFoodBankLocations() : []),
+  ];
+}
+
+function mapPointById(id) {
+  return (networkData.signals ?? []).find((signal) => signal.id === id)
+    ?? (foodBankData.locations ?? []).find((location) => location.id === id);
+}
+
+function mapPointLabel(point) {
+  return point.label ?? point.name ?? 'CareSpace location';
+}
+
+function mapPointMeta(point) {
+  return point.meta ?? `${point.area ?? 'San Diego County'} · ${point.kind ?? 'Network signal'}`;
+}
+
 function signalIconName(type) {
   if (type === 'supply') return 'heart';
   if (type === 'demand') return 'users';
+  if (type === 'food-bank') return 'pin';
   return 'spark';
 }
 
 function signalIconClass(type) {
   if (type === 'supply') return 'icon-supply';
   if (type === 'demand') return 'icon-demand';
+  if (type === 'food-bank') return 'icon-food-bank';
   return 'icon-capacity';
 }
 
@@ -511,49 +559,56 @@ function renderSignalPanel(filter) {
   const list = $('[data-signal-list]');
   if (!list) return;
 
-  const signals = visibleSignals(filter);
-  const cards = signals.slice(0, 3);
+  const points = visibleMapPoints(filter);
+  const cards = points.slice(0, 3);
   list.innerHTML = cards.length
-    ? cards.map((signal) => `
-      <button class="signal-card" type="button" data-focus="${escapeHtml(signal.id)}">
-        <span class="signal-card-icon ${signalIconClass(signal.type)}">${icon(signalIconName(signal.type))}</span>
-        <span><strong>${escapeHtml(signal.label)}</strong><small>${escapeHtml(signal.meta)}</small></span>
+    ? cards.map((point) => `
+      <button class="signal-card" type="button" data-focus="${escapeHtml(point.id)}">
+        <span class="signal-card-icon ${signalIconClass(point.type)}">${icon(signalIconName(point.type))}</span>
+        <span><strong>${escapeHtml(mapPointLabel(point))}</strong><small>${escapeHtml(mapPointMeta(point))}</small></span>
         <span class="signal-card-arrow">${icon('arrow')}</span>
       </button>`).join('')
     : '<p class="signal-empty">No signals match this filter yet.</p>';
 
   const count = $('[data-panel-count]');
-  if (count) count.textContent = String(signals.length).padStart(2, '0');
+  if (count) count.textContent = String(points.length).padStart(2, '0');
 
   const footer = $('[data-panel-footer]');
   if (footer) {
-    const remaining = Math.max(signals.length - cards.length, 0);
-    footer.textContent = remaining ? `+ ${remaining} more signals are active` : 'Select a signal to inspect its location';
+    const remaining = Math.max(points.length - cards.length, 0);
+    footer.textContent = remaining ? `+ ${remaining} more locations are active` : 'Select a location to inspect its details';
   }
 }
 
-function createSignalMarker(signal) {
-  const coordinates = signalCoordinates(signal);
+function createSignalMarker(point) {
+  const coordinates = signalCoordinates(point);
   if (!coordinates) return null;
 
   const marker = L.marker(coordinates, {
     icon: L.divIcon({
-      className: `carespace-marker marker-${signal.type}`,
+      className: `carespace-marker marker-${point.type}`,
       html: '<span class="carespace-marker-pulse"></span><span class="carespace-marker-core"></span>',
       iconSize: [28, 28],
       iconAnchor: [14, 14],
       popupAnchor: [0, -15],
     }),
-    title: `${signal.label}: ${signal.meta}`,
+    title: `${mapPointLabel(point)}: ${mapPointMeta(point)}`,
   });
 
-  const puma = signal.puma ?? networkData.geography;
-  const pumaLabel = puma?.name ? `<small>PUMA area · ${escapeHtml(puma.name)}</small>` : '';
+  const puma = point.puma ?? networkData.geography;
+  const pumaLabel = point.type === 'food-bank'
+    ? [point.address, point.schedule ? `Schedule · ${point.schedule}` : '', point.access ? `Access · ${point.access}` : '']
+      .filter(Boolean)
+      .map((detail) => `<small>${escapeHtml(detail)}</small>`)
+      .join('')
+    : puma?.name ? `<small>PUMA area · ${escapeHtml(puma.name)}</small>` : '';
+  const sourceLabel = point.source ? `<small class="map-popup-source">Source · ${escapeHtml(point.source)}</small>` : '';
   marker.bindPopup(`
     <div class="map-popup">
-      <strong>${escapeHtml(signal.label)}</strong>
-      <span>${escapeHtml(signal.meta)}</span>
+      <strong>${escapeHtml(mapPointLabel(point))}</strong>
+      <span>${escapeHtml(mapPointMeta(point))}</span>
       ${pumaLabel}
+      ${sourceLabel}
     </div>`, { closeButton: false });
   return marker;
 }
@@ -590,23 +645,33 @@ async function loadServiceAreaBoundaryLayer(map) {
 
 function setMapFilter(filter) {
   $$('.map-filter').forEach((button) => button.classList.toggle('is-active', button.dataset.filter === filter));
-  const signals = visibleSignals(filter);
+  const points = visibleMapPoints(filter);
   if (mapRuntime) {
     mapRuntime.markerLayer.clearLayers();
     mapRuntime.markers.clear();
-    signals.forEach((signal) => {
-      const marker = createSignalMarker(signal);
+    points.forEach((point) => {
+      const marker = createSignalMarker(point);
       if (!marker) return;
-      mapRuntime.markers.set(signal.id, marker);
+      mapRuntime.markers.set(point.id, marker);
       marker.addTo(mapRuntime.markerLayer);
     });
   }
 
   renderSignalPanel(filter);
+  const filterLabel = {
+    supply: 'food available',
+    demand: 'community need',
+    capacity: 'capacity and logistics',
+    'food-bank': 'food-bank locations',
+  }[filter] ?? 'network';
+  const foodBankCount = visibleFoodBankLocations().length;
   const copy = filter === 'all'
-    ? `Showing all ${signals.length} live signals`
-    : `Showing ${signals.length} ${filter === 'supply' ? 'food available' : filter === 'demand' ? 'community need' : 'capacity and logistics'} signals`;
-  const sourceNote = mapRuntime?.isFallback ? ' · demo feed' : '';
+    ? `Showing all ${points.length} live locations · ${foodBankCount} food banks`
+    : `Showing ${points.length} ${filterLabel}`;
+  const sourceNote = [
+    mapRuntime?.isFallback ? 'demo signal feed' : '',
+    mapRuntime?.isFoodBankFallback ? 'demo food-bank feed' : '',
+  ].filter(Boolean).map((note) => ` · ${note}`).join('');
   $('#mapStatus').innerHTML = `<i class="live-dot"></i> ${copy}${sourceNote}`;
   announce(copy);
 }
@@ -619,17 +684,33 @@ async function loadNetworkData() {
   return { ...fallbackNetworkData, ...payload, signals: payload.signals };
 }
 
+async function loadFoodBankData() {
+  const response = await fetch(foodBankDataUrl, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`Food-bank feed returned ${response.status}`);
+  const payload = await response.json();
+  if (!Array.isArray(payload.locations)) throw new Error('Food-bank feed has no locations array');
+  return { ...fallbackFoodBankData, ...payload, locations: payload.locations };
+}
+
 async function initializeLiveMap() {
   const mapElement = $('#liveMap');
   if (!mapElement) return;
 
-  let isFallback = false;
-  try {
-    networkData = await loadNetworkData();
-  } catch (error) {
-    isFallback = true;
+  const [networkResult, foodBankResult] = await Promise.allSettled([loadNetworkData(), loadFoodBankData()]);
+  const isFallback = networkResult.status !== 'fulfilled';
+  const isFoodBankFallback = foodBankResult.status !== 'fulfilled';
+
+  if (isFallback) {
     networkData = fallbackNetworkData;
-    console.warn('CareSpace network feed unavailable; showing demo signals.', error);
+    console.warn('CareSpace network feed unavailable; showing demo signals.', networkResult.reason);
+  } else {
+    networkData = networkResult.value;
+  }
+  if (isFoodBankFallback) {
+    foodBankData = fallbackFoodBankData;
+    console.warn('CareSpace food-bank feed unavailable; showing demo food-bank locations.', foodBankResult.reason);
+  } else {
+    foodBankData = foodBankResult.value;
   }
 
   const focus = networkData.focus ?? fallbackNetworkData.focus;
@@ -660,6 +741,7 @@ async function initializeLiveMap() {
     mapRuntime = {
       map,
       isFallback,
+      isFoodBankFallback,
       scopeBounds: bounds,
       boundaryLayer: null,
       markerLayer,
@@ -668,9 +750,11 @@ async function initializeLiveMap() {
 
     const name = networkData.scope?.name || networkData.geography?.name || 'Service area';
     const type = networkData.geography?.type || 'local';
+    const signalCount = visibleSignals('all').length;
+    const foodBankCount = visibleFoodBankLocations().length;
     $('#networkFocusName').textContent = name;
-    $('#networkFocusMeta').textContent = `${visibleSignals('all').length} signals · ${type} ready`;
-    $('#mapProviderBadge').textContent = `${name} · ${type}-ready`;
+    $('#networkFocusMeta').textContent = `${signalCount} signals · ${foodBankCount} food banks · ${type} ready`;
+    $('#mapProviderBadge').textContent = `${name} · ${type}-ready · food banks live`;
     setMapFilter('all');
     void loadServiceAreaBoundaryLayer(map).then((boundaryLayer) => {
       if (mapRuntime?.map === map) mapRuntime.boundaryLayer = boundaryLayer;
@@ -1070,14 +1154,14 @@ $$('[data-filter]').forEach((button) => button.addEventListener('click', () => s
 $('[data-signal-list]').addEventListener('click', (event) => {
   const button = event.target.closest('[data-focus]');
   if (!button) return;
-  const signal = networkData.signals.find((candidate) => candidate.id === button.dataset.focus);
-  if (!signal) return;
+  const point = mapPointById(button.dataset.focus);
+  if (!point) return;
 
-  const filter = signal.type === 'logistics' ? 'capacity' : signal.type;
+  const filter = point.type === 'food-bank' ? 'food-bank' : point.type === 'logistics' ? 'capacity' : point.type;
   setMapFilter(filter);
   $('#network').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  const coordinates = signalCoordinates(signal);
-  const marker = mapRuntime?.markers.get(signal.id);
+  const coordinates = signalCoordinates(point);
+  const marker = mapRuntime?.markers.get(point.id);
   if (mapRuntime?.map && coordinates) {
     mapRuntime.map.setView(coordinates, Math.max(mapRuntime.map.getZoom(), 14), { animate: true });
     marker?.openPopup();
