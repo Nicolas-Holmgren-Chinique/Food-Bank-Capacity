@@ -1,0 +1,8 @@
+name = "carespace"
+compatibility_date = "2026-08-21"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "CARES_DB"
+database_name = "carespace-food-bank-poc"
+database_id = "0da74332-abd8-4e1a-b543-b8580c92e4a0"

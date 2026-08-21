@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './styles.css';
+import { allocate, spaceFromCapacityRecords } from './lib/allocation.js';
 
 const fallbackNetworkData = {
   version: '1.0',
@@ -70,6 +71,7 @@ const fallbackNetworkData = {
 
 const networkDataUrl = import.meta.env.VITE_NETWORK_DATA_URL || '/network-data.json';
 let networkData = fallbackNetworkData;
+let foodBankData = { locations: [] };
 let mapRuntime = null;
 
 const fallbackDashboardData = {
@@ -147,10 +149,34 @@ const fallbackDashboardData = {
 };
 
 const dashboardDataUrl = import.meta.env.VITE_DASHBOARD_DATA_URL || '/dashboard-data.json';
+const foodBankDataUrl = import.meta.env.VITE_FOOD_BANK_DATA_URL || '/api/v1/food-banks';
+const foodBankStaticDataUrl = '/food-bank-locations.json';
+const dashboardAuthBaseUrl = import.meta.env.VITE_DASHBOARD_AUTH_URL || '/api/v1/dashboard';
+const fallbackFoodBankData = {
+  version: '1.0',
+  schema: 'carespace.food-bank-locations',
+  source: 'CareSpace demo food-bank locations',
+  scope: fallbackNetworkData.scope,
+  locations: fallbackDashboardData.foodBanks.map((foodBank) => ({
+    ...foodBank,
+    id: `food-bank-${foodBank.id}`,
+    sourceId: foodBank.id,
+    type: 'food-bank',
+    label: foodBank.name,
+    meta: `${foodBank.area} · ${foodBank.kind}`,
+    address: foodBank.area,
+    schedule: `${foodBank.status} · ${foodBank.hours}`,
+    access: foodBank.access,
+    source: 'CareSpace demo network',
+  })),
+};
 let dashboardData = fallbackDashboardData;
 let dashboardRole = 'need';
+let dashboardAuthMode = 'login';
+let dashboardUser = null;
 let selectedFoodBankId = fallbackDashboardData.foodBanks[0].id;
 let dashboardRuntime = null;
+let allocationSupply = null;
 
 const icon = (name) => {
   const paths = {
@@ -168,6 +194,30 @@ const icon = (name) => {
   };
   return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name] ?? paths.spark}</svg>`;
 };
+
+// Fixed POC envelopes for common San Diego County cities. Replace these with
+// authoritative city boundaries when the dashboard moves beyond the demo.
+const dashboardCityScopes = [
+  { id: 'county', name: 'San Diego County', aliases: [], center: { latitude: 32.95, longitude: -117.12, zoom: 9 }, bounds: [[32.53, -117.60], [33.39, -116.08]] },
+  { id: 'san-diego', name: 'San Diego', aliases: ['san diego', 'city heights'], center: { latitude: 32.7157, longitude: -117.1611, zoom: 11 }, bounds: [[32.53, -117.30], [32.93, -116.90]] },
+  { id: 'chula-vista', name: 'Chula Vista', aliases: ['chula vista'], center: { latitude: 32.6401, longitude: -117.0842, zoom: 12 }, bounds: [[32.57, -117.18], [32.72, -116.95]] },
+  { id: 'oceanside', name: 'Oceanside', aliases: ['oceanside'], center: { latitude: 33.1959, longitude: -117.3795, zoom: 12 }, bounds: [[33.12, -117.45], [33.30, -117.20]] },
+  { id: 'escondido', name: 'Escondido', aliases: ['escondido'], center: { latitude: 33.1192, longitude: -117.0864, zoom: 12 }, bounds: [[33.04, -117.22], [33.24, -116.94]] },
+  { id: 'carlsbad', name: 'Carlsbad', aliases: ['carlsbad'], center: { latitude: 33.1581, longitude: -117.3506, zoom: 12 }, bounds: [[33.08, -117.43], [33.23, -117.24]] },
+  { id: 'encinitas', name: 'Encinitas', aliases: ['encinitas'], center: { latitude: 33.0370, longitude: -117.2920, zoom: 12 }, bounds: [[32.98, -117.36], [33.10, -117.22]] },
+  { id: 'vista', name: 'Vista', aliases: ['vista'], center: { latitude: 33.2007, longitude: -117.2425, zoom: 12 }, bounds: [[33.13, -117.34], [33.29, -117.13]] },
+  { id: 'san-marcos', name: 'San Marcos', aliases: ['san marcos'], center: { latitude: 33.1434, longitude: -117.1661, zoom: 12 }, bounds: [[33.07, -117.28], [33.23, -117.05]] },
+  { id: 'national-city', name: 'National City', aliases: ['national city'], center: { latitude: 32.6781, longitude: -117.0992, zoom: 12 }, bounds: [[32.61, -117.16], [32.73, -117.03]] },
+  { id: 'el-cajon', name: 'El Cajon', aliases: ['el cajon'], center: { latitude: 32.7948, longitude: -116.9625, zoom: 12 }, bounds: [[32.71, -117.07], [32.91, -116.82]] },
+  { id: 'la-mesa', name: 'La Mesa', aliases: ['la mesa'], center: { latitude: 32.7678, longitude: -117.0231, zoom: 12 }, bounds: [[32.70, -117.12], [32.84, -116.93]] },
+  { id: 'santee', name: 'Santee', aliases: ['santee'], center: { latitude: 32.8384, longitude: -116.9739, zoom: 12 }, bounds: [[32.79, -117.09], [32.91, -116.85]] },
+  { id: 'poway', name: 'Poway', aliases: ['poway'], center: { latitude: 32.9628, longitude: -117.0359, zoom: 12 }, bounds: [[32.88, -117.22], [33.08, -116.90]] },
+  { id: 'coronado', name: 'Coronado', aliases: ['coronado'], center: { latitude: 32.6859, longitude: -117.1831, zoom: 12 }, bounds: [[32.62, -117.27], [32.73, -117.12]] },
+  { id: 'imperial-beach', name: 'Imperial Beach', aliases: ['imperial beach'], center: { latitude: 32.5839, longitude: -117.1131, zoom: 13 }, bounds: [[32.54, -117.20], [32.63, -117.05]] },
+  { id: 'lemon-grove', name: 'Lemon Grove', aliases: ['lemon grove'], center: { latitude: 32.7426, longitude: -117.0317, zoom: 13 }, bounds: [[32.69, -117.10], [32.80, -116.96]] },
+  { id: 'spring-valley', name: 'Spring Valley', aliases: ['spring valley'], center: { latitude: 32.7448, longitude: -116.9989, zoom: 12 }, bounds: [[32.66, -117.12], [32.85, -116.88]] },
+  { id: 'fallbrook', name: 'Fallbrook', aliases: ['fallbrook'], center: { latitude: 33.3764, longitude: -117.2511, zoom: 12 }, bounds: [[33.28, -117.40], [33.48, -117.05]] },
+];
 
 const app = document.querySelector('#app');
 
@@ -257,6 +307,7 @@ app.innerHTML = `
               <button class="map-filter" type="button" data-filter="supply"><span class="filter-dot dot-supply"></span>Food</button>
               <button class="map-filter" type="button" data-filter="demand"><span class="filter-dot dot-demand"></span>Need</button>
               <button class="map-filter" type="button" data-filter="capacity"><span class="filter-dot dot-capacity"></span>Capacity</button>
+              <button class="map-filter" type="button" data-filter="food-bank"><span class="filter-dot dot-food-bank"></span>Food banks</button>
             </div>
             <button class="map-expand" type="button" data-report="resource" aria-label="Explore the network">Explore ${icon('arrow')}</button>
           </div>
@@ -286,34 +337,40 @@ app.innerHTML = `
           <div class="dashboard-gate" data-dashboard-gate>
             <div class="dashboard-login-card">
               <div class="dashboard-login-mark"><span>${icon('pin')}</span></div>
-              <p class="eyebrow">Demo access</p>
-              <h3>Open your CareSpace dashboard.</h3>
-              <p class="dashboard-login-intro">Choose the view that fits you. This prototype does not transmit or store credentials; production sign-in will connect here to the approved auth provider.</p>
-              <div class="dashboard-role-switch" role="group" aria-label="Choose your dashboard role">
-                <button type="button" class="dashboard-role is-active" data-demo-role="need">I need food</button>
-                <button type="button" class="dashboard-role" data-demo-role="food-bank">I run a food bank</button>
+              <p class="eyebrow">POC demo · no login required</p>
+              <h3>Choose a CareSpace view.</h3>
+              <p class="dashboard-login-intro">Open a role-specific dashboard with one click. Each view uses the same San Diego County network, shaped for the person or organization using it.</p>
+              <div class="dashboard-role-switch" role="group" aria-label="Open a demo dashboard">
+                <button type="button" class="dashboard-role is-active" data-demo-role="need">Person in need ${icon('arrow')}</button>
+                <button type="button" class="dashboard-role" data-demo-role="food-bank">Food bank operator ${icon('arrow')}</button>
+                <button type="button" class="dashboard-role" data-demo-role="food-supplier">Food supplier ${icon('arrow')}</button>
               </div>
-              <form class="dashboard-login-form" data-dashboard-login>
-                <label class="dashboard-email-field"><span>Email for demo access</span><input type="email" name="email" placeholder="you@example.org" autocomplete="email" required /></label>
-                <button class="button button-dark" type="submit" data-dashboard-submit>Enter as a person in need ${icon('arrow')}</button>
-              </form>
-              <p class="dashboard-login-footnote">No account required for this demo · organization-level data only</p>
+              <p class="dashboard-login-footnote">Demo data only · no credentials or personal information are required to explore these views.</p>
             </div>
-            <div class="dashboard-login-aside"><span class="dashboard-aside-number">01</span><p><strong>For people in need</strong><br />See food banks, pantry hours, access notes, and available inventory near you.</p><p><strong>For food banks</strong><br />See your inventory alongside nearby handoff partners and community demand.</p></div>
+            <div class="dashboard-login-aside"><span class="dashboard-aside-number">01</span><p><strong>For people in need</strong><br />See food banks, pantry hours, access notes, and available inventory near you.</p><p><strong>For food banks</strong><br />See your inventory alongside nearby handoff partners and community demand.</p><p><strong>For food suppliers</strong><br />Record a restaurant, market, farm, or kitchen account that can offer food.</p></div>
           </div>
 
           <div class="dashboard-app" data-dashboard-app hidden>
-            <div class="dashboard-appbar"><div><span class="dashboard-pill" data-dashboard-role-pill>Person in need</span><h3 data-dashboard-title>Find food near you</h3><p data-dashboard-subtitle>Live food access across San Diego County.</p></div><button class="dashboard-signout" type="button" data-dashboard-logout>Sign out ${icon('arrow')}</button></div>
+            <div class="dashboard-appbar"><div><span class="dashboard-pill" data-dashboard-role-pill>Person in need</span><h3 data-dashboard-title>Find food near you</h3><p data-dashboard-subtitle>Live food access across San Diego County.</p></div><button class="dashboard-signout" type="button" data-dashboard-logout>Change demo role ${icon('arrow')}</button></div>
             <div class="dashboard-layout">
               <section class="dashboard-map-card" aria-label="Nearby food access">
                 <div class="dashboard-card-heading"><div><p class="panel-kicker">Nearby food access</p><h4>What can land near you?</h4></div><span class="dashboard-live-label"><i class="live-dot"></i> Live feed</span></div>
-                <div class="dashboard-location-bar"><label for="dashboard-location">Search within</label><input id="dashboard-location" data-dashboard-location value="San Diego County" /><button type="button" class="location-button" data-use-location aria-label="Use my location">${icon('pin')}</button></div>
+                <div class="dashboard-location-bar">
+                  <label for="dashboard-city">Scope to</label>
+                  <select id="dashboard-city" data-dashboard-city aria-label="Scope dashboard map to a San Diego County city">
+                    ${dashboardCityScopes.map((city) => `<option value="${city.id}">${city.name}</option>`).join('')}
+                  </select>
+                  <label class="dashboard-search-label" for="dashboard-location">Filter</label>
+                  <input id="dashboard-location" data-dashboard-location placeholder="Food location or area" aria-label="Filter food locations" />
+                  <button type="button" class="location-button" data-use-location aria-label="Use my location">${icon('pin')}</button>
+                </div>
                 <div class="dashboard-map" id="dashboardMap" aria-label="Map of nearby food banks in San Diego County"><div class="dashboard-map-status" data-dashboard-map-status>Loading food access…</div></div>
                 <p class="dashboard-map-footnote"><span>${icon('pin')} County scope</span><span>Approximate locations protect privacy</span></p>
               </section>
               <aside class="dashboard-results-card" aria-label="Nearby food locations"><div class="dashboard-card-heading"><div><p class="panel-kicker">Available nearby</p><h4>Food locations</h4></div><span class="panel-count" data-dashboard-result-count>04</span></div><div class="dashboard-results" data-dashboard-results></div></aside>
             </div>
             <section class="dashboard-inventory-card" data-dashboard-inventory aria-label="Food inventory overview"></section>
+            <section class="dashboard-allocation-card" data-dashboard-allocation aria-label="Wave allocation"></section>
             <div class="dashboard-privacy-note">${icon('check')} Location stays at the county and service-area level in this demo. No individual need or case details are shown.</div>
           </div>
         </div>
@@ -491,15 +548,42 @@ function visibleSignals(filter) {
   return (networkData.signals ?? []).filter((signal) => signalWithinScope(signal) && signalMatchesFilter(signal, filter));
 }
 
+function visibleFoodBankLocations() {
+  return (foodBankData.locations ?? []).filter((location) => signalWithinScope(location));
+}
+
+function visibleMapPoints(filter) {
+  if (filter === 'food-bank') return visibleFoodBankLocations();
+  return [
+    ...visibleSignals(filter),
+    ...(filter === 'all' ? visibleFoodBankLocations() : []),
+  ];
+}
+
+function mapPointById(id) {
+  return (networkData.signals ?? []).find((signal) => signal.id === id)
+    ?? (foodBankData.locations ?? []).find((location) => location.id === id);
+}
+
+function mapPointLabel(point) {
+  return point.label ?? point.name ?? 'CareSpace location';
+}
+
+function mapPointMeta(point) {
+  return point.meta ?? `${point.area ?? 'San Diego County'} · ${point.kind ?? 'Network signal'}`;
+}
+
 function signalIconName(type) {
   if (type === 'supply') return 'heart';
   if (type === 'demand') return 'users';
+  if (type === 'food-bank') return 'pin';
   return 'spark';
 }
 
 function signalIconClass(type) {
   if (type === 'supply') return 'icon-supply';
   if (type === 'demand') return 'icon-demand';
+  if (type === 'food-bank') return 'icon-food-bank';
   return 'icon-capacity';
 }
 
@@ -507,49 +591,56 @@ function renderSignalPanel(filter) {
   const list = $('[data-signal-list]');
   if (!list) return;
 
-  const signals = visibleSignals(filter);
-  const cards = signals.slice(0, 3);
+  const points = visibleMapPoints(filter);
+  const cards = points.slice(0, 3);
   list.innerHTML = cards.length
-    ? cards.map((signal) => `
-      <button class="signal-card" type="button" data-focus="${escapeHtml(signal.id)}">
-        <span class="signal-card-icon ${signalIconClass(signal.type)}">${icon(signalIconName(signal.type))}</span>
-        <span><strong>${escapeHtml(signal.label)}</strong><small>${escapeHtml(signal.meta)}</small></span>
+    ? cards.map((point) => `
+      <button class="signal-card" type="button" data-focus="${escapeHtml(point.id)}">
+        <span class="signal-card-icon ${signalIconClass(point.type)}">${icon(signalIconName(point.type))}</span>
+        <span><strong>${escapeHtml(mapPointLabel(point))}</strong><small>${escapeHtml(mapPointMeta(point))}</small></span>
         <span class="signal-card-arrow">${icon('arrow')}</span>
       </button>`).join('')
     : '<p class="signal-empty">No signals match this filter yet.</p>';
 
   const count = $('[data-panel-count]');
-  if (count) count.textContent = String(signals.length).padStart(2, '0');
+  if (count) count.textContent = String(points.length).padStart(2, '0');
 
   const footer = $('[data-panel-footer]');
   if (footer) {
-    const remaining = Math.max(signals.length - cards.length, 0);
-    footer.textContent = remaining ? `+ ${remaining} more signals are active` : 'Select a signal to inspect its location';
+    const remaining = Math.max(points.length - cards.length, 0);
+    footer.textContent = remaining ? `+ ${remaining} more locations are active` : 'Select a location to inspect its details';
   }
 }
 
-function createSignalMarker(signal) {
-  const coordinates = signalCoordinates(signal);
+function createSignalMarker(point) {
+  const coordinates = signalCoordinates(point);
   if (!coordinates) return null;
 
   const marker = L.marker(coordinates, {
     icon: L.divIcon({
-      className: `carespace-marker marker-${signal.type}`,
+      className: `carespace-marker marker-${point.type}`,
       html: '<span class="carespace-marker-pulse"></span><span class="carespace-marker-core"></span>',
       iconSize: [28, 28],
       iconAnchor: [14, 14],
       popupAnchor: [0, -15],
     }),
-    title: `${signal.label}: ${signal.meta}`,
+    title: `${mapPointLabel(point)}: ${mapPointMeta(point)}`,
   });
 
-  const puma = signal.puma ?? networkData.geography;
-  const pumaLabel = puma?.name ? `<small>PUMA area · ${escapeHtml(puma.name)}</small>` : '';
+  const puma = point.puma ?? networkData.geography;
+  const pumaLabel = point.type === 'food-bank'
+    ? [point.address, point.schedule ? `Schedule · ${point.schedule}` : '', point.access ? `Access · ${point.access}` : '']
+      .filter(Boolean)
+      .map((detail) => `<small>${escapeHtml(detail)}</small>`)
+      .join('')
+    : puma?.name ? `<small>PUMA area · ${escapeHtml(puma.name)}</small>` : '';
+  const sourceLabel = point.source ? `<small class="map-popup-source">Source · ${escapeHtml(point.source)}</small>` : '';
   marker.bindPopup(`
     <div class="map-popup">
-      <strong>${escapeHtml(signal.label)}</strong>
-      <span>${escapeHtml(signal.meta)}</span>
+      <strong>${escapeHtml(mapPointLabel(point))}</strong>
+      <span>${escapeHtml(mapPointMeta(point))}</span>
       ${pumaLabel}
+      ${sourceLabel}
     </div>`, { closeButton: false });
   return marker;
 }
@@ -586,23 +677,33 @@ async function loadServiceAreaBoundaryLayer(map) {
 
 function setMapFilter(filter) {
   $$('.map-filter').forEach((button) => button.classList.toggle('is-active', button.dataset.filter === filter));
-  const signals = visibleSignals(filter);
+  const points = visibleMapPoints(filter);
   if (mapRuntime) {
     mapRuntime.markerLayer.clearLayers();
     mapRuntime.markers.clear();
-    signals.forEach((signal) => {
-      const marker = createSignalMarker(signal);
+    points.forEach((point) => {
+      const marker = createSignalMarker(point);
       if (!marker) return;
-      mapRuntime.markers.set(signal.id, marker);
+      mapRuntime.markers.set(point.id, marker);
       marker.addTo(mapRuntime.markerLayer);
     });
   }
 
   renderSignalPanel(filter);
+  const filterLabel = {
+    supply: 'food available',
+    demand: 'community need',
+    capacity: 'capacity and logistics',
+    'food-bank': 'food-bank locations',
+  }[filter] ?? 'network';
+  const foodBankCount = visibleFoodBankLocations().length;
   const copy = filter === 'all'
-    ? `Showing all ${signals.length} live signals`
-    : `Showing ${signals.length} ${filter === 'supply' ? 'food available' : filter === 'demand' ? 'community need' : 'capacity and logistics'} signals`;
-  const sourceNote = mapRuntime?.isFallback ? ' · demo feed' : '';
+    ? `Showing all ${points.length} live locations · ${foodBankCount} food banks`
+    : `Showing ${points.length} ${filterLabel}`;
+  const sourceNote = [
+    mapRuntime?.isFallback ? 'demo signal feed' : '',
+    mapRuntime?.isFoodBankFallback ? 'demo food-bank feed' : '',
+  ].filter(Boolean).map((note) => ` · ${note}`).join('');
   $('#mapStatus').innerHTML = `<i class="live-dot"></i> ${copy}${sourceNote}`;
   announce(copy);
 }
@@ -615,17 +716,50 @@ async function loadNetworkData() {
   return { ...fallbackNetworkData, ...payload, signals: payload.signals };
 }
 
+async function readFoodBankFeed(url) {
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`Food-bank feed returned ${response.status}`);
+  const payload = await response.json();
+  if (!Array.isArray(payload.locations)) throw new Error('Food-bank feed has no locations array');
+  return { ...fallbackFoodBankData, ...payload, locations: payload.locations };
+}
+
+async function loadFoodBankData() {
+  try {
+    return { data: await readFoodBankFeed(foodBankDataUrl), isFallback: false };
+  } catch (apiError) {
+    if (foodBankDataUrl !== foodBankStaticDataUrl) {
+      try {
+        return { data: await readFoodBankFeed(foodBankStaticDataUrl), isFallback: true };
+      } catch (staticError) {
+        console.warn('CareSpace food-bank API and static feed unavailable; showing demo locations.', { apiError, staticError });
+      }
+    }
+    return { data: fallbackFoodBankData, isFallback: true };
+  }
+}
+
 async function initializeLiveMap() {
   const mapElement = $('#liveMap');
   if (!mapElement) return;
 
-  let isFallback = false;
-  try {
-    networkData = await loadNetworkData();
-  } catch (error) {
-    isFallback = true;
+  const [networkResult, foodBankResult] = await Promise.allSettled([loadNetworkData(), loadFoodBankData()]);
+  const isFallback = networkResult.status !== 'fulfilled';
+  const isFoodBankFallback = foodBankResult.status !== 'fulfilled' || foodBankResult.value.isFallback;
+
+  if (isFallback) {
     networkData = fallbackNetworkData;
-    console.warn('CareSpace network feed unavailable; showing demo signals.', error);
+    console.warn('CareSpace network feed unavailable; showing demo signals.', networkResult.reason);
+  } else {
+    networkData = networkResult.value;
+  }
+  if (isFoodBankFallback) {
+    foodBankData = foodBankResult.status === 'fulfilled' ? foodBankResult.value.data : fallbackFoodBankData;
+    if (foodBankResult.status !== 'fulfilled') {
+      console.warn('CareSpace food-bank feed unavailable; showing demo food-bank locations.', foodBankResult.reason);
+    }
+  } else {
+    foodBankData = foodBankResult.value.data;
   }
 
   const focus = networkData.focus ?? fallbackNetworkData.focus;
@@ -656,6 +790,7 @@ async function initializeLiveMap() {
     mapRuntime = {
       map,
       isFallback,
+      isFoodBankFallback,
       scopeBounds: bounds,
       boundaryLayer: null,
       markerLayer,
@@ -664,9 +799,11 @@ async function initializeLiveMap() {
 
     const name = networkData.scope?.name || networkData.geography?.name || 'Service area';
     const type = networkData.geography?.type || 'local';
+    const signalCount = visibleSignals('all').length;
+    const foodBankCount = visibleFoodBankLocations().length;
     $('#networkFocusName').textContent = name;
-    $('#networkFocusMeta').textContent = `${visibleSignals('all').length} signals · ${type} ready`;
-    $('#mapProviderBadge').textContent = `${name} · ${type}-ready`;
+    $('#networkFocusMeta').textContent = `${signalCount} signals · ${foodBankCount} food banks · ${type} ready`;
+    $('#mapProviderBadge').textContent = `${name} · ${type}-ready · ${isFoodBankFallback ? 'food-bank fallback' : 'food banks live'}`;
     setMapFilter('all');
     void loadServiceAreaBoundaryLayer(map).then((boundaryLayer) => {
       if (mapRuntime?.map === map) mapRuntime.boundaryLayer = boundaryLayer;
@@ -688,14 +825,32 @@ function dashboardScopeBounds() {
   return [[south, west], [north, east]];
 }
 
+function selectedDashboardCity() {
+  const cityId = $('[data-dashboard-city]')?.value || 'county';
+  return dashboardCityScopes.find((city) => city.id === cityId) ?? dashboardCityScopes[0];
+}
+
+function pointWithinBounds(coordinates, bounds) {
+  if (!coordinates || !Array.isArray(bounds) || bounds.length !== 2) return false;
+  const [[south, west], [north, east]] = bounds;
+  const [latitude, longitude] = coordinates;
+  return latitude >= south && latitude <= north && longitude >= west && longitude <= east;
+}
+
+function foodBankMatchesCity(foodBank, city) {
+  if (city.id === 'county') return true;
+  const searchable = [foodBank.area, foodBank.address].filter(Boolean).join(' ').toLowerCase();
+  return city.aliases.some((alias) => searchable.includes(alias)) || pointWithinBounds(signalCoordinates(foodBank), city.bounds);
+}
+
 function foodBanksInScope() {
   const bounds = dashboardScopeBounds();
+  const city = selectedDashboardCity();
   return (dashboardData.foodBanks ?? []).filter((foodBank) => {
     const coordinates = signalCoordinates(foodBank);
-    if (!coordinates || !bounds) return Boolean(coordinates);
-    const [[south, west], [north, east]] = bounds;
-    const [latitude, longitude] = coordinates;
-    return latitude >= south && latitude <= north && longitude >= west && longitude <= east;
+    if (!coordinates) return false;
+    if (bounds && !pointWithinBounds(coordinates, bounds)) return false;
+    return foodBankMatchesCity(foodBank, city);
   });
 }
 
@@ -761,9 +916,23 @@ function renderDashboardResults() {
 function renderDashboardInventory() {
   const container = $('[data-dashboard-inventory]');
   if (!container) return;
+
+  if (dashboardRole === 'food-supplier') {
+    const supplierName = dashboardUser?.organizationName || 'Food supplier workspace';
+    const supplierRows = [
+      ['Organization account', supplierName, 'Registered in the CareSpace D1 dashboard'],
+      ['Availability status', 'Ready to share', 'Add a pickup window and quantity next'],
+      ['Handoff partner', 'San Diego County network', 'Food banks can discover your supply'],
+    ];
+    container.innerHTML = `
+      <div class="dashboard-inventory-heading"><div><p class="panel-kicker">Supplier view</p><h4>${escapeHtml(supplierName)}</h4><p>Keep your available food and pickup windows visible to nearby food banks.</p></div><button class="text-button" type="button" data-dashboard-report>Share available food ${icon('arrow')}</button></div>
+      <div class="dashboard-inventory-list">${supplierRows.map(([category, amount, note]) => `<div class="dashboard-inventory-row"><span class="inventory-spark">${icon('heart')}</span><span><strong>${escapeHtml(category)}</strong><small>${escapeHtml(note)}</small></span><b>${escapeHtml(amount)}</b></div>`).join('')}</div>`;
+    return;
+  }
+
   const foodBanks = foodBanksInScope();
   const selected = dashboardRole === 'food-bank'
-    ? foodBanks.find((foodBank) => foodBank.isDemoUserFoodBank) ?? foodBanks[0]
+    ? (dashboardData.foodBanks ?? []).find((foodBank) => foodBank.isDemoUserFoodBank)
     : foodBanks.find((foodBank) => foodBank.id === selectedFoodBankId) ?? foodBanks[0];
   if (!selected) {
     container.innerHTML = '<p class="dashboard-empty">Inventory will appear when food access data is available.</p>';
@@ -780,6 +949,165 @@ function renderDashboardInventory() {
   container.innerHTML = `
     <div class="dashboard-inventory-heading"><div><p class="panel-kicker">${dashboardRole === 'food-bank' ? 'Operator view' : 'Food available'}</p><h4>${title}</h4><p>${intro}</p></div>${action}</div>
     <div class="dashboard-inventory-list">${(selected.inventory ?? []).map((item) => `<div class="dashboard-inventory-row"><span class="inventory-spark">${icon('spark')}</span><span><strong>${escapeHtml(item.category)}</strong><small>${escapeHtml(item.note)}</small></span><b>${escapeHtml(item.amount)}</b></div>`).join('')}</div>`;
+}
+
+/* ---------------------------------------------------------------------------
+ * Wave allocation — operator view.
+ *
+ * Splits a fixed number of indivisible ration boxes across facilities so the
+ * worst-served facility does as well as possible, then reports which
+ * facilities are blocked by storage rather than by supply. Same engine the
+ * agent API runs (src/lib/allocation.js).
+ * ------------------------------------------------------------------------ */
+
+const allocationPercent = (value) => `${(value * 100).toFixed(1)}%`;
+const allocationCount = (value) => Number(value).toLocaleString();
+
+/** Collect solver input from reported capacity, skipping facilities that have not reported. */
+function allocationInputs() {
+  const dimensions = dashboardData.allocation?.rationBox;
+  if (!Array.isArray(dimensions) || dimensions.length === 0) return null;
+
+  const sites = [];
+  let dropped = 0;
+  let unverified = 0;
+  let missing = 0;
+
+  for (const foodBank of dashboardData.foodBanks ?? []) {
+    if (!Array.isArray(foodBank.capacity) || !Number.isFinite(Number(foodBank.peopleServed))) {
+      missing += 1;
+      continue;
+    }
+    const { space, stale, warnings } = spaceFromCapacityRecords(foodBank.capacity);
+    dropped += stale.length;
+    unverified += warnings.filter((w) => w.includes('last_verified')).length;
+    sites.push({
+      id: foodBank.id,
+      name: foodBank.name,
+      people: Number(foodBank.peopleServed),
+      boxesOnHand: Number(foodBank.boxesOnHand) || 0,
+      space,
+    });
+  }
+
+  if (sites.length === 0) return null;
+  return { dimensions, sites, dropped, unverified, missing };
+}
+
+const ALLOCATION_EMPTY = `
+  <p class="dashboard-empty">Allocation needs two things no facility has reported yet: <strong>available capacity</strong> by storage type, and the number of <strong>people served</strong>. Both are already defined in the product requirements. Once they arrive, this panel plans the wave automatically.</p>`;
+
+/** Recompute and repaint only the body, so the wave-size field keeps focus. */
+function renderAllocationBody() {
+  const body = $('[data-allocation-body]');
+  if (!body) return;
+
+  const input = allocationInputs();
+  if (!input) {
+    body.innerHTML = ALLOCATION_EMPTY;
+    return;
+  }
+
+  let result;
+  try {
+    result = allocate({ supply: allocationSupply ?? 0, dimensions: input.dimensions, sites: input.sites });
+  } catch (error) {
+    console.warn('CareSpace allocation failed.', error);
+    body.innerHTML = ALLOCATION_EMPTY;
+    return;
+  }
+
+  const rows = result.sites
+    .map((site) => {
+      const blocked = site.status === 'capacity_bound';
+      const label = blocked
+        ? 'Storage full'
+        : site.status === 'met'
+          ? 'Covered'
+          : site.status === 'stocked'
+            ? 'Stocked'
+            : 'Room for more';
+      const dimension = input.dimensions.find((d) => d.key === site.bindingDimension);
+      const limitedBy = site.bindingDimension
+        ? ` · limited by ${escapeHtml(String(dimension?.label ?? site.bindingDimension))}`
+        : '';
+      return `
+        <tr class="${blocked ? 'is-blocked' : ''}">
+          <th scope="row"><strong>${escapeHtml(site.name)}</strong><small>${allocationCount(site.residualNeed)} boxes needed${limitedBy}</small></th>
+          <td>${allocationCount(site.boxCapacity)}</td>
+          <td><b>${allocationCount(site.boxes)}</b></td>
+          <td><span class="allocation-bar"><i style="width:${Math.min(100, site.coverage * 100).toFixed(1)}%"></i></span><small>${allocationPercent(site.coverage)}</small></td>
+          <td><span class="allocation-pill ${blocked ? 'pill-blocked' : 'pill-open'}">${label}</span></td>
+        </tr>`;
+    })
+    .join('');
+
+  const top = result.recommendations[0];
+  const recommendation = top
+    ? `<div class="allocation-recommendation">
+         <span class="allocation-rec-icon">${icon('spark')}</span>
+         <div>
+           <strong>Add storage at ${escapeHtml(top.name)}, not food.</strong>
+           <p>${top.additions
+             .map((a) => `${allocationCount(a.addUnits)} ${escapeHtml(String(a.unit))} more ${escapeHtml(String(a.label).toLowerCase())}`)
+             .join(' and ')} lets it take ${allocationCount(top.boxesAtWaterline)} boxes instead of ${allocationCount(top.boxesToday)} — lifting the worst-served facility in the network from ${allocationPercent(top.floorCoverageBefore)} to ${allocationPercent(top.floorCoverageAfter)}.</p>
+         </div>
+       </div>`
+    : '';
+
+  const provenance = [
+    input.missing ? `${input.missing} facility${input.missing === 1 ? '' : 'ies'} without reported capacity` : '',
+    input.dropped ? `${input.dropped} expired record excluded` : '',
+    input.unverified ? `${input.unverified} records carry no verification timestamp` : '',
+  ].filter(Boolean);
+
+  body.innerHTML = `
+    <p class="allocation-verdict ${result.regime === 'capacity_bound' ? 'is-blocked' : ''}">${escapeHtml(result.verdict)}</p>
+
+    <div class="allocation-metrics">
+      <div><strong>${allocationCount(result.totals.shipped)}</strong><span>boxes placed<br />of ${allocationCount(result.totals.supply)} available</span></div>
+      <div><strong>${allocationPercent(result.totals.coverage)}</strong><span>of residual need<br />met this wave</span></div>
+      <div><strong>${allocationPercent(result.totals.floorCoverage)}</strong><span>at the worst-served<br />facility</span></div>
+      <div><strong>${allocationCount(result.totals.atomicityLoss)}</strong><span>boxes of capacity<br />stranded by mismatch</span></div>
+    </div>
+
+    <div class="allocation-table-wrap">
+      <table class="allocation-table">
+        <thead><tr><th scope="col">Facility</th><th scope="col">Can hold</th><th scope="col">Send</th><th scope="col">Coverage</th><th scope="col">Limited by</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+
+    ${recommendation}
+
+    <p class="allocation-footnote">${icon('check')} Planned against free space reported now, never nameplate capacity.${provenance.length ? ` ${escapeHtml(provenance.join(' · '))}.` : ''}</p>`;
+}
+
+/** Build the panel shell once per dashboard render, then fill the body. */
+function renderDashboardAllocation() {
+  const container = $('[data-dashboard-allocation]');
+  if (!container) return;
+
+  // Operator-facing only — a person looking for food does not plan the wave.
+  if (dashboardRole !== 'food-bank') {
+    container.hidden = true;
+    container.innerHTML = '';
+    return;
+  }
+  container.hidden = false;
+
+  if (allocationSupply === null) {
+    allocationSupply = Math.max(0, Math.floor(Number(dashboardData.allocation?.supplyBoxes) || 0));
+  }
+
+  container.innerHTML = `
+    <div class="dashboard-card-heading">
+      <div><p class="panel-kicker">Wave allocation</p><h4>Where the next boxes should go</h4></div>
+      <label class="allocation-supply"><span>Boxes this wave</span><input type="number" min="0" step="10" value="${allocationSupply}" data-allocation-supply aria-label="Boxes available this wave" /></label>
+    </div>
+    <div data-allocation-body></div>`;
+
+  renderAllocationBody();
 }
 
 function focusDashboardFoodBank(id) {
@@ -824,16 +1152,41 @@ function initializeDashboardMap() {
   requestAnimationFrame(() => map.invalidateSize());
 }
 
+function zoomDashboardToCity() {
+  if (!dashboardRuntime?.map) return;
+  const city = selectedDashboardCity();
+  dashboardRuntime.map.flyTo([city.center.latitude, city.center.longitude], city.center.zoom, {
+    animate: true,
+    duration: 0.7,
+  });
+}
+
 function renderDashboard() {
-  const isFoodBank = dashboardRole === 'food-bank';
-  $('[data-dashboard-role-pill]').textContent = isFoodBank ? 'Food bank operator' : 'Person in need';
-  $('[data-dashboard-title]').textContent = isFoodBank ? 'Keep your inventory visible' : 'Find food near you';
-  $('[data-dashboard-subtitle]').textContent = isFoodBank
-    ? 'See your inventory and nearby partners across San Diego County.'
-    : 'See open food banks, access notes, and available inventory across San Diego County.';
-  $('[data-dashboard-map-status]').textContent = `${foodBanksInScope().length} food locations in San Diego County`;
+  const roleCopy = {
+    need: {
+      label: 'Person in need',
+      title: 'Find food near you',
+      subtitle: 'See open food banks, access notes, and available inventory across San Diego County.',
+    },
+    'food-bank': {
+      label: 'Food bank operator',
+      title: 'Keep your inventory visible',
+      subtitle: 'See your inventory and nearby partners across San Diego County.',
+    },
+    'food-supplier': {
+      label: 'Food supplier',
+      title: 'Offer food with confidence',
+      subtitle: 'Keep restaurant, market, farm, and kitchen supply visible to food banks.',
+    },
+  }[dashboardRole];
+  const city = selectedDashboardCity();
+  $('[data-dashboard-role-pill]').textContent = roleCopy.label;
+  $('[data-dashboard-title]').textContent = roleCopy.title;
+  $('[data-dashboard-subtitle]').textContent = roleCopy.subtitle;
+  $('[data-dashboard-map-status]').textContent = `${foodBanksInScope().length} food locations in ${city.name}`;
   renderDashboardResults();
   renderDashboardInventory();
+  renderDashboardAllocation();
   renderDashboardMarkers();
 }
 
@@ -846,16 +1199,101 @@ async function loadDashboardData() {
 }
 
 function setDashboardRole(role) {
-  dashboardRole = role === 'food-bank' ? 'food-bank' : 'need';
+  dashboardRole = ['food-bank', 'food-supplier'].includes(role) ? role : 'need';
   selectedFoodBankId = dashboardRole === 'food-bank'
     ? (dashboardData.foodBanks.find((foodBank) => foodBank.isDemoUserFoodBank)?.id ?? dashboardData.foodBanks[0]?.id)
     : dashboardData.foodBanks[0]?.id;
   $$('[data-demo-role]').forEach((button) => button.classList.toggle('is-active', button.dataset.demoRole === dashboardRole));
+  const roleLabel = {
+    need: 'a person in need',
+    'food-bank': 'a food bank',
+    'food-supplier': 'a food supplier',
+  }[dashboardRole];
   const submit = $('[data-dashboard-submit]');
-  if (submit) submit.innerHTML = `${dashboardRole === 'food-bank' ? 'Enter as a food bank' : 'Enter as a person in need'} ${icon('arrow')}`;
+  if (submit) submit.innerHTML = `${dashboardAuthMode === 'register' ? `Create an account as ${roleLabel}` : `Sign in as ${roleLabel}`} ${icon('arrow')}`;
+  const organization = $('[data-dashboard-login] [name="organizationName"]');
+  if (organization) organization.required = dashboardAuthMode === 'register' && dashboardRole !== 'need';
 }
 
-async function enterDashboard() {
+const demoDashboardProfiles = {
+  need: {
+    id: 'demo-person-in-need',
+    displayName: 'Demo neighbor',
+    organizationName: 'San Diego community',
+    status: 'demo',
+  },
+  'food-bank': {
+    id: 'user-demo-food-bank',
+    displayName: 'Avery Martinez',
+    organizationName: 'Central Care Food Bank',
+    status: 'demo',
+  },
+  'food-supplier': {
+    id: 'user-demo-food-supplier',
+    displayName: 'Jordan Rivera',
+    organizationName: 'Northside Market',
+    status: 'demo',
+  },
+};
+
+async function openDemoDashboard(role) {
+  const selectedRole = ['food-bank', 'food-supplier'].includes(role) ? role : 'need';
+  const profile = demoDashboardProfiles[selectedRole];
+  const buttons = $$('[data-demo-role]');
+  buttons.forEach((button) => { button.disabled = true; });
+  dashboardUser = { ...profile, role: selectedRole };
+  setDashboardRole(selectedRole);
+  try {
+    await openDashboard();
+  } catch (error) {
+    dashboardUser = null;
+    $('[data-dashboard-app]').hidden = true;
+    $('[data-dashboard-gate]').hidden = false;
+    announce(error instanceof Error ? error.message : 'The demo dashboard could not open.');
+  } finally {
+    buttons.forEach((button) => { button.disabled = false; });
+  }
+}
+
+function setDashboardAuthMode(mode) {
+  dashboardAuthMode = mode === 'register' ? 'register' : 'login';
+  const fields = $('[data-dashboard-register-fields]');
+  if (fields) fields.hidden = dashboardAuthMode !== 'register';
+  const displayName = $('[data-dashboard-login] [name="displayName"]');
+  if (displayName) displayName.required = dashboardAuthMode === 'register';
+  const organization = $('[data-dashboard-login] [name="organizationName"]');
+  if (organization) organization.required = dashboardAuthMode === 'register' && dashboardRole !== 'need';
+  const password = $('[data-dashboard-login] [name="password"]');
+  if (password) password.autocomplete = dashboardAuthMode === 'register' ? 'new-password' : 'current-password';
+  const toggle = $('[data-dashboard-auth-mode]');
+  if (toggle) toggle.textContent = dashboardAuthMode === 'register' ? 'Already registered? Sign in' : 'New here? Create an account';
+  const status = $('[data-dashboard-auth-status]');
+  if (status) status.textContent = '';
+  setDashboardRole(dashboardRole);
+}
+
+async function authenticateDashboard() {
+  const form = $('[data-dashboard-login]');
+  const formData = new FormData(form);
+  const endpoint = dashboardAuthMode === 'register' ? 'register' : 'login';
+  const response = await fetch(`${dashboardAuthBaseUrl}/${endpoint}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({
+      email: formData.get('email'),
+      password: formData.get('password'),
+      role: dashboardRole,
+      displayName: formData.get('displayName'),
+      organizationName: formData.get('organizationName'),
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.detail || 'The dashboard could not authenticate you.');
+  return payload.user;
+}
+
+async function openDashboard() {
   const gate = $('[data-dashboard-gate]');
   const dashboardApp = $('[data-dashboard-app]');
   gate.hidden = true;
@@ -867,12 +1305,60 @@ async function enterDashboard() {
     dashboardData = fallbackDashboardData;
     console.warn('CareSpace dashboard feed unavailable; showing demo inventory.', error);
   }
-  setDashboardRole(dashboardRole);
+  setDashboardRole(dashboardUser?.role ?? dashboardRole);
   initializeDashboardMap();
   renderDashboard();
   dashboardApp.classList.remove('is-loading');
-  announce(`${dashboardRole === 'food-bank' ? 'Food bank' : 'Person in need'} dashboard opened.`);
+  announce(`${dashboardUser?.displayName ? `${dashboardUser.displayName} · ` : ''}${dashboardRole === 'food-bank' ? 'Food bank' : dashboardRole === 'food-supplier' ? 'Food supplier' : 'Person in need'} dashboard opened.`);
   requestAnimationFrame(() => dashboardRuntime?.map.invalidateSize());
+}
+
+async function enterDashboard() {
+  const status = $('[data-dashboard-auth-status]');
+  const submit = $('[data-dashboard-submit]');
+  if (submit) submit.disabled = true;
+  if (status) status.textContent = dashboardAuthMode === 'register' ? 'Creating your D1-backed account…' : 'Signing you in…';
+  try {
+    dashboardUser = await authenticateDashboard();
+    if (status) status.textContent = '';
+    await openDashboard();
+  } catch (error) {
+    if (status) status.textContent = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
+  } finally {
+    if (submit) submit.disabled = false;
+  }
+}
+
+async function restoreDashboardSession() {
+  try {
+    const response = await fetch(`${dashboardAuthBaseUrl}/session`, { headers: { accept: 'application/json' }, credentials: 'same-origin' });
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (!payload.user) return;
+    dashboardUser = payload.user;
+    await openDashboard();
+  } catch {
+    // The public landing page remains usable when the dashboard API is unavailable.
+  }
+}
+
+async function signOutDashboard() {
+  try {
+    await fetch(`${dashboardAuthBaseUrl}/session`, { method: 'DELETE', credentials: 'same-origin' });
+  } catch {
+    // Clear the local view even if the network is unavailable.
+  }
+  dashboardUser = null;
+  dashboardApp.hidden = true;
+  $('[data-dashboard-gate]').hidden = false;
+  if (dashboardRuntime) {
+    dashboardRuntime.map.remove();
+    dashboardRuntime = null;
+  }
+  const loginForm = $('[data-dashboard-login]');
+  if (loginForm) loginForm.reset();
+  setDashboardRole('need');
+  announce('Choose another demo role to open a dashboard.');
 }
 
 $$('[data-report]').forEach((element) => {
@@ -906,22 +1392,26 @@ $$('[data-filter]').forEach((button) => button.addEventListener('click', () => s
 $('[data-signal-list]').addEventListener('click', (event) => {
   const button = event.target.closest('[data-focus]');
   if (!button) return;
-  const signal = networkData.signals.find((candidate) => candidate.id === button.dataset.focus);
-  if (!signal) return;
+  const point = mapPointById(button.dataset.focus);
+  if (!point) return;
 
-  const filter = signal.type === 'logistics' ? 'capacity' : signal.type;
+  const filter = point.type === 'food-bank' ? 'food-bank' : point.type === 'logistics' ? 'capacity' : point.type;
   setMapFilter(filter);
   $('#network').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  const coordinates = signalCoordinates(signal);
-  const marker = mapRuntime?.markers.get(signal.id);
+  const coordinates = signalCoordinates(point);
+  const marker = mapRuntime?.markers.get(point.id);
   if (mapRuntime?.map && coordinates) {
     mapRuntime.map.setView(coordinates, Math.max(mapRuntime.map.getZoom(), 14), { animate: true });
     marker?.openPopup();
   }
 });
 
-$$('[data-demo-role]').forEach((button) => button.addEventListener('click', () => setDashboardRole(button.dataset.demoRole)));
-$('[data-dashboard-login]').addEventListener('submit', (event) => {
+$$('[data-demo-role]').forEach((button) => button.addEventListener('click', () => void openDemoDashboard(button.dataset.demoRole)));
+
+const dashboardAuthModeToggle = $('[data-dashboard-auth-mode]');
+if (dashboardAuthModeToggle) dashboardAuthModeToggle.addEventListener('click', () => setDashboardAuthMode(dashboardAuthMode === 'register' ? 'login' : 'register'));
+const dashboardLoginForm = $('[data-dashboard-login]');
+if (dashboardLoginForm) dashboardLoginForm.addEventListener('submit', (event) => {
   event.preventDefault();
   void enterDashboard();
 });
@@ -941,9 +1431,23 @@ dashboardApp.addEventListener('click', (event) => {
   if (request) announce('A food request draft has been started for this location.');
 });
 
+$('[data-dashboard-city]').addEventListener('change', () => {
+  $('[data-dashboard-location]').value = '';
+  renderDashboard();
+  zoomDashboardToCity();
+});
+
 $('[data-dashboard-location]').addEventListener('input', () => {
   renderDashboardResults();
   renderDashboardMarkers();
+});
+
+dashboardApp.addEventListener('input', (event) => {
+  if (!event.target.matches('[data-allocation-supply]')) return;
+  const next = Math.max(0, Math.floor(Number(event.target.value) || 0));
+  if (next === allocationSupply) return;
+  allocationSupply = next;
+  renderAllocationBody();
 });
 
 $('[data-use-location]').addEventListener('click', () => {
@@ -976,15 +1480,7 @@ $('[data-use-location]').addEventListener('click', () => {
   );
 });
 
-$('[data-dashboard-logout]').addEventListener('click', () => {
-  dashboardApp.hidden = true;
-  $('[data-dashboard-gate]').hidden = false;
-  if (dashboardRuntime) {
-    dashboardRuntime.map.remove();
-    dashboardRuntime = null;
-  }
-  announce('You have been signed out of the demo dashboard.');
-});
+$('[data-dashboard-logout]').addEventListener('click', () => void signOutDashboard());
 
 const menuButton = $('[data-menu]');
 const desktopNav = $('.desktop-nav');
