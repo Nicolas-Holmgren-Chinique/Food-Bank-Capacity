@@ -473,16 +473,18 @@
     }
     .dashboard-stage { max-width: 1000px; margin: 0 auto; perspective: 1500px; }
     .dashboard-card {
+      height: 470px;
       min-height: 470px;
       position: relative;
       transform-style: preserve-3d;
-      transition: transform 700ms cubic-bezier(.2,.75,.2,1);
+      transition: transform 700ms cubic-bezier(.2,.75,.2,1), height 350ms ease;
     }
     .dashboard-card.is-open { transform: rotateY(180deg); }
     .dashboard-face {
       position: absolute;
       inset: 0;
-      min-height: 470px;
+      height: 100%;
+      min-height: 0;
       padding: 2.2rem;
       border: 1px solid #dedbd4;
       border-radius: 18px;
@@ -520,7 +522,7 @@
     .dashboard-demo-aside p { color: #315a5d; line-height: 1.6; margin: 0.75rem 0 0; }
     .dashboard-demo-aside ul { color: #315a5d; line-height: 1.8; margin: 1.1rem 0 0; padding-left: 1.1rem; }
     .dashboard-note { color: #777; display: block; font-size: 0.72rem; margin-top: 1.15rem; }
-    .dashboard-app-face { transform: rotateY(180deg); overflow: auto; }
+    .dashboard-app-face { transform: rotateY(180deg); overflow: visible; }
     .dashboard-appbar { align-items: flex-start; display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #eee; padding-bottom: 1.25rem; }
     .dashboard-appbar h3 { font-size: 1.65rem; margin: 0.3rem 0; }
     .dashboard-appbar p { color: var(--gray); margin: 0; }
@@ -588,7 +590,7 @@
       .section { padding: 2.5rem 1.25rem; }
       .map-card-header { padding: 0.75rem 1rem; }
       .dashboard-face { padding: 1.25rem; }
-      .dashboard-card, .dashboard-face { min-height: 590px; }
+      .dashboard-card { height: 590px; min-height: 590px; }
       .dashboard-metrics, .dashboard-content-grid, .allocation-model-grid { grid-template-columns: 1fr; }
       .dashboard-appbar { flex-direction: column; }
       .dashboard-back { align-self: flex-start; }
@@ -1149,6 +1151,13 @@
   const list = document.querySelector('[data-dashboard-list]');
   const model = document.querySelector('[data-dashboard-model]');
 
+  function sizeDashboardCard(face) {
+    window.requestAnimationFrame(() => {
+      const minimum = window.matchMedia('(max-width: 640px)').matches ? 590 : 470;
+      card.style.height = Math.max(minimum, face.scrollHeight + 4) + 'px';
+    });
+  }
+
   function openDashboard(role) {
     const profile = profiles[role] || profiles.need;
     kicker.textContent = profile.kicker;
@@ -1161,6 +1170,7 @@
     card.classList.add('is-open');
     gate.setAttribute('aria-hidden', 'true');
     app.setAttribute('aria-hidden', 'false');
+    sizeDashboardCard(app);
     window.setTimeout(() => document.querySelector('[data-dashboard-back]').focus(), 450);
   }
 
@@ -1172,8 +1182,12 @@
     card.classList.remove('is-open');
     gate.setAttribute('aria-hidden', 'false');
     app.setAttribute('aria-hidden', 'true');
+    sizeDashboardCard(gate);
     window.setTimeout(() => document.querySelector('[data-demo-role]').focus(), 450);
   });
+
+  sizeDashboardCard(gate);
+  window.addEventListener('resize', () => sizeDashboardCard(card.classList.contains('is-open') ? app : gate));
 })();
 </script>
 
